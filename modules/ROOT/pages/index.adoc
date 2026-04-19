@@ -1,4 +1,4 @@
-= Learn Ruby on Rails
+= Welcome
 Stefan Wintermeyer <sw@wintermeyer-consulting.de>
 
 The book you are about to read targets **Ruby 4.0** and

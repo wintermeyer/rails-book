@@ -1,5 +1,6 @@
 .Getting Started
 * xref:index.adoc[Welcome]
+
 * xref:preface.adoc[Preface]
 * xref:how-to.adoc[How to Work with This Book]
 
