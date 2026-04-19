@@ -1,0 +1,19 @@
+site:
+  title: Ruby Introduction
+  url: https://wintermeyer-consulting.de/ruby
+  start_page: book::index.adoc
+content:
+  sources:
+  - url: .
+    branches: HEAD
+    start_path: ruby-book
+ui:
+  bundle:
+    url: https://github.com/wintermeyer/wincon-antora-ui/releases/download/latest/ui-bundle.zip
+    snapshot: true
+  supplemental_files: ./ruby-book/ui-supplemental
+  output_dir: antora-assets
+output:
+  dir: build/ruby-site
+runtime:
+  fetch: true

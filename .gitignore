@@ -3,3 +3,7 @@
 /build/
 # Generated at deploy time by scripts/fetch-partials.sh.
 /ui-supplemental/
+/ruby-book/ui-supplemental/
+# Generated at deploy time by ruby-book/scripts/split.py from
+# modules/ROOT/pages/ruby-basics.adoc.
+/ruby-book/modules/ROOT/pages/
