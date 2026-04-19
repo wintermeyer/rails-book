@@ -1,11 +1,10 @@
 [[agentic-coding]]
 = Coding Rails With an AI Agent
 
-Between the fifth and eighth major versions of Ruby on Rails a
-quiet revolution happened: AI coding agents went from
-"interesting toy" to "the environment most Rails developers now
-work in". A book that teaches Rails in 2026 can no longer
-pretend they don't exist.
+A quiet revolution has happened in the last few years: AI
+coding agents went from "interesting toy" to "the environment
+most Rails developers now work in". A book that teaches Rails
+in 2026 can no longer pretend they don't exist.
 
 This chapter is not "how to prompt". Prompts go stale fast — the
 tool you use next year will understand you better than the one
@@ -115,7 +114,11 @@ Solid Cable.
   `link_to ..., method: :delete`.
 - Prefer `params.expect(...)` over
   `params.require(...).permit(...)`.
-- New migrations inherit from `ActiveRecord::Migration[8.1]`.
+- Never hand-write migration files. Always create them with
+  `bin/rails generate migration ...` (or a model/scaffold
+  generator). The generator picks the correct
+  `ActiveRecord::Migration[8.1]` version stamp and writes a
+  safe reversible skeleton.
 
 ## Do not
 
@@ -128,6 +131,31 @@ Solid Cable.
 
 That file is the cheapest investment in code quality you'll
 make this year.
+
+.An Opinionated Alternative: ClaudeOnRails
+****
+If you would rather not hand-roll `CLAUDE.md`, Obie Fernandez's
+https://github.com/obie/claude-on-rails[ClaudeOnRails] gem
+generates one for you, plus a whole team of specialised agents
+(models, controllers, views, tests, services, devops)
+orchestrated through
+https://github.com/parruda/claude-swarm[claude-swarm]. It can
+also wire up the
+https://github.com/maquina-app/rails-mcp-server[Rails MCP
+Server] so agents query the official Rails guides directly,
+which is a very effective antidote to hallucinated APIs.
+
+The underlying philosophy is different from the one this
+chapter teaches. ClaudeOnRails aims at _"describe the feature,
+the swarm builds it"_, where this chapter aims at _"one small
+step, verify, commit"_. Neither is wrong, but if you adopt the
+swarm, treat the xref:verify[Verify, or You Didn't Do It]
+discipline as non-negotiable, because more code is generated
+between review points.
+
+We stick with the hand-rolled `CLAUDE.md` for the rest of the
+chapter so the moving parts stay visible.
+****
 
 [[inline-context]]
 === Built-in Context Sources
@@ -205,14 +233,101 @@ the input.
 == A Real Example: Claude Code, End to End
 
 Here is an actual session, warts and all, adding a "published"
-flag to a blog. I'm using Claude Code in a fresh Rails 8 app
-generated with `rails new blog && cd blog && bin/rails generate
-scaffold post title body:text`.
+flag to a blog. We start from a completely empty directory so
+every step is visible.
 
 === Setup
 
-First, I create `CLAUDE.md` as shown above. Then I start the
-agent in the project directory:
+Generate a fresh Rails 8.1 app and step into it. `rails new`
+also runs `git init` and commits the untouched application as
+its first commit, so you already have a clean baseline to
+revert to:
+
+[source,bash]
+----
+$ rails new blog
+$ cd blog
+----
+
+Generate the `Post` scaffold that we will extend later, and
+run the migration it just wrote:
+
+[source,bash]
+----
+$ bin/rails generate scaffold post title body:text
+$ bin/rails db:migrate
+----
+
+Create `CLAUDE.md` at the project root. We reuse the template
+from the xref:claudemd[CLAUDE.md section above] and prepend a
+couple of sentences about this specific project, because the
+agent has no way of knowing what "blog" means to us:
+
+[source,markdown]
+.CLAUDE.md
+----
+# Project
+
+A small personal blog. A `Post` has a `title` (string) and a
+`body` (text), scaffolded with
+`bin/rails generate scaffold post title body:text`. There is
+no authentication yet and the scaffolded CRUD routes are
+public.
+
+The application is Ruby on Rails 8.1 on Ruby 4.0, SQLite in
+development and production, Solid Queue / Solid Cache /
+Solid Cable.
+
+## Conventions
+
+- Always use `bin/rails`, never `rails`.
+- Run `bin/rails test` before declaring a change complete.
+- System tests use headless Chrome via Cuprite.
+- Use Turbo/Hotwire for interactivity. Only add a Stimulus
+  controller when the behaviour is genuinely client-side.
+- `button_to` for destructive actions, never
+  `link_to ..., method: :delete`.
+- Prefer `params.expect(...)` over
+  `params.require(...).permit(...)`.
+- Never hand-write migration files. Always create them with
+  `bin/rails generate migration ...` (or a model/scaffold
+  generator). The generator picks the correct
+  `ActiveRecord::Migration[8.1]` version stamp and writes a
+  safe reversible skeleton.
+
+## Do not
+
+- Edit `db/schema.rb` by hand. Write a migration instead.
+- Commit `config/master.key` or anything containing real
+  credentials.
+- Skip or disable tests. If a test is wrong, fix it; if the
+  code is wrong, fix the code.
+----
+
+Those first two paragraphs are the whole point: without them
+the agent would have to guess what kind of app this is from
+the `Post` model alone, and it would probably assume Devise,
+Pundit and a handful of other defaults we do not have.
+
+A quick boot check confirms the app is in working order
+before the agent touches anything:
+
+[source,bash]
+----
+$ bin/rails test
+----
+
+Commit the scaffold and `CLAUDE.md` together. One tidy
+starting point makes it obvious later which lines the agent
+added:
+
+[source,bash]
+----
+$ git add .
+$ git commit -m "Scaffold Post and add CLAUDE.md"
+----
+
+Now start the agent in the project directory:
 
 [source,bash]
 ----
@@ -534,3 +649,8 @@ Short honest list.
   https://www.conventionalcommits.org — gives you a habit
   for writing commit messages that future agents (and
   future-you) will thank you for.
+* https://github.com/obie/claude-on-rails[ClaudeOnRails] by
+  Obie Fernandez. A Rails gem that provisions a pre-wired
+  `CLAUDE.md`, a swarm of specialised agents, and optional
+  Rails MCP Server integration. Worth trying once you are
+  fluent in the hand-rolled workflow this chapter teaches.
