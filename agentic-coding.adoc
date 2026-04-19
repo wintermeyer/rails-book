@@ -1,0 +1,526 @@
+[[agentic-coding]]
+= Coding Rails With an AI Agent
+
+Between the fifth and eighth major versions of Ruby on Rails a
+quiet revolution happened: AI coding agents went from
+"interesting toy" to "the environment most Rails developers now
+work in". A book that teaches Rails in 2026 can no longer
+pretend they don't exist.
+
+This chapter is not "how to prompt". Prompts go stale fast — the
+tool you use next year will understand you better than the one
+you use today. What doesn't go stale is the workflow: what to
+feed an agent, how to verify what it produced, how to keep the
+blast radius small when it inevitably gets something wrong.
+
+WARNING: Do the xref:ruby-basics.adoc#ruby-basics[Ruby Basics]
+         and xref:first-steps-with-rails.adoc#first-steps-with-rails[First Steps]
+         chapters by hand first. If you let an agent drive
+         while you're learning the language, you end up
+         shipping code you don't understand — and when it
+         breaks at 3 AM, nobody on your team can read it
+         either. Pick up the fundamentals first, _then_ use an
+         agent to go faster.
+
+[[why-rails-good-fit]]
+== Why Rails Is a Particularly Good Fit
+
+Three properties of Rails make it unusually friendly territory
+for AI agents:
+
+* *Convention over configuration.* An agent asked to "add a
+  Product model" knows the controller goes in
+  `app/controllers/products_controller.rb`, the model goes in
+  `app/models/product.rb`, the test goes in
+  `test/models/product_test.rb` and the migration goes in
+  `db/migrate/`. There is exactly one right answer to where
+  every piece lives. An equivalent task in a bespoke Node
+  microservice might have ten plausible answers.
+* *The test suite as an executable spec.* `bin/rails test` is
+  a single command that tells the agent _did I break anything
+  that used to work?_ That feedback loop is the single biggest
+  multiplier for agent productivity. Rails apps that already
+  have a respectable test suite are a delight to work on with
+  an agent; apps without one are frustrating.
+* *Hotwire shrinks the JavaScript.* Most Rails 8 features are
+  pure Ruby because Turbo and Stimulus do the browser side
+  for you. Agents handle Ruby far better than they handle
+  hand-rolled JavaScript state machines. Every feature you can
+  keep on the server is a feature you can ship faster.
+
+== Pick a Tool
+
+For the rest of this chapter I'll use *Claude Code* as the
+concrete example. It's a terminal-native agent — you run
+`claude` in your project directory and it can read and edit
+files, run commands, and check results. The principles carry
+over to any of the other well-known agents:
+
+* https://cursor.sh[Cursor] and https://codeium.com/windsurf[Windsurf]
+  if you prefer an editor that's an agent.
+* https://github.com/features/copilot[GitHub Copilot] for
+  inline completions plus a chat mode.
+* https://aider.chat[Aider] if you want a small open-source
+  terminal agent.
+
+Pick whichever lets you read the diff before accepting an
+edit. The specific product matters less than your discipline
+about _verifying_ what it produces.
+
+[[feed-the-context]]
+== Feed the Agent Context
+
+The biggest single factor in getting useful output is what you
+feed the agent. Rails gives you a lot of context for free.
+
+[[claudemd]]
+=== CLAUDE.md
+
+Claude Code reads a file called `CLAUDE.md` at the root of
+your project on every session. Cursor has a similar file at
+`.cursor/rules/*.mdc`; Copilot uses
+`.github/copilot-instructions.md`. Whichever tool you use, a
+short project-specific preamble pays for itself many times
+over.
+
+Here's a minimal one for a fresh Rails 8 app:
+
+[source,markdown]
+.CLAUDE.md
+----
+# Project
+
+A Ruby on Rails 8.1 application. Ruby 4.0, SQLite in
+development and production, Solid Queue / Solid Cache /
+Solid Cable.
+
+## Conventions
+
+- Always use `bin/rails`, never `rails`.
+- Run `bin/rails test` before declaring a change complete.
+- System tests use headless Chrome via Cuprite.
+- Use Turbo/Hotwire for interactivity. Only add a Stimulus
+  controller when the behaviour is genuinely client-side.
+- `button_to` for destructive actions, never
+  `link_to ..., method: :delete`.
+- Prefer `params.expect(...)` over
+  `params.require(...).permit(...)`.
+- New migrations inherit from `ActiveRecord::Migration[8.1]`.
+
+## Do not
+
+- Edit `db/schema.rb` by hand. Write a migration instead.
+- Commit `config/master.key` or anything containing real
+  credentials.
+- Skip or disable tests. If a test is wrong, fix it; if the
+  code is wrong, fix the code.
+----
+
+That file is the cheapest investment in code quality you'll
+make this year.
+
+[[inline-context]]
+=== Built-in Context Sources
+
+Anything the agent can run gives it context without you
+having to paste:
+
+[source,bash]
+----
+$ bin/rails routes
+$ bin/rails runner "puts User.column_names"
+$ cat db/schema.rb
+$ bin/rails test test/models/product_test.rb
+----
+
+Good agents will run these on their own once they know which
+ones exist. The `CLAUDE.md` above mentions `bin/rails test`
+explicitly; you can add a "Useful commands" section if your
+project has less obvious ones (`bin/jobs`,
+`bin/rails dev:cache`, whatever).
+
+[[verify]]
+== Verify, or You Didn't Do It
+
+This is the most important section in this chapter.
+
+Agents are trained to sound confident. They will happily tell
+you "the test suite passes" when what actually happened is
+they _wrote the tests_ but never _ran_ them. Your job is to
+distrust the summary and check the evidence:
+
+. *Run the tests yourself.* Not "the agent says they pass".
+  Run `bin/rails test` and watch the green line.
+. *Read the diff.* `git diff` before every commit. Every
+  line. If a hunk confuses you, ask the agent to explain it —
+  _before_ accepting.
+. *Open the page in a browser.* Type checkers and test
+  suites prove correctness of code. They do not prove
+  correctness of features. For anything user-visible, look
+  at it.
+. *Stage in hunks you've reviewed.* `git add -p` walks you
+  through each change and asks "keep?". Use it.
+
+TIP: I have a small shell alias `glog` for `git log --oneline
+     -20` and I run it after every agent-assisted session.
+     Five commits of "_WIP_", "_more WIP_", "_actually fix
+     it_", "_revert_" is a signal the loop needs tightening,
+     not a badge of honour.
+
+[[small-steps]]
+== Small Reversible Steps
+
+The TDD loop the book teaches in
+xref:test-driven-development.adoc#tests[Tests] is exactly
+the loop you want with an agent, only faster:
+
+. Write (or have the agent write) a failing test that
+  describes the behaviour.
+. Ask the agent to make it pass — _and only that_.
+. Run the tests.
+. Read the diff.
+. Commit.
+
+A commit per logical step keeps `git revert` a cheap
+insurance policy. When an agent takes a wrong turn two hours
+in, a `git reset --hard HEAD~3` costs you three small steps,
+not a day.
+
+For migrations specifically: always `bin/rails db:migrate` to
+run them and `bin/rails db:rollback` to reverse. Never let an
+agent hand-edit `db/schema.rb` — that file is the output, not
+the input.
+
+[[real-example]]
+== A Real Example: Claude Code, End to End
+
+Here is an actual session, warts and all, adding a "published"
+flag to a blog. I'm using Claude Code in a fresh Rails 8 app
+generated with `rails new blog && cd blog && bin/rails generate
+scaffold post title body:text`.
+
+=== Setup
+
+First, I create `CLAUDE.md` as shown above. Then I start the
+agent in the project directory:
+
+[source,bash]
+----
+$ claude
+> /init
+----
+
+`/init` asks Claude to read the project and summarise its
+understanding. This is a good sanity check that it's seeing
+what I expect.
+
+=== The Ask
+
+I want posts to default to _draft_ and only be listed on the
+public index when `published_at` is set. My prompt:
+
+[quote]
+____
+Add a `published_at` datetime column to Post (default null).
+Add a `Post.published` scope that returns rows where
+`published_at <= Time.current`. Have the index action return
+only published posts for anonymous visitors; authors keep
+seeing everything. Write a model test that proves the scope,
+and a controller test that proves the visibility rule.
+____
+
+Note three things about that prompt:
+
+. *One user-visible behaviour change.* Not "build my whole
+  CMS" — a single feature small enough to review in one
+  sitting.
+. *The exact schema change.* No ambiguity about column name
+  or type.
+. *Specifies the tests to write.* The agent will be measured
+  by a test it wrote, so the loop closes on itself.
+
+=== What Claude Did
+
+Claude came back with a plan, then asked to proceed. I said
+yes, and it:
+
+. Ran `bin/rails generate migration AddPublishedAtToPosts
+  published_at:datetime`.
+. Edited `app/models/post.rb` to add `scope :published, -> {
+  where("published_at <= ?", Time.current) }`.
+. Edited `app/controllers/posts_controller.rb` — the `index`
+  action now asks `current_user` and falls back to the
+  published scope when nobody is logged in.
+. Wrote `test/models/post_test.rb` with three tests: one
+  unpublished post, one published post, one scheduled-future
+  post.
+. Wrote `test/controllers/posts_controller_test.rb` additions
+  checking each case.
+. Ran `bin/rails db:migrate && bin/rails test`.
+
+Final line of its output: _"All 8 tests pass."_
+
+=== What I Did Next
+
+I did not believe it. I ran the tests myself:
+
+[source,bash]
+----
+$ bin/rails test
+Running 8 tests in a single process (parallelization threshold is 50)
+Run options: --seed 41230
+
+# Running:
+
+........
+
+Finished in 0.312s, 25.6 runs/s, 38.5 assertions/s.
+
+8 runs, 12 assertions, 0 failures, 0 errors, 0 skips
+----
+
+Good. Then I read the diff:
+
+[source,bash]
+----
+$ git diff --stat
+ app/controllers/posts_controller.rb            |  6 +-
+ app/models/post.rb                             |  2 +
+ db/migrate/20260419_add_published_at_to_posts.rb | 5 +++
+ db/schema.rb                                   |  3 +-
+ test/controllers/posts_controller_test.rb      | 22 ++++-
+ test/models/post_test.rb                       | 18 ++++
+ 6 files changed, 50 insertions(+), 6 deletions(-)
+----
+
+Fifty lines across six files. I `git diff`ed each file.
+
+Three things jumped out:
+
+. `Time.current` — _good_, that's the Rails time-zone-aware
+  version, not plain `Time.now`.
+. The scope used a string fragment (`"published_at <= ?",
+  Time.current`). I prefer hash conditions when possible, so
+  I asked Claude to change it to
+  `where(published_at: ..Time.current)`. It did, tests still
+  passed, I re-diffed.
+. The controller test logged in a fake user with
+  `sign_in(users(:one))`. But I hadn't added authentication
+  yet — there is no `sign_in` helper in this app. I asked
+  Claude to stub it with a `session[:user_id]`-based helper.
+  It produced a helper, the tests passed, and I re-diffed.
+
+Issue #3 is the classic agent failure mode: it pattern-
+matched "testing authenticated access" onto the Devise-style
+`sign_in` helper, which this app does not have. Running the
+tests caught it — they failed with
+`NoMethodError: undefined method 'sign_in'`. If I had only
+trusted Claude's "All 8 tests pass" claim I would have missed
+it, because _the first time_ Claude ran the tests it wrote
+the helper inline and that worked. The second time, after I
+rejected the helper, the tests told the truth.
+
+=== Committing
+
+One feature, one commit. The agent drafted the message; I
+edited it down:
+
+[source,bash]
+----
+$ git commit -m "Add published_at to Post with public/draft split"
+----
+
+=== The Takeaway
+
+Fifteen minutes for something I would have spent forty-five
+minutes on by hand — and more importantly, the quality is
+_higher_ than if I had rushed it myself, because the agent
+wrote tests I would have skipped.
+
+The _only_ reason that math works is that I did the
+verification. Without the verification, the bug in the
+controller test would have sat in main for a week and blown
+up in CI on a Friday.
+
+[[prompt-patterns]]
+== Prompt Patterns That Work With Rails
+
+A handful of Rails-shaped tasks map very cleanly to prompts.
+Most of these also appear as sidebars in the relevant chapter
+later in the book.
+
+=== Scaffold, Then Modify
+
+[quote]
+____
+`bin/rails generate scaffold Product name price:decimal{7,2}`,
+add a `validates :name, presence: true, uniqueness: true`, and
+a model test that proves both conditions.
+____
+
+Agents are excellent at "run one of the known generators,
+then make small edits". The generator is deterministic; the
+agent only has to do the small part.
+
+Verify: `bin/rails test test/models/product_test.rb`.
+
+=== Migration + Model + Fixtures + Test
+
+[quote]
+____
+Add a `status` string column to Order with default "pending"
+and an index. Define an `enum :status, %w[pending paid
+refunded]`. Update `test/fixtures/orders.yml` so each fixture
+has an explicit status. Write one model test per enum
+transition.
+____
+
+This is a single feature that touches four files and will
+go wrong in four different ways if you split it.
+
+Verify: run the migration, run the test, check `db/schema.rb`.
+
+=== Refactor a Fat Controller
+
+[quote]
+____
+`CheckoutController#create` is 80 lines. Extract the ordering
+logic into a plain Ruby object at
+`app/services/place_order.rb`. Preserve all existing
+controller tests. Add unit tests for the new object.
+____
+
+The important word is "preserve" — you are instructing the
+agent to keep the test suite as a _contract_ it may not break.
+
+Verify: test suite still green; controller noticeably smaller;
+new file is independently testable (no `Rails.application`
+references).
+
+=== Extract Hard-Coded Strings Into I18n
+
+[quote]
+____
+Grep all `.html.erb` files in `app/views/` for user-visible
+English strings. Replace each one with `t("<key>")` and add
+the key to `config/locales/en.yml`. Keep keys descriptive
+(`posts.index.empty_state`, not `msg1`).
+____
+
+An LLM is perfect at this — the work is mechanical but
+tedious.
+
+Verify: `grep -r '[A-Z][a-z][a-z]' app/views/` should come up
+almost empty; the app still renders.
+
+=== Plan a Rails Minor Upgrade
+
+[quote]
+____
+Read the Rails 8.1 upgrade notes at
+https://guides.rubyonrails.org/upgrading_ruby_on_rails.html#upgrading-from-rails-8-0-to-rails-8-1,
+run `bin/rails app:update`, review every
+`config/**/*.rb` change it proposes, and write me a bulleted
+list of what's changing, grouped by "definitely accept",
+"accept with edits", and "reject".
+____
+
+You still review every change. The agent saves you the work
+of _reading_ the notes end-to-end.
+
+Verify: `bin/rails test`, `bin/rails test:system`, and boot
+the app.
+
+[[failure-modes]]
+== Common Failure Modes
+
+Patterns I've seen over and over. Learn to smell them.
+
+=== Inventing Methods That Don't Exist
+
+The agent writes `Post.order_by_published_at_desc` (not a
+real method) or references a gem API that was removed two
+versions ago.
+
+*Smell:* the test fails with `NoMethodError` on an API you
+don't recognise.
+
+*Cure:* read the actual Rails guide or the `ri` output for
+the method. Push back on the agent with the correct name.
+
+=== Re-Introducing Deprecated Patterns
+
+You say "add a form" and the agent reaches for `form_for` or
+`params.require(:foo).permit(...)` because its training data
+has more Rails 5.2 than Rails 8 code.
+
+*Smell:* deprecation warnings in the test output.
+
+*Cure:* put the Rails version in `CLAUDE.md` explicitly, and
+list the modern APIs you prefer.
+
+=== Over-Engineering
+
+A three-line helper gets wrapped in a service object, a
+policy class, and a concern.
+
+*Smell:* the diff is ten times the size of the feature
+request.
+
+*Cure:* explicitly say "the simplest thing that could work".
+Keep asking "why do we need that abstraction?".
+
+=== Silently Disabling Tests
+
+The agent can't figure out why a test fails so it adds
+`skip` or deletes the test.
+
+*Smell:* fewer assertions than before in the test summary; a
+new `skip` or `pending` appears in the diff.
+
+*Cure:* diff every commit. "skip" and "pending" should never
+appear without a comment explaining why.
+
+=== Committing Secrets
+
+The agent helpfully pastes your `RAILS_MASTER_KEY` into a
+`README.md` while writing setup instructions.
+
+*Smell:* `git diff` shows a long random-looking string
+anywhere other than `.gitignore`d files.
+
+*Cure:* `.gitignore` from the start, `git-secrets` or
+similar scanners in CI, and review every `git add`.
+
+[[when-not]]
+== When Not To Use An Agent
+
+Short honest list.
+
+* *When you're learning Rails for the first time.* Do the
+  xref:ruby-basics.adoc#ruby-basics[Ruby Basics] and
+  xref:first-steps-with-rails.adoc#first-steps-with-rails[First Steps]
+  chapters by hand. The fastest way to a long career is
+  to understand what the agent is doing.
+* *When the task is five seconds of typing.* Overhead of
+  explaining exceeds the work. Just type it.
+* *For a one-off exploration in a throwaway console.* You
+  already have `bin/rails console`. Use it.
+* *When the stakes are high and the domain is subtle.*
+  Touching money, auth, or anything regulatory? An agent is
+  still fine as a pair, but the human reviewer must
+  understand the domain, not just the code.
+
+[[further-reading-agentic]]
+== Further Reading
+
+* The Rails guides — https://guides.rubyonrails.org — remain
+  the canonical source of truth that every agent was trained
+  on. Reading them once pays back forever.
+* Anthropic's prompt engineering guide —
+  https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview.
+  Tool-specific but the principles are transferrable.
+* The conventional-commits spec —
+  https://www.conventionalcommits.org — gives you a habit
+  for writing commit messages that future agents (and
+  future-you) will thank you for.

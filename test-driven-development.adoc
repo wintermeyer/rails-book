@@ -772,6 +772,35 @@ controllers, helpers and models. We have a total of 63 LOC for
 tests. This gives us a test ratio of 1 to 0.7. Of course this
 does not say anything about the _quality_ of the tests.
 
+.Prompt pattern: TDD with an AI agent
+[sidebar]
+****
+The red-green-refactor loop is exactly the loop you want an
+agent to drive. It's self-verifying: every step either makes
+a failing test pass or breaks nothing that worked before.
+
+A typical Claude Code session on a feature I haven't built
+yet:
+
+[quote]
+____
+1. Write a failing test in `test/models/post_test.rb` that
+   asserts a `Post.popular` scope returns posts with more
+   than 10 comments.
+2. Run `bin/rails test test/models/post_test.rb` to confirm
+   it's red.
+3. Implement the scope in `app/models/post.rb`.
+4. Run the same test again and show me it's green.
+5. Don't commit yet — I'll review the diff first.
+____
+
+Note the explicit "don't commit yet". Agents that are good
+at committing are also good at committing things you
+haven't reviewed. Keep the human in the loop for step 6. See
+xref:agentic-coding.adoc#agentic-coding[Coding Rails With
+an AI Agent] for the end-to-end story.
+****
+
 [[more-on-testing]]
 == More on Testing
 

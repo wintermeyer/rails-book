@@ -717,6 +717,32 @@ Application in Only One Language: German"]. But we need to define YAML
 language files for all required languages and tell the Rails application
 which language it should currently use. We do this via `I18n.locale`.
 
+.Prompt pattern: extract hard-coded strings into I18n
+[sidebar]
+****
+Retrofitting i18n onto an existing app is tedious, mechanical
+work — which is exactly the kind of work an AI agent is good
+at. A prompt that works well:
+
+[quote]
+____
+Find every hard-coded user-visible English string in
+`app/views/**/*.html.erb`. Replace each with `t("<key>")`,
+where the key is descriptive and namespaced by the view path
+(for example `posts.index.empty_state`). Add the keys to
+`config/locales/en.yml`. Then translate the same keys to
+German in `config/locales/de.yml`. Don't touch HTML markup.
+____
+
+Verify: `grep -rE '>[A-Z][a-z]+[a-z]' app/views/` should
+come up nearly empty; boot the app and click through a few
+pages; check that `I18n.locale = :de` renders German.
+Translation quality will need a second human pass for any
+marketing copy, but the scaffolding work is done. See
+xref:agentic-coding.adoc#agentic-coding[Coding Rails With
+an AI Agent].
+****
+
 [[using-i18n.locale-for-defining-the-default-language]]
 === Using I18n.locale for Defining the Default Language
 

@@ -404,6 +404,29 @@ We could also have done all of this manually. Scaffolding is merely
 an automatism that does the work for us for some basic things. This
 assumes that you always want to view, create and delete records.
 
+.Prompt pattern: scaffold, then modify
+[sidebar]
+****
+The scaffold generator and an AI agent are a natural pair. The
+generator does the deterministic work, the agent does the tiny
+custom work on top. A prompt that works well in Claude Code
+(or Cursor, or any decent agent):
+
+[quote]
+____
+`bin/rails generate scaffold Product name price:decimal{7,2}`,
+then add `validates :name, presence: true, uniqueness: true` to
+the model plus a model test that proves both conditions. Run
+`bin/rails db:migrate && bin/rails test` and show me the result.
+____
+
+Verify: read the diff of every file, then re-run
+`bin/rails test` yourself. The agent may claim it ran the tests;
+trust the green line on your own terminal, not the claim. See
+xref:agentic-coding.adoc#agentic-coding[Coding Rails With an AI
+Agent] for the full workflow.
+****
+
 Without diving too deeply into the topic of routes, let's just have a
 quick look at the available routes for our example. You need to run
 `bin/rails routes`:

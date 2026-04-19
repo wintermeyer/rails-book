@@ -4030,6 +4030,34 @@ created in the directory `db/migrate/`. I am going to show you the
 principle using the example of a shop application. Let's create one
 first:
 
+.Prompt pattern: migration + model + fixtures + test in one go
+[sidebar]
+****
+A schema change typically touches four files: the migration,
+the model, the fixtures, and at least one test. Doing all four
+in a single agent round-trip is much less error-prone than
+splitting them.
+
+Prompt for Claude Code (or equivalent):
+
+[quote]
+____
+Add a `status` string column to `Order` with default
+"pending" and an index. Define `enum :status, %w[pending
+paid refunded]` on the model. Update
+`test/fixtures/orders.yml` so every fixture has an explicit
+status. Write a model test per enum transition. Then run
+`bin/rails db:migrate && bin/rails test`.
+____
+
+Verify: run the migration yourself, check `db/schema.rb`
+matches the intent, re-run `bin/rails test`. Never let an
+agent hand-edit `db/schema.rb` — that file is the output of
+migrations, not the input. See
+xref:agentic-coding.adoc#agentic-coding[Coding Rails With
+an AI Agent].
+****
+
 [source,bash]
 ----
 $ rails new shop

@@ -179,6 +179,37 @@ path as the recommended default because it requires less
 sysadmin and because the whole Rails team uses it to deploy 37signals'
 own Rails applications.
 
+.Prompt pattern: plan a Rails minor-version upgrade
+[sidebar]
+****
+Every Rails minor release brings new defaults, a handful of
+deprecations, and a `bin/rails app:update` that proposes a
+batch of config changes. Reading the upgrade guide end-to-end
+takes an hour; having an agent do the reading and produce a
+summary takes five minutes, and you still review every file
+change.
+
+Prompt:
+
+[quote]
+____
+Read the Rails 8.1 upgrade notes at
+https://guides.rubyonrails.org/upgrading_ruby_on_rails.html,
+then run `bin/rails app:update`. For every change it
+proposes in `config/` or `bin/`, give me a three-column
+summary: file, what changes, and whether I should accept
+as-is, accept with edits, or reject. Do not commit
+anything.
+____
+
+Verify: `bin/rails test`, `bin/rails test:system`, boot the
+app and click the critical paths. See
+xref:agentic-coding.adoc#agentic-coding[Coding Rails With
+an AI Agent] for the broader workflow. Never skip the "boot
+the app" step on a minor upgrade — the test suite doesn't
+catch initializer problems.
+****
+
 [[further-reading-deployment]]
 == Further Reading
 

@@ -28,6 +28,8 @@ include::ruby-basics.adoc[]
 
 include::first-steps-with-rails.adoc[]
 
+include::agentic-coding.adoc[]
+
 include::activerecord.adoc[]
 
 include::scaffolding-and-rest.adoc[]
