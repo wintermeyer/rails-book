@@ -2,7 +2,7 @@ name: Build book
 
 # PR-only workflow: builds the book on a GitHub-hosted runner to catch
 # regressions before merge. Does not deploy. The deploy workflow runs
-# on push to main against the self-hosted `eliph` runner on bremen2.
+# on push to main against the self-hosted `books` runner on bremen2.
 
 on:
   pull_request:

@@ -69,7 +69,7 @@ build (optional — without this the UI bundle's default empty
 ## Deployment
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`, which
-runs on the dedicated self-hosted runner (label `eliph`) on bremen2.
+runs on the dedicated self-hosted runner (label `books`) on bremen2.
 The runner checks the repo out and executes `scripts/deploy.sh`:
 
 1. Activate mise (Node pinned via `.tool-versions` on the runner's

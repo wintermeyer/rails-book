@@ -9,11 +9,11 @@ permissions:
 
 jobs:
   deploy:
-    # Self-hosted runner registered on bremen2 under the `eliph` user,
-    # with label `eliph`. Shared with elixir-phoenix-ash; the book
+    # Self-hosted runner registered on bremen2 under the `books` user,
+    # with label `books`. Shared with elixir-phoenix-ash; the book
     # deploy is CPU-light and runs after Antora builds release their
     # lock, so there is no contention in practice.
-    runs-on: [self-hosted, eliph]
+    runs-on: [self-hosted, books]
 
     steps:
       - uses: actions/checkout@v4
