@@ -1,0 +1,633 @@
+@import "tailwindcss" source(none);
+@source "../partials/**/*.hbs";
+@source "../layouts/**/*.hbs";
+@source "../js/**/*.js";
+
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-serif: Georgia, "Times New Roman", Times, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --color-accent-light: oklch(52.77% 0.158 128.37);
+  --color-accent-dark: #c8f55a;
+  --color-surface-light: #fafafa;
+  --color-surface-dark: #0e0e0e;
+  --color-surface-panel-dark: #131313;
+  --color-ink-light: #171717;
+  --color-ink-dark: #f0ede6;
+}
+
+/* Highlight the current book's link in the shared book nav. The
+ * nav element carries data-book-current="phoenix" (stamped in by
+ * scripts/fetch-partials.sh), and each stack link carries
+ * data-stack="rails|phoenix|ruby|elixir". Keep the selector list in
+ * sync with learn-ruby-on-rails-book/assets/chrome.css. */
+@layer components {
+  [data-book-current="rails"] [data-stack="rails"],
+  [data-book-current="phoenix"] [data-stack="phoenix"],
+  [data-book-current="ruby"] [data-stack="ruby"],
+  [data-book-current="elixir"] [data-stack="elixir"] {
+    @apply font-semibold text-lime-700 dark:text-[#c8f55a];
+  }
+}
+
+@layer base {
+  html {
+    scroll-padding-top: 4rem;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-neutral-50 font-sans text-neutral-900 antialiased;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: #0e0e0e;
+      color: #f0ede6;
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-tight;
+    font-weight: 400;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  code, kbd, pre, samp {
+    @apply font-mono;
+  }
+
+  hr {
+    @apply border-neutral-200 dark:border-neutral-800;
+  }
+
+  /* Screen reader only helper that Antora partials rely on */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Page shell — Antora wraps everything in <body class="article"> and emits
+   <header class="header">, <div class="body"> (nav + main), <footer>.
+--------------------------------------------------------------------------- */
+
+body.article {
+  @apply flex min-h-screen flex-col;
+}
+
+body.article > .body {
+  @apply mx-auto flex w-full max-w-[88rem] flex-1 gap-8 px-4 sm:px-8 lg:gap-12 lg:px-10;
+}
+
+/* ---------------------------------------------------------------------------
+   Left sidebar — book TOC (nav.hbs + nav-menu.hbs + nav-tree.hbs).
+--------------------------------------------------------------------------- */
+
+.nav-container {
+  @apply w-full shrink-0 lg:w-64 lg:pt-6;
+}
+
+.nav-container:not(.is-active) {
+  @apply hidden lg:block;
+}
+
+.nav {
+  @apply lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pt-2;
+}
+
+.nav .panels {
+  @apply flex flex-col gap-8;
+}
+
+.nav-list {
+  @apply m-0 list-none p-0;
+}
+
+.nav-menu > .nav-list > .nav-item {
+  @apply mt-5;
+}
+
+.nav-menu > .nav-list > .nav-item:first-child {
+  @apply mt-0;
+}
+
+.nav-item {
+  @apply relative m-0 py-0.5 pl-4;
+}
+
+.nav-item[data-depth="0"] > .nav-link,
+.nav-item[data-depth="0"] > .nav-text {
+  @apply font-mono text-[11px] font-normal uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400;
+}
+
+.nav-item[data-depth="0"] {
+  @apply pl-0;
+}
+
+.nav-link,
+.nav-text {
+  @apply block py-1 text-[14px] leading-6 text-neutral-600 no-underline hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-[#f0ede6];
+}
+
+.nav-item.is-current-page > .nav-link {
+  @apply text-[#65a30d] dark:text-[#c8f55a];
+}
+
+.nav-item.is-current-page {
+  @apply before:absolute before:top-1 before:bottom-1 before:left-0 before:w-[2px] before:bg-[#65a30d] before:content-[''] dark:before:bg-[#c8f55a];
+}
+
+/* First-pass UX: show the full TOC at all times. The toggle buttons stay
+   in the DOM (the default JS inserts them) but are visually hidden so
+   the tree is never collapsed. */
+.nav-item-toggle {
+  @apply hidden;
+}
+
+/* nav-explore lives below nav-menu (lists all components). Hidden for a single-component site. */
+.nav-panel-explore .components {
+  @apply hidden;
+}
+
+.nav-menu-toggle {
+  @apply hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Article kicker — mobile-only strip above the article h1 that hosts the
+   sidebar toggle. On desktop the sidebar is always visible, so the kicker
+   collapses to nothing.
+--------------------------------------------------------------------------- */
+
+.article-kicker {
+  @apply mb-5 flex items-center gap-3 lg:mb-0 lg:hidden;
+}
+
+.nav-toggle {
+  @apply relative h-11 w-11 shrink-0 cursor-pointer rounded border-0 bg-neutral-100 text-neutral-900 lg:hidden dark:bg-neutral-900 dark:text-neutral-100;
+}
+
+.nav-toggle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  background-color: currentColor;
+  mask: url("../img/menu.svg") center / contain no-repeat;
+  -webkit-mask: url("../img/menu.svg") center / contain no-repeat;
+}
+
+/* When the nav overlay is open on mobile, the toggle floats above the
+   overlay so the user can always reach it to close. */
+.nav-toggle.is-active {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 30;
+  background-color: #fafafa;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+
+.nav-toggle.is-active::before {
+  mask: url("../img/close.svg") center / contain no-repeat;
+  -webkit-mask: url("../img/close.svg") center / contain no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-toggle.is-active {
+    background-color: #131313;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Main article — .doc is the AsciiDoc content wrapper.
+--------------------------------------------------------------------------- */
+
+main.article {
+  @apply flex min-w-0 flex-1 flex-col pb-16;
+}
+
+main.article > .content {
+  @apply flex min-w-0 flex-1 flex-col gap-10 px-0 pt-6 sm:px-6 sm:pt-8 lg:flex-row lg:items-start lg:px-2;
+}
+
+.doc {
+  @apply min-w-0 flex-1;
+}
+
+.doc h1.page {
+  @apply mb-8 text-[clamp(28px,3.6vw,40px)] leading-[1.1] tracking-tight;
+}
+
+.doc h2 {
+  @apply mt-14 mb-4 text-[clamp(22px,3vw,34px)] leading-[1.15];
+}
+
+.doc h3 {
+  @apply mt-10 mb-3 text-[clamp(18px,2.4vw,24px)] leading-[1.2];
+}
+
+.doc h4 {
+  @apply mt-8 mb-2 text-lg;
+}
+
+.doc p,
+.doc ul,
+.doc ol,
+.doc dl {
+  @apply mb-5 text-[17px] leading-[1.75] text-neutral-700 dark:text-neutral-300;
+}
+
+.doc ul,
+.doc ol {
+  @apply ml-6 list-outside;
+}
+
+.doc ul {
+  @apply list-disc;
+}
+
+.doc ol {
+  @apply list-decimal;
+}
+
+.doc li {
+  @apply mb-2;
+}
+
+.doc li > p {
+  @apply mb-2;
+}
+
+.doc a {
+  @apply text-[#65a30d] underline decoration-[#65a30d]/40 underline-offset-[3px] hover:decoration-[#65a30d] dark:text-[#c8f55a] dark:decoration-[#c8f55a]/40 dark:hover:decoration-[#c8f55a];
+}
+
+/* Email addresses never wrap mid-address, even if they push the line
+   wrap point out. Applies globally (header, body, footer) so a mailto
+   link always renders as one uninterrupted token. */
+a[href^="mailto:"] {
+  white-space: nowrap;
+}
+
+.doc a.anchor {
+  @apply hidden;
+}
+
+.doc strong {
+  @apply font-semibold text-neutral-900 dark:text-[#f0ede6];
+}
+
+.doc em {
+  @apply italic;
+}
+
+.doc blockquote {
+  @apply my-6 border-l-2 border-neutral-300 pl-5 font-serif text-[17px] italic text-neutral-600 dark:border-neutral-700 dark:text-neutral-400;
+}
+
+/* Tables */
+.doc table {
+  @apply my-6 w-full border-collapse text-[15px];
+}
+
+.doc table.tableblock {
+  @apply my-6;
+}
+
+/* AsciiDoc wraps every table in `<div class="tableblock">`; let wide
+   tables scroll horizontally instead of breaking the page layout on
+   narrow screens. */
+.doc .tableblock {
+  @apply -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0;
+}
+
+.doc .tableblock > table {
+  @apply min-w-full;
+}
+
+.doc th {
+  @apply border-b-2 border-neutral-300 px-3 py-2 text-left font-mono text-[11px] tracking-[0.15em] text-neutral-600 uppercase dark:border-neutral-700 dark:text-neutral-400;
+  font-weight: 500;
+}
+
+.doc td {
+  @apply border-b border-neutral-200 px-3 py-2 align-top text-neutral-700 dark:border-neutral-800 dark:text-neutral-300;
+}
+
+/* Inline code + code blocks */
+.doc code {
+  @apply rounded bg-neutral-100 px-[0.35em] py-[0.1em] font-mono text-[0.92em] text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200;
+  overflow-wrap: anywhere;
+}
+
+.doc p,
+.doc li {
+  overflow-wrap: break-word;
+}
+
+.doc pre {
+  @apply my-6 overflow-x-auto rounded-sm bg-neutral-900 p-4 font-mono text-[13px] leading-[1.6] text-neutral-100 ring-1 ring-neutral-200 sm:p-5 sm:text-[14px] dark:bg-[#131313] dark:ring-neutral-800;
+}
+
+.doc pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+
+.doc .listingblock,
+.doc .literalblock {
+  @apply relative my-6;
+}
+
+.doc .listingblock > .title,
+.doc .imageblock > .title,
+.doc .tableblock > caption {
+  @apply mb-2 font-mono text-[11px] tracking-[0.15em] text-neutral-500 uppercase dark:text-neutral-400;
+  overflow-wrap: anywhere;
+}
+
+.doc .source-toolbox {
+  @apply absolute top-2 right-2 flex items-center gap-2 text-[11px] text-neutral-400;
+}
+
+.doc .source-lang {
+  @apply font-mono uppercase tracking-[0.15em];
+}
+
+.doc .copy-button {
+  @apply relative cursor-pointer border border-neutral-700 bg-neutral-800/80 p-1.5 text-neutral-300 hover:bg-neutral-700 hover:text-white;
+  border-radius: 3px;
+}
+
+.doc .copy-icon {
+  @apply block h-4 w-4;
+  filter: invert(1) opacity(0.7);
+}
+
+.doc .copy-toast {
+  @apply absolute top-full right-0 mt-1 hidden rounded bg-[#c8f55a] px-2 py-0.5 font-mono text-[10px] tracking-widest text-black uppercase;
+}
+
+.doc .copy-button.clicked .copy-toast {
+  @apply block;
+}
+
+/* Admonitions (NOTE, TIP, WARNING, CAUTION, IMPORTANT). AsciiDoc emits
+   <td class="icon"><i class="fa icon-note" title="Note"></i> plus a
+   content cell. We don't ship FontAwesome, so we show the icon's title
+   attribute as a mono uppercase label instead. */
+.doc .admonitionblock {
+  @apply my-6 overflow-hidden rounded-sm border-l-2 border-neutral-300 bg-neutral-100/60 dark:border-neutral-700 dark:bg-neutral-900/60;
+}
+
+.doc .admonitionblock > table {
+  @apply my-0 w-full;
+}
+
+.doc .admonitionblock td {
+  @apply border-0 p-4;
+}
+
+.doc .admonitionblock .icon {
+  @apply w-20 pt-5 pl-4 align-top sm:w-28 sm:pl-5;
+}
+
+.doc .admonitionblock .icon i {
+  font-style: normal;
+}
+
+.doc .admonitionblock .icon i::before {
+  content: attr(title);
+  @apply block font-mono text-[11px] font-normal tracking-[0.2em] text-neutral-600 uppercase dark:text-neutral-400;
+}
+
+.doc .admonitionblock.note { @apply border-[#65a30d] dark:border-[#c8f55a]; }
+.doc .admonitionblock.note .icon i::before { @apply text-[#65a30d] dark:text-[#c8f55a]; }
+
+.doc .admonitionblock.tip { @apply border-sky-600 dark:border-sky-400; }
+.doc .admonitionblock.tip .icon i::before { @apply text-sky-600 dark:text-sky-400; }
+
+.doc .admonitionblock.warning,
+.doc .admonitionblock.caution { @apply border-amber-600 dark:border-amber-400; }
+.doc .admonitionblock.warning .icon i::before,
+.doc .admonitionblock.caution .icon i::before { @apply text-amber-600 dark:text-amber-400; }
+
+.doc .admonitionblock.important { @apply border-rose-600 dark:border-rose-400; }
+.doc .admonitionblock.important .icon i::before { @apply text-rose-600 dark:text-rose-400; }
+
+.doc .admonitionblock td.content {
+  @apply pt-4 pr-4 pb-4 pl-0 sm:pr-5;
+}
+
+.doc .admonitionblock td.content > .title {
+  @apply mb-2 font-serif text-lg leading-snug;
+}
+
+.doc .admonitionblock td.content > :last-child {
+  @apply mb-0;
+}
+
+/* Images + figures */
+.doc .imageblock,
+.doc figure {
+  @apply my-6;
+}
+
+.doc .imageblock img,
+.doc figure img {
+  @apply h-auto max-w-full;
+}
+
+.doc .imageblock .title {
+  @apply mt-2;
+}
+
+/* Horizontal rule */
+.doc hr {
+  @apply my-10;
+}
+
+/* Callout numbers next to code lines. AsciiDoc emits both
+   `<i class="conum" data-value="1"></i>` and a `<b>(1)</b>` text
+   fallback — hide the bold fallback so only the pill renders. */
+.doc .conum[data-value] {
+  @apply ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#65a30d] px-1 font-mono text-[11px] font-bold not-italic text-white dark:bg-[#c8f55a] dark:text-[#0e0e0e];
+}
+
+.doc .conum[data-value]::after {
+  content: attr(data-value);
+}
+
+.doc .conum[data-value] + b {
+  display: none;
+}
+
+.doc .colist {
+  @apply my-4 text-[15px];
+}
+
+.doc .colist td {
+  @apply py-1 align-top;
+}
+
+.doc .colist > table > tbody > tr > td:first-child {
+  @apply pr-3;
+}
+
+/* ---------------------------------------------------------------------------
+   Article footer — Edit this Page link sits at the very end of the
+   article, muted and unobtrusive.
+--------------------------------------------------------------------------- */
+
+.article-footer {
+  @apply mt-16 border-t border-neutral-200 pt-6 dark:border-neutral-800;
+}
+
+.edit-this-page {
+  @apply font-mono text-[11px] tracking-[0.15em] uppercase;
+}
+
+.edit-this-page a {
+  @apply text-neutral-500 no-underline hover:text-[#65a30d] dark:text-neutral-400 dark:hover:text-[#c8f55a];
+}
+
+/* ---------------------------------------------------------------------------
+   Pagination (prev/next at the bottom of each page).
+
+   Mobile-first: two stacked full-width cards. From sm up they sit
+   side-by-side. Each card has a muted overline ("Previous"/"Next") and
+   the page title below it, so the reader sees *where* each link goes
+   before tapping.
+--------------------------------------------------------------------------- */
+
+.pagination {
+  @apply mt-14 grid gap-3 border-t border-neutral-200 pt-6 sm:grid-cols-2 dark:border-neutral-800;
+}
+
+.pagination a {
+  @apply flex min-h-[4rem] flex-col justify-center rounded-sm border border-neutral-200 px-4 py-3 text-neutral-700 no-underline transition hover:border-[#65a30d] hover:text-[#65a30d] dark:border-neutral-800 dark:text-neutral-300 dark:hover:border-[#c8f55a] dark:hover:text-[#c8f55a];
+}
+
+.pagination .next {
+  @apply sm:col-start-2 sm:text-right;
+}
+
+/* First page has no previous — push the next link into its column. */
+.pagination:not(:has(.prev)) .next {
+  @apply col-start-1 sm:col-start-2;
+}
+
+.pagination .pagination-label {
+  @apply font-mono text-[11px] tracking-[0.2em] text-neutral-500 uppercase dark:text-neutral-400;
+}
+
+.pagination .pagination-title {
+  @apply mt-1 font-serif text-[17px] leading-snug;
+}
+
+/* ---------------------------------------------------------------------------
+   Right-hand TOC (toc.sidebar, rendered dynamically by site.js).
+--------------------------------------------------------------------------- */
+
+.toc.sidebar {
+  @apply hidden;
+}
+
+@media (min-width: 1024px) {
+  .toc.sidebar {
+    @apply block w-56 shrink-0 self-start;
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    order: 2;
+  }
+
+  .doc {
+    order: 1;
+  }
+}
+
+.toc-menu h3 {
+  @apply mb-3 font-mono text-[11px] font-normal tracking-[0.2em] text-neutral-500 uppercase dark:text-neutral-400;
+}
+
+.toc-menu ul {
+  @apply m-0 list-none border-l border-neutral-200 p-0 dark:border-neutral-800;
+}
+
+.toc-menu li {
+  @apply -ml-px border-l border-transparent;
+}
+
+.toc-menu li[data-level="1"] a {
+  @apply pl-3;
+}
+
+.toc-menu li[data-level="2"] a {
+  @apply pl-6;
+}
+
+.toc-menu li[data-level="3"] a {
+  @apply pl-9;
+}
+
+.toc-menu a {
+  @apply block py-1 text-[13px] leading-5 text-neutral-500 no-underline hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-[#f0ede6];
+}
+
+.toc-menu .is-active {
+  @apply border-l-2 border-[#65a30d] text-[#65a30d] dark:border-[#c8f55a] dark:text-[#c8f55a];
+}
+
+.toc.embedded {
+  @apply mb-8 border border-neutral-200 bg-neutral-100/60 p-4 lg:hidden dark:border-neutral-800 dark:bg-neutral-900/60;
+}
+
+/* ---------------------------------------------------------------------------
+   Mobile: when .nav-container.is-active, overlay the sidebar.
+--------------------------------------------------------------------------- */
+
+.is-clipped--nav {
+  overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+  .nav-container.is-active {
+    @apply fixed inset-0 z-20 block overflow-y-auto bg-neutral-50 px-6 pt-6 pb-10 dark:bg-[#0e0e0e];
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utility: hide for print — Antora uses .hide-for-print on chrome elements.
+--------------------------------------------------------------------------- */
+
+@media print {
+  .hide-for-print,
+  .nav-container,
+  header,
+  footer,
+  .toolbar,
+  .pagination,
+  .toc.sidebar {
+    display: none !important;
+  }
+}

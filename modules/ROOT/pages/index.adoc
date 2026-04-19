@@ -1,0 +1,29 @@
+= Learn Ruby on Rails
+Stefan Wintermeyer <sw@wintermeyer-consulting.de>
+
+The book you are about to read targets **Ruby 4.0** and
+**Ruby on Rails 8.1**. Every example has been re-run against these
+versions; screenshots come from fresh Rails 8 scaffolds. Chapters
+added for the 5.2 → 8.1 refresh cover Hotwire (Turbo + Stimulus),
+the built-in authentication generator, and the Solid trifecta
+(Solid Queue / Solid Cache / Solid Cable).
+
+Pick a chapter from the sidebar. I recommend reading in order, but
+each chapter stands on its own so you can skip ahead if a topic
+doesn't interest you.
+
+[[dedication]]
+== Dedication
+
+Für Oma und Opa.
+
+I dedicate this book to my grandparents.
+
+[[training]]
+== Ruby on Rails Training
+
+I offer remote and on-site Ruby on Rails training in English and
+German. Please contact me with background information (group size,
+location, preferred date) at
+mailto:sw@wintermeyer-consulting.de[sw@wintermeyer-consulting.de]
+to discuss details.

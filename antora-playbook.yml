@@ -1,0 +1,15 @@
+site:
+  title: Learn Ruby on Rails
+  url: https://wintermeyer-consulting.de/rails
+  start_page: book::index.adoc
+content:
+  sources:
+  - url: https://github.com/wintermeyer/learn-ruby-on-rails-book.git
+    branches: main
+ui:
+  bundle:
+    url: ./ui-bundle/build/ui-bundle.zip
+    snapshot: true
+  output_dir: antora-assets
+runtime:
+  fetch: true

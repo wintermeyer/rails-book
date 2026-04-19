@@ -1,0 +1,16 @@
+{{#if (or page.previous page.next)}}
+<nav class="pagination" aria-label="Page navigation">
+  {{#with page.previous}}
+  <a class="prev" href="{{{relativize ./url}}}" rel="prev">
+    <span class="pagination-label">← Previous</span>
+    <span class="pagination-title">{{{./content}}}</span>
+  </a>
+  {{/with}}
+  {{#with page.next}}
+  <a class="next" href="{{{relativize ./url}}}" rel="next">
+    <span class="pagination-label">Next →</span>
+    <span class="pagination-title">{{{./content}}}</span>
+  </a>
+  {{/with}}
+</nav>
+{{/if}}

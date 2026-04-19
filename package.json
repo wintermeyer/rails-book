@@ -1,13 +1,10 @@
 {
-  "name": "learn-ruby-on-rails-book-chrome",
+  "name": "learn-ruby-on-rails-book",
   "version": "1.0.0",
-  "description": "Tailwind build for the shared site chrome (nav + footer)",
   "private": true,
-  "scripts": {
-    "build:chrome": "tailwindcss -i assets/chrome.css -o output/chrome.css --minify"
-  },
+  "description": "Antora site generator for the Learn Ruby on Rails book",
   "devDependencies": {
-    "@tailwindcss/cli": "^4.0.0",
-    "tailwindcss": "^4.0.0"
+    "@antora/cli": "3.1.14",
+    "@antora/site-generator": "3.1.14"
   }
 }

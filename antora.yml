@@ -1,0 +1,6 @@
+name: book
+title: Learn Ruby on Rails
+version: ~
+start_page: ROOT:index.adoc
+nav:
+- modules/ROOT/nav.adoc

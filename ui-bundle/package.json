@@ -1,0 +1,20 @@
+{
+  "name": "elixir-phoenix-ash-ui",
+  "version": "1.0.0",
+  "description": "Antora UI bundle themed after wintermeyer-consulting.de",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build:copy": "node scripts/copy.mjs",
+    "build:css": "tailwindcss -i src/css/site.css -o build/bundle/css/site.css --minify",
+    "build:zip": "node scripts/zip.mjs",
+    "build": "npm run clean && npm run build:copy && npm run build:css && npm run build:zip",
+    "dev": "tailwindcss -i src/css/site.css -o build/bundle/css/site.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "archiver": "^7.0.1",
+    "tailwindcss": "^4.0.0"
+  }
+}

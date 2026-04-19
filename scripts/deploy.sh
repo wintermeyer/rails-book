@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
-# Deploy the Learn Ruby on Rails book to bremen2 under
+# Deploy the Learn Ruby on Rails book (Antora) to bremen2 under
 # /var/www/learn-ruby-on-rails-book/releases/<timestamp>/ and
 # atomically swap the `current` symlink.
 #
-# Runs on the `eliph` self-hosted GitHub Actions runner (same runner
-# that deploys elixir-phoenix-ash). Invoked from the actions/checkout
+# Runs on the `eliph` self-hosted GitHub Actions runner (dedicated
+# service `actions.runner.wintermeyer-learn-ruby-on-rails-book.
+# bremen2-eliph-rails-book`). Invoked from the actions/checkout
 # workdir as `./scripts/deploy.sh`.
-#
-# Tooling is provided by mise: Ruby for asciidoctor, Node for the
-# Tailwind chrome.css compile. Versions pinned in `.tool-versions`.
 
 set -euo pipefail
 
-# Activate mise so ruby / bundle / node / npm / npx resolve on the
-# non-interactive shell GitHub Actions spawns. `mise activate` only
-# wires the shim dir for interactive shells, so also prepend the
-# shim dir to PATH explicitly for this script.
+# Activate mise so node / npm / npx resolve on the non-interactive
+# shell GitHub Actions spawns. `mise activate` only wires the shim
+# dir via a precmd hook that never fires in this shell, so prepend
+# the shim dir to PATH directly.
 if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate bash)"
 elif [ -x "$HOME/.local/bin/mise" ]; then
@@ -41,40 +39,32 @@ flock -n 9 || { log "ERROR: another deploy is running"; exit 1; }
 REPO_DIR="$(pwd)"
 log "Repo: ${REPO_DIR}"
 
-# Let mise install the versions pinned in .tool-versions if they are
-# not already present on the runner. A no-op on subsequent deploys.
-# Non-fatal on failure — maybe the runner has the tools already or
-# the registry is flaky; we'll find out soon enough at the next step.
-#
-# ruby.compile=false pulls precompiled ruby binaries instead of
-# building from source, which dodges the libyaml-dev / psych
-# requirement on bremen2's Debian host.
+# mise install is non-fatal on failure: the runner most likely has
+# the pinned Node version already.
 if command -v mise >/dev/null 2>&1; then
-  mise settings ruby.compile=false 2>/dev/null || true
   mise install || log "WARN: mise install failed, proceeding with current PATH"
 fi
 
 log "Fetching latest nav + footer partials from wincon..."
 ./scripts/fetch-partials.sh
 
-log "Installing Ruby gems..."
-bundle config set --local path 'vendor/bundle'
-bundle install --quiet
+log "Building UI bundle..."
+( cd "${REPO_DIR}/ui-bundle" && npm ci --no-audit --no-fund && npm run build )
 
-log "Installing Node packages..."
-npm ci --no-audit --no-fund
+log "Installing Antora..."
+( cd "${REPO_DIR}" && npm ci --no-audit --no-fund )
 
-log "Building HTML..."
-bundle exec rake html
+log "Rendering site..."
+( cd "${REPO_DIR}" && npx antora --fetch antora-playbook.yml )
 
-if [ ! -f "${REPO_DIR}/output/learn-ruby-on-rails.html" ]; then
-  log "ERROR: expected output/learn-ruby-on-rails.html not found"
+if [ ! -d "${REPO_DIR}/build/site/book" ]; then
+  log "ERROR: expected build/site/book/ not found"
   exit 1
 fi
 
 log "Publishing release ${TIMESTAMP}..."
 mkdir -p "${RELEASE_DIR}"
-cp -a "${REPO_DIR}/output/." "${RELEASE_DIR}/"
+cp -a "${REPO_DIR}/build/site/." "${RELEASE_DIR}/"
 chmod -R a+rX "${RELEASE_DIR}"
 
 log "Atomic swap..."

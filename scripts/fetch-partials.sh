@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
-# Fetch the canonical nav + footer partials from wincon into
-# .scratch/partials/. The Rakefile prefers these over the committed
-# fallbacks in assets/ when they exist.
+# Fetch the canonical nav + footer partials from wincon and overwrite
+# ui-bundle/src/partials/{header,footer}-content.hbs before the UI
+# bundle is built.
 #
 # Source of truth: https://wintermeyer-consulting.de/partials/
 # (served from wincon/priv/static/partials/).
 #
-# Falls back to the GitHub raw URL when the production site is
-# unreachable — useful during CI bootstrap or when wincon is down.
-#
-# On fetch failure, the script does NOT exit with an error: the
-# Rakefile will transparently use the committed fallbacks. Net
-# problems should never break a deploy.
+# Falls back to the GitHub raw URL when production is unreachable.
+# Keeps the committed .hbs files as-is on total failure so deploys
+# do not break on a transient network glitch.
 
 set -u
 
@@ -21,37 +18,35 @@ BOOK_CURRENT="rails"
 
 cd "$(dirname "$0")/.."
 
-mkdir -p .scratch/partials
+PARTIALS_DIR="ui-bundle/src/partials"
 
-fetch_one() {
-  local name="$1"
-  local dest=".scratch/partials/${name}"
+try_fetch() {
+  local source_name="$1"
+  local dest="$2"
 
-  if curl -fsSL --max-time 10 -o "${dest}.tmp" "${PROD_BASE}/${name}"; then
+  if curl -fsSL --max-time 10 -o "${dest}.tmp" "${PROD_BASE}/${source_name}"; then
     mv "${dest}.tmp" "${dest}"
-    echo "fetched ${name} from production"
+    echo "fetched ${source_name} -> ${dest} (production)"
     return 0
   fi
 
-  if curl -fsSL --max-time 10 -o "${dest}.tmp" "${GH_BASE}/${name}"; then
+  if curl -fsSL --max-time 10 -o "${dest}.tmp" "${GH_BASE}/${source_name}"; then
     mv "${dest}.tmp" "${dest}"
-    echo "fetched ${name} from GitHub raw"
+    echo "fetched ${source_name} -> ${dest} (GitHub raw)"
     return 0
   fi
 
   rm -f "${dest}.tmp"
-  echo "WARN: could not fetch ${name}; falling back to assets/${name}"
+  echo "WARN: could not fetch ${source_name}; keeping ${dest}"
   return 1
 }
 
-fetch_one footer.html || true
+try_fetch footer.html "${PARTIALS_DIR}/footer-content.hbs" || true
 
-if fetch_one book-nav.html; then
-  # Stamp "rails" into data-book-current so the Rails nav link is
-  # highlighted by the CSS rule in assets/chrome.css.
-  tmp=".scratch/partials/book-nav.html.tmp"
+if try_fetch book-nav.html "${PARTIALS_DIR}/header-content.hbs"; then
+  # Highlight the Rails link in the shared book nav.
+  tmp="${PARTIALS_DIR}/header-content.hbs.tmp"
   sed -e "s/data-book-current=\"\"/data-book-current=\"${BOOK_CURRENT}\"/" \
-    .scratch/partials/book-nav.html > "$tmp"
-  mv "$tmp" .scratch/partials/nav.html
-  rm -f .scratch/partials/book-nav.html
+    "${PARTIALS_DIR}/header-content.hbs" > "$tmp"
+  mv "$tmp" "${PARTIALS_DIR}/header-content.hbs"
 fi

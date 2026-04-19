@@ -1,0 +1,11 @@
+<article class="doc">
+{{> article-kicker}}
+{{#with page.title}}
+<h1 class="page">{{{this}}}</h1>
+{{/with}}
+{{{page.contents}}}
+{{> pagination}}
+<div class="article-footer">
+{{> edit-this-page}}
+</div>
+</article>

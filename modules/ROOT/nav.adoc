@@ -1,0 +1,44 @@
+.Getting Started
+* xref:index.adoc[Welcome]
+* xref:preface.adoc[Preface]
+* xref:how-to.adoc[How to Work with This Book]
+
+.Ruby
+* xref:ruby-basics.adoc[Ruby Introduction]
+
+.Rails Foundations
+* xref:first-steps-with-rails.adoc[First Steps with Rails]
+* xref:agentic-coding.adoc[Coding Rails With an AI Agent]
+* xref:bundler-and-gems.adoc[Bundler and Gems]
+* xref:scaffolding-and-rest.adoc[Scaffolding and REST]
+* xref:routing.adoc[Routes]
+
+.Data Layer
+* xref:activerecord.adoc[ActiveRecord]
+* xref:active-storage.adoc[Active Storage]
+
+.Views & Interaction
+* xref:hotwire.adoc[Hotwire (Turbo + Stimulus)]
+* xref:forms.adoc[Forms]
+* xref:asset-pipeline.adoc[The Asset Pipeline]
+* xref:i18n.adoc[Internationalization]
+
+.Users & State
+* xref:authentication.adoc[Authentication]
+* xref:cookies-and-sessions.adoc[Cookies and Sessions]
+* xref:credentials.adoc[Credentials]
+
+.Background Work & Messaging
+* xref:active-job.adoc[Active Job]
+* xref:action-mailer.adoc[Action Mailer]
+* xref:action-cable.adoc[Action Cable]
+* xref:solid-trifecta.adoc[Solid Queue / Cache / Cable]
+* xref:caching.adoc[Caching]
+
+.Testing & Deployment
+* xref:test-driven-development.adoc[Tests]
+* xref:production-webserver.adoc[Web Server in Production]
+
+.Appendices
+* xref:installing.adoc[Installing Ruby on Rails]
+* xref:further-reading-material.adoc[Further Reading]

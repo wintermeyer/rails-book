@@ -1,0 +1,325 @@
+[[forms]]
+= Forms
+
+[[the-data-input-workflow]]
+== The Data-Input Workflow
+
+To understand forms we take a look at the data workflow. Grasping
+it well will help to understand what forms do.
+
+Example application:
+
+[source,bash]
+----
+$ rails new testapp
+[...]
+$ cd testapp
+$ bin/rails generate scaffold Person first_name last_name
+[...]
+$ bin/rails db:migrate
+[...]
+$ bin/rails server
+[...]
+----
+
+Most of the time we create forms using the scaffold generator.
+Let's go through the data flow.
+
+[[request-the-peoplenew-form]]
+=== Request the people#new form
+
+When we request the http://localhost:3000/people/new URL the
+router picks the following route:
+
+[source,bash]
+----
+new_person GET    /people/new(.:format)      people#new
+----
+
+The controller `app/controllers/people_controller.rb` runs this
+code:
+
+[source,ruby]
+.app/controllers/people_controller.rb
+----
+# GET /people/new
+def new
+  @person = Person.new
+end
+----
+
+So a new instance of `Person` is created and stored in the instance
+variable `@person`.
+
+Rails takes `@person` and starts processing the view file
+`app/views/people/new.html.erb`:
+
+[source,erb]
+.app/views/people/new.html.erb
+----
+<% content_for :title, "New person" %>
+
+<h1>New person</h1>
+
+<%= render "form", person: @person %>
+
+<br>
+
+<div>
+  <%= link_to "Back to people", people_path %>
+</div>
+----
+
+`render "form", person: @person` renders the file
+`app/views/people/_form.html.erb` and sets the local variable
+`person` to the value of `@person`:
+
+[source,erb]
+.app/views/people/_form.html.erb
+----
+<%= form_with(model: person) do |form| %>
+  <% if person.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(person.errors.count, "error") %> prohibited this person from being saved:</h2>
+
+      <ul>
+        <% person.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :first_name, style: "display: block" %>
+    <%= form.text_field :first_name %>
+  </div>
+
+  <div>
+    <%= form.label :last_name, style: "display: block" %>
+    <%= form.text_field :last_name %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
+----
+
+`form_with(model: person)` embeds the two ``text_field``s
+(`:first_name` and `:last_name`) plus a `submit` button.
+
+The resulting HTML:
+
+[source,html]
+----
+[...]
+<form action="/people" accept-charset="UTF-8" method="post" data-turbo="true">
+  <input type="hidden" name="authenticity_token" value="lSt...hbIg==" />
+
+  <div>
+    <label style="display: block" for="person_first_name">First name</label>
+    <input type="text" name="person[first_name]" id="person_first_name" />
+  </div>
+
+  <div>
+    <label style="display: block" for="person_last_name">Last name</label>
+    <input type="text" name="person[last_name]" id="person_last_name" />
+  </div>
+
+  <div>
+    <input type="submit" name="commit" value="Create Person" data-disable-with="Create Person" />
+  </div>
+</form>
+[...]
+----
+
+This form uses the HTTP `POST` method to upload the data to the
+server.
+
+NOTE: Rails 5 used `form_tag` + `form_for`, Rails 5.1 replaced both
+      with `form_with`. Rails 5.x defaulted `form_with` to
+      Ajax-submitted (remote: true) behavior, which is why the
+      older scaffold passed `local: true`. Since Rails 6.1 the
+      default is a plain local submission; in Rails 7+ that
+      submission is also wrapped by Turbo. You no longer need
+      `local: true`. To opt _out_ of Turbo on a specific form
+      write `form_with(model: person, data: { turbo: false })`.
+
+[[push-the-data-to-the-server]]
+=== Push the Data to the Server
+
+We enter "Stefan" in the `first_name` field and "Wintermeyer" in
+the `last_name` field and click the submit button. The browser
+POSTs the data to the URL `/people`. The log shows:
+
+[source,bash]
+----
+Started POST "/people" for ::1 at 2026-04-19 12:56:46 +0200
+Processing by PeopleController#create as TURBO_STREAM
+  Parameters: {"authenticity_token"=>"0wS2r9...", "person"=>{"first_name"=>"Stefan", "last_name"=>"Wintermeyer"}, "commit"=>"Create Person"}
+  Person Create (0.6ms)  INSERT INTO "people" ("first_name", "last_name", "created_at", "updated_at") VALUES (?, ?, ?, ?)
+Redirected to http://localhost:3000/people/1
+Completed 302 Found in 9ms (ActiveRecord: 1.6ms)
+----
+
+What happened in Rails?
+
+The router answers the request with this route:
+
+[source,bash]
+----
+POST   /people(.:format)          people#create
+----
+
+The controller `app/controllers/people_controller.rb` runs this
+code:
+
+[source,ruby]
+.app/controllers/people_controller.rb
+----
+def create
+  @person = Person.new(person_params)
+
+  respond_to do |format|
+    if @person.save
+      format.html { redirect_to @person, notice: "Person was successfully created." }
+      format.json { render :show, status: :created, location: @person }
+    else
+      format.html { render :new, status: :unprocessable_entity }
+      format.json { render json: @person.errors, status: :unprocessable_entity }
+    end
+  end
+end
+
+[...]
+
+# Only allow a list of trusted parameters through.
+def person_params
+  params.expect(person: [ :first_name, :last_name ])
+end
+----
+
+A new instance `@person` is created from the parameters the browser
+sent. Those parameters are filtered in the `person_params` method
+which acts as an allow-list. This prevents a user from injecting
+parameters we don't want to be injected.
+
+Once `@person` is saved a `redirect_to @person` is triggered. That
+would be http://localhost:3000/people/1 in this example.
+
+When the save fails — for example because a validation rejected the
+input — the controller re-renders the `:new` template with HTTP
+status `422 Unprocessable Entity`. Turbo recognises that status
+and swaps the form back into the page _without_ a full reload, so
+the user keeps whatever they typed. This is why the scaffold sets
+`status: :unprocessable_entity` explicitly.
+
+[[present-the-new-data]]
+=== Present the new Data
+
+The redirect to http://localhost:3000/people/1 is traceable in the
+log file:
+
+[source,bash]
+----
+Started GET "/people/1" for ::1 at 2026-04-19 12:56:47 +0200
+Processing by PeopleController#show as HTML
+  Parameters: {"id"=>"1"}
+  Person Load (0.2ms)  SELECT "people".* FROM "people" WHERE "people"."id" = ? LIMIT ?
+  Rendering layout layouts/application.html.erb
+  Rendering people/show.html.erb within layouts/application
+  Rendered people/show.html.erb within layouts/application
+Completed 200 OK in 27ms (Views: 20.8ms | ActiveRecord: 0.2ms)
+----
+
+The router answers this request with:
+
+[source,bash]
+----
+person GET    /people/:id(.:format)      people#show
+----
+
+Which gets handled by the `show` action in
+`app/controllers/people_controller.rb`.
+
+[[generic-forms]]
+== Generic Forms
+
+A form doesn't have to be tied to an ActiveRecord object. You can
+use `form_with(url: ...)` to create a free-standing form. From the
+official Rails form helpers guide
+(https://guides.rubyonrails.org/form_helpers.html), here is a
+search form that is not connected to a model:
+
+[source,erb]
+----
+<%= form_with(url: "/search", method: :get) do |f| %>
+  <%= f.label(:q, "Search for:") %>
+  <%= f.text_field(:q, id: :q) %>
+  <%= f.submit("Search") %>
+<% end %>
+----
+
+Resulting HTML:
+
+[source,html]
+----
+<form action="/search" accept-charset="UTF-8" method="get">
+  <label for="q">Search for:</label>
+  <input id="q" name="q" type="text" />
+  <input name="commit" type="submit" value="Search" />
+</form>
+----
+
+To handle this you'd create a new route in `config/routes.rb` and
+an action in a controller.
+
+NOTE: Older versions of this book mentioned `form_tag`. It was
+      deprecated in Rails 5.1 and removed in Rails 7. `form_with`
+      covers both the "bound to a model" and the "free-standing"
+      cases: pass `model:` for the former, `url:` for the latter.
+
+[[form-with-options]]
+== Useful `form_with` Options
+
+A few options you will reach for often:
+
+`form_with(model: person, data: { turbo: false })`::
+  Force a full page reload on submit. Useful if you need the
+  browser's default POST behaviour (downloads, for example).
+`form_with(model: person, data: { turbo_frame: "new_person" })`::
+  Target the response at a specific Turbo Frame. Great for modals
+  and inline-edit UI.
+`form_with(model: person, url: people_path(format: :json), format: :json)`::
+  Submit JSON to a JSON endpoint.
+`form_with(model: [post, comment])`::
+  The two-element `model:` array tells Rails to build a URL for the
+  _nested_ resource `post/:id/comments`.
+
+[[formtaghelper]]
+== FormBuilder Helpers
+
+Inside the `form_with do |form| ... end` block, `form` is a
+`FormBuilder`. It offers dozens of helpers: `text_field`,
+`text_area`, `email_field`, `password_field`, `number_field`,
+`date_field`, `color_field`, `select`, `collection_select`,
+`check_box`, `radio_button`, `file_field`, and so on. Because we
+use scaffold to generate most forms there is no need to memorize
+them. It is just important to know where to look in case you need
+something else.
+
+The full reference for form-builder methods is at
+https://api.rubyonrails.org/classes/ActionView/Helpers/FormBuilder.html
+
+[[alternatives]]
+== Alternatives
+
+Many Rails developers use _Simple Form_ as an alternative to the
+standard way of defining forms. It can really save time and most of
+the time it's just easier. Simple Form is available at
+https://github.com/heartcombo/simple_form
+
+For a modern, utility-first look you may also want to combine
+scaffolds with Tailwind CSS via the `tailwindcss-rails` gem; `rails
+new myapp --css=tailwind` sets that up from the start.
