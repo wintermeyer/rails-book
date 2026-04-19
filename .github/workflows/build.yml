@@ -1,0 +1,27 @@
+name: Build book
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Build HTML and PDF
+        run: bundle exec rake build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: book
+          path: output/

@@ -73,7 +73,7 @@ from Async(default) in 10012.97ms
 NOTE: The file `log/development.log` contains the logging output.
 
 You'll find a more concrete example of using jobs in the
-xref:action-mailer#action-mailer[Action Mailer chapter] where an e-mail gets
+xref:action-mailer.adoc#action-mailer[Action Mailer chapter] where an e-mail gets
 send.
 
 == Set the time for future execution

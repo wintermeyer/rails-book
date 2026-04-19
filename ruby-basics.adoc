@@ -428,7 +428,7 @@ Hello World!
 ----
 
 I will explain the difference between instance and class methods in more
-detail in xref:ruby-basics#class-methods-and-instance-methods[the section called
+detail in xref:ruby-basics.adoc#class-methods-and-instance-methods[the section called
 "Class Methods and Instance Methods"]. Another chicken and egg problem.
 
 [[private-methods]]
@@ -2088,7 +2088,7 @@ $ irb
 
 Of course, hashes can store not just strings as objects in the values,
 but - as with arrays - also classes that you define yourself (see
-xref:ruby-basics#arrays[the section called "Arrays"]).
+xref:ruby-basics.adoc#arrays[the section called "Arrays"]).
 
 [[symbols]]
 ==== Symbols

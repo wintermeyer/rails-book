@@ -24,9 +24,9 @@ I think the greatest frustration with Rails arises regularly from the fact that
 many beginners use scaffolding to get quick results without having proper basic
 knowledge of Ruby and without knowing what ActiveRecord is. They don’t know what
 to do next. Fortunately, you have worked your way through the chapters
-xref:ruby-basics#ruby-basics["Ruby Basics"],
-xref:first-steps-with-rails#first-steps-with-rails["First Steps with Rails"] and
-xref:activerecord#activerecord["ActiveRecord"], so you will be able to
+xref:ruby-basics.adoc#ruby-basics["Ruby Basics"],
+xref:first-steps-with-rails.adoc#first-steps-with-rails["First Steps with Rails"] and
+xref:activerecord.adoc#activerecord["ActiveRecord"], so you will be able to
 understand and use scaffolding straight away.
 
 == Redirects and Flash Messages
@@ -181,7 +181,7 @@ anyone would associate the term “_Flash_” with more or less colorful web
 pages that were implemented with the Adobe Shockwave Flash Plug-in. But
 in Ruby on Rails, flash messages are something completely different.
 They are messages that are displayed, for example on the new page after
-a redirect (see xref:scaffolding-and-rest#redirects[section Redirects]).
+a redirect (see xref:scaffolding-and-rest.adoc#redirects[section Redirects]).
 
 Flash messages are good friends with redirects. The two often work
 together in a team to give the user feedback on an action he just
@@ -190,7 +190,7 @@ when a user has logged in. Often the user is redirected back to the
 original page and gets the message “You are now logged in.”
 
 As an example, we are once more constructing the ping pong scenario from
-xref:scaffolding-and-rest#redirects[section "Redirects"]:
+xref:scaffolding-and-rest.adoc#redirects[section "Redirects"]:
 
 [source,bash]
 ----
@@ -394,7 +394,7 @@ $ rails db:seed
 === The Routes
 
 `rails generate scaffold` has created a route (more on this later in
-the chapter xref:routing#routing["Routes"]), a controller and several views for us.
+the chapter xref:routing.adoc#routing["Routes"]), a controller and several views for us.
 
 We could also have done all of this manually. Scaffolding is merely an
 automatism that does the work for us for some basic things. This is

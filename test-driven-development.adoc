@@ -60,7 +60,7 @@ $ rails db:migrate
 ----
 
 You already know all about scaffolds (if not, please go and read the chapter
-xref:scaffolding-and-rest#scaffolding-and-rest["Scaffolding and REST"] first)
+xref:scaffolding-and-rest.adoc#scaffolding-and-rest["Scaffolding and REST"] first)
 so you know what the application we have just created does. The scaffold
 created a few tests (they are easy to recognise because the word `test`
 is in the file name).
@@ -88,7 +88,7 @@ good. By default, a test will run through in a standard scaffold.
 
 Let’s edit the `app/models/user.rb` and insert a few validations (if
 these are not entirely clear to you, please read the section
-xref:activerecord#validation["Validation"]):
+xref:activerecord.adoc#validation["Validation"]):
 
 [source,ruby]
 .app/models/user.rb
@@ -532,7 +532,7 @@ http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html[api.rubyonrails.or
 === Static Fixtures
 
 The simplest variant for fixtures is static data. The fixture for `User` used in
-xref:test-driven-development#example-for-a-user-in-a-web-shop["Example for a
+xref:test-driven-development.adoc#example-for-a-user-in-a-web-shop["Example for a
 User in a Web Shop"] statically should look as follows (please change the
 content of the file accordingly):
 

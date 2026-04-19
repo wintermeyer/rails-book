@@ -2,7 +2,7 @@
 = First Steps with Rails
 
 Now that you have painstakingly read your way through
-xref:ruby-basics#ruby-basics[Ruby Basics] we can move on
+xref:ruby-basics.adoc#ruby-basics[Ruby Basics] we can move on
 to a more exciting bit. In this chapter, we will create our first
 small Ruby on Rails project.
 
@@ -384,7 +384,7 @@ Rails.application.routes.draw do
 end
 ----
 
-Alter on we are going to dive more into xref:routing#routing[Routes].
+Alter on we are going to dive more into xref:routing.adoc#routing[Routes].
 
 IMPORTANT: A static file in the directory `public` always has higher
            priority than a route in the `config/routes.rb`! So if we
@@ -535,7 +535,7 @@ Now you understand how Ruby code is used in the view.
 [qanda]
 I don't understand anything. I can't cope with the Ruby code. Could you please explain it again?::
   Is it possible that you have not completely worked your way through
-  xref:ruby-basics#ruby-basics[Ruby Basics]? Please do take
+  xref:ruby-basics.adoc#ruby-basics[Ruby Basics]? Please do take
   your time with it and have another thorough look. Otherwise, the rest
   won't make any sense here.
 I can understand the Ruby code and the HTML output. But I don't get why some HTML code was rendered around it if I didn't even write that HTML code. Where does it come from, and can I influence it?::
@@ -578,7 +578,7 @@ The interesting bit is the line
 With `<%= yield %>` the view file is included here. The lines with the
 stylesheets, the JavaScript and the `csrf_meta_tags` can stay as they are
 for now. We'll have a look into that in
-xref:asset-pipeline#asset-pipeline[Asset pipeline]. No need to
+xref:asset-pipeline.adoc#asset-pipeline[Asset pipeline]. No need to
 bother with that right now.
 
 The file `app/views/layouts/application.html.erb` enables you to
@@ -625,7 +625,7 @@ have a value in the controller that I want to display in the view, then
 I need a mechanism for this. This is referred to as _instance variable_
 and always starts with a `@`. If you are not 100 % sure any more which
 variable has which _scope_, then please have another quick look at
-xref:ruby-basics#scope-of-variables[Scope of Variables].
+xref:ruby-basics.adoc#scope-of-variables[Scope of Variables].
 
 In the following example, we insert an instance variable for the current
 time which we get by `Time.now` in the controller and then insert it in the
@@ -811,7 +811,7 @@ http://guides.rubyonrails.org/layouts_and_rendering.html#using-partials
 == The Rails Console
 
 The _console_ in Rails is nothing more than an `irb` (see
-xref:ruby-basics#irb[section "irb"]) built around
+xref:ruby-basics.adoc#irb[section "irb"]) built around
 the Rails environment. The console is very useful both for developing
 and for administration purposes, because the whole Rails environment is
 represented and available.
@@ -872,7 +872,7 @@ Loading development environment (Rails 5.2.0)
 $
 ----
 
-In xref:activerecord#activerecord[chapter "ActiveRecord"] we
+In xref:activerecord.adoc#activerecord[chapter "ActiveRecord"] we
 are going to be working lots with the console and will soon begin to
 appreciate the debugging possibilities it offers.
 
@@ -1185,7 +1185,7 @@ certain functionality in a Rails project.*
 
 "Model" in this case means data model. By default, Rails applications
 are an ActiveRecord data model (see
-xref:activerecord#activerecord[chapter "ActiveRecord"]).
+xref:activerecord.adoc#activerecord[chapter "ActiveRecord"]).
 
 All models can be found in the directory `app/models/`.
 
@@ -1203,7 +1203,7 @@ You will find all the views in the directory `app/views/.`
 === Controller
 
 Once a web page call has ended up in a route (see
-xref:routing#routing[chapter "Routes"]), it goes from there to
+xref:routing.adoc#routing[chapter "Routes"]), it goes from there to
 the controller. The route specifies a certain method (action) as target.
 This method can then fulfil the desired tasks (such as finding a
 specific set of data and saving it in an instance variable) and then
