@@ -1,0 +1,686 @@
+[[ruby-is-object-oriented]]
+= Ruby is Object-Oriented
+
+Ruby only knows objects. Everything is an object (sounds almost like
+Zen). Every object is an instance of a class. You can find out the class
+of an object via the method `.class`.
+
+An object in Ruby is encapsulated and can only be reached from the
+outside via the methods of the corresponding object. What does this
+mean? I cannot change any property of an object directly from the
+outside. The corresponding object has to offer a method with which I can
+do so.
+
+[NOTE]
+====
+Please do not panic if you have no idea what a class and an
+object is. I won't tell anyone and you can still work with
+it just fine without worrying too much. This topic alone could
+fill whole volumes. Roughly speaking, an object is a container
+for something and a method changes something in that container.
+
+Please go on reading and have a look at the examples. The puzzle
+will gradually get clearer.
+====
+
+[[methods]]
+== Methods
+
+In other programming languages, the terms you would use for Ruby methods
+would be: functions, procedures, subroutines and of course methods.
+
+
+[NOTE]
+====
+Here we go with the oversimplification. We can not compare non-Object
+oriented programming languages with OO ones. Plus there are two kinds of
+methods (class methods and instance methods). I do not
+want to make it too complicated. So I simply ignore those "fine"
+distinctions.
+====
+
+At this point you start looking for a good example, but all I can think
+of are silly ones. The problem is the assumption that we are only
+allowed to use knowledge that has already been described previously in
+this book.
+
+So let's assume that we use the following code sequence repeatedly (for
+whatever reason):
+
+[source,ruby]
+.hello-worldx3a.rb
+----
+puts 'Hello World!'
+puts 'Hello World!'
+puts 'Hello World!'
+----
+
+So we want to output the string “Hello World!” three times in separate rows. As
+this makes our daily work routine much longer, we are now going to
+define a method (with the meaningless name `three\_times`), with which
+this can all be done in one go.
+
+IMPORTANT: Names of methods are always written in lower case.
+
+[source,ruby]
+.hello-worldx3b.rb
+----
+def three_times
+  puts 'Hello World!'
+  puts 'Hello World!'
+  puts 'Hello World!'
+end
+----
+
+Let's test this by starting the `irb` and loading the program with the
+command `load './hello-worldx3b.rb'`. After that we have access to the
+`three_times` method.
+
+[source,bash]
+----
+$ irb
+>> load './hello-worldx3b.rb'
+=> true
+>> three_times
+Hello World!
+Hello World!
+Hello World!
+=> nil
+>> exit
+----
+
+When defining a method, you can define required parameters and use them
+within the method. This enables us to create a method to which we pass a
+string as parameter and we can then output it three times.
+
+[source,ruby]
+.hello-worldx3c.rb
+----
+def three_times(value)
+  puts value
+  puts value
+  puts value
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './hello-worldx3c.rb'
+=> true
+>> three_times('Hello World!')
+Hello World!
+Hello World!
+Hello World!
+=> nil
+----
+
+Incidentally, you can omit the brackets when calling the method.
+
+[source,bash]
+----
+>> three_times 'Hello World!'
+Hello World!
+Hello World!
+Hello World!
+=> nil
+----
+
+[TIP]
+====
+Ruby gurus and would-be gurus are going to turn up their noses on the
+subject of “unnecessary” brackets in your programs and will probably
+pepper you with more or less stupid comments with comparisons to Java
+and other programming languages.
+
+There is one simple rule in the Ruby community: the fewer brackets, the
+cooler you are! ;-)
+
+But you won't get a medal for using fewer brackets. Decide for yourself
+what makes you happy.
+====
+
+If you do not specify a parameter with the above method, you will get
+the error message: `wrong number of arguments (0 for 1)`:
+
+[source,bash]
+----
+>> three_times
+ArgumentError: wrong number of arguments (given 0, expected 1)
+	from /Users/.../hello-worldx3c.rb:1:in `three_times'
+	from (irb):2
+>> exit
+----
+
+You can give the variable `value` a default value and then you can also
+call the method without parameter:
+
+[source,ruby]
+.hello-worldx3d.rb
+----
+def three_times(value = 'blue')
+  puts value
+  puts value
+  puts value
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './hello-worldx3d.rb'
+=> true
+>> three_times('Example')
+Example
+Example
+Example
+=> nil
+>> three_times
+blue
+blue
+blue
+=> nil
+>> exit
+----
+
+[[classes]]
+== Classes
+
+For now you can think of a class as a collection of methods. The name of
+a class always starts with an upper case letter. Let's assume that the
+method belongs to the new class `This_and_that`. It would then be
+defined as follows in a Ruby program:
+
+[source,ruby]
+.hello-worldx3e.rb
+----
+class This_and_that
+  def three_times
+    puts 'Hello World!'
+    puts 'Hello World!'
+    puts 'Hello World!'
+  end
+end
+----
+
+Let's play it through in `irb`:
+
+[source,bash]
+----
+$ irb
+>> load './hello-worldx3e.rb'
+=> true
+----
+
+Now we try to call the method `three_times`:
+
+[source,bash]
+----
+>> This_and_that.three_times
+NoMethodError: undefined method `three_times' for This_and_that:Class
+	from (irb):2
+>>
+----
+
+This results in an error message, because `This_and_that` is a class
+and not an instance. As we are working with instance methods, it only
+works if we have first created a new object (a new instance) of the
+class `This_and_that` with the class method `new`. Let's name it `abc`:
+
+[source,bash]
+----
+>> abc = This_and_that.new
+=> #<This_and_that:0x007fb01b02dcd0>
+>> abc.three_times
+Hello World!
+Hello World!
+Hello World!
+=> nil
+>> exit
+----
+
+I will explain the difference between instance and class methods in more
+detail in <<class-methods-and-instance-methods,the section called
+"Class Methods and Instance Methods">>. Another chicken and egg problem.
+
+[[private-methods]]
+=== Private Methods
+
+Quite often it makes sense to only call a method within its own class or
+own instance. Such methods are referred to as private methods (as
+opposed to public methods), and they are listed below the keyword
+`private` within a class.
+
+[source,ruby]
+.pm-example.rb
+----
+class Example
+  def a
+    puts 'a'
+  end
+
+  private
+  def b
+    puts 'b'
+  end
+end
+----
+
+We run this in an irb. First the public and than the private
+method which raises an error:
+
+[source,bash]
+----
+$ irb
+>> load './pm-example.rb'
+=> true
+>> abc = Example.new
+=> #<Example:0x007fa530037910>
+>> abc.a
+a
+=> nil
+>> abc.b
+NoMethodError: private method `b' called for #<Example:0x007fa530037910>
+	from (irb):4
+>> exit
+----
+
+[[method-initialize]]
+=== Method initialize()
+
+If a new instance is created (by calling the method new), the method
+that is processed first and automatically is the method `initialize`.
+The method is automatically a private method, even if it not listed
+explicitly under `private`.
+
+[source,ruby]
+.pm-example-a.rb
+----
+class Room
+  def initialize
+    puts 'abc'
+  end
+end
+----
+
+irb test of it:
+
+[source,bash]
+----
+$ irb
+>> load './initialize-example-a.rb'
+=> true
+>> kitchen = Room.new
+abc
+=> #<Room:0x007f830704edb8>
+>> exit
+----
+
+The instance `kitchen` is created with `Room.new` and the method
+initialize is processed automatically.
+
+The method new accepts the parameters specified for the method
+initialize:
+
+[source,ruby]
+.initialize-example-b.rb
+----
+class Example
+  def initialize(value)
+    puts value
+  end
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './initialize-example-b.rb'
+=> true
+>> abc = Example.new('Hello World!')
+Hello World!
+=> #<Example:0x007fbb0b845f30>
+>> exit
+----
+
+[[return]]
+=== return
+
+`puts` is nice to demonstrate an example in this book but normally you
+need a way to return the result of something. The `return` statement can
+be used for that:
+
+[source,ruby]
+.circle-a.rb
+----
+def area_of_a_circle(radius)
+  pi = 3.14
+  area = pi * radius * radius
+  return area
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './circle-a.rb'
+=> true
+>> area_of_a_circle(10)
+=> 314.0
+>> exit
+----
+
+But it wouldn't be Ruby if you couldn't do it shorter. You can simply
+skip return:
+
+[source,ruby]
+.circle-b.rb
+----
+def area_of_a_circle(radius)
+  pi = 3.14
+  area = pi * radius * radius
+  area
+end
+----
+
+You can actually even skip the last line because Ruby returns the value
+of the last expression as a default:
+
+[source,ruby]
+.circle-c.rb
+----
+def area_of_a_circle(radius)
+  pi = 3.14
+  area = pi * radius * radius
+end
+----
+
+Obviously you can go one step further with this code:
+
+[source,ruby]
+.circle-d.rb
+----
+def area_of_a_circle(radius)
+  pi = 3.14
+  pi * radius * radius
+end
+----
+
+`return` is sometimes useful to make a method easier to read. But you
+don't have to use it in case you feel more comfortable with out.
+
+[[inheritance]]
+=== Inheritance
+
+A class can inherit from another class. When defining the class, the
+parent class must be added with a `<` (smaller than) sign:
+
+[source,ruby]
+----
+class Example < ParentClass
+----
+
+Rails makes use of this approach very frequently (otherwise I would not
+be bothering you with it).
+
+In the following example, we define the class `Abc` and which contains
+the methods `a`, `b` and `c`. Then we define a class `Abcd` and let it
+inherit the class `Abc` and add a new method `d`. The new instances
+`example1` and `example2` are created with the Class-Methods `new` and
+show that `example2` has access to the methods `a`, `b`, `c` and `d` but
+`example1` only to `a`, `b` and `c`.
+
+[source,ruby]
+.inheritance-example-a.rb
+----
+class Abc
+  def a
+    'a'
+  end
+
+  def b
+    'b'
+  end
+
+  def c
+    'c'
+  end
+end
+
+class Abcd < Abc
+  def d
+    'd'
+  end
+end
+----
+
+Run in in the irb:
+
+[source,bash]
+----
+$ irb
+>> load './inheritance-example-a.rb'
+=> true
+>> example1 = Abc.new
+=> #<Abc:0x007fac5a845630>
+>> example2 = Abcd.new
+=> #<Abcd:0x007fac5a836630>
+>> example2.d
+=> "d"
+>> example2.a
+=> "a"
+>> example1.d
+NoMethodError: undefined method `d' for #<Abc:0x007fac5a845630>
+	from (irb):6
+>> example1.a
+=> "a"
+>> exit
+----
+
+[TIP]
+====
+It is important to read the Error-Messages. They tell you what happened
+and where to search for the problem. In this example Ruby said that
+there is an `undefined method` for `#<Abc:0x007fac5a845630>`. With that
+information you know that the Class `Abc` is missing the method which
+you were trying to use.
+====
+
+[[class-methods-and-instance-methods]]
+=== Class Methods and Instance Methods
+
+There are two important kinds of methods: class methods and instance
+methods.
+
+You now already know what a class it. And an instance of such a class is
+created via the class method `new`. A class method can only be called in
+connection with the class (for example, the method `new` is a class
+method). An instance method is a method that only works with an
+instance. So you cannot apply the method `new` to an instance.
+
+Let's first try to call an instance method as class method:
+
+[source,ruby]
+.pi-a.rb
+----
+class Knowledge
+  def pi
+    3.14
+  end
+end
+----
+
+Run it in irb:
+
+[source,bash]
+----
+$ irb
+>> load 'pi-a.rb'
+=> true
+>> Knowledge.pi
+NoMethodError: undefined method `pi' for Knowledge:Class
+	from (irb):2
+>>
+----
+
+So that does not work. Well, then let's create a new instance of the
+class and try again:
+
+[source,bash]
+----
+>> example = Knowledge.new
+=> #<Knowledge:0x007fe620010938>
+>> example.pi
+=> 3.14
+>> exit
+----
+
+Now we just need to find out how to define a class method. Hardcore
+Rails gurus would now whisk you away into the depths of the source code
+and pick out examples from ActiveRecord. I will spare you this and
+show an abstract example:
+
+[source,ruby]
+.pi-b.rb
+----
+class Knowledge
+  def self.pi
+    3.14
+  end
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './pi-b.rb'
+=> true
+>> Knowledge.pi
+=> 3.14
+>>
+----
+
+And the proof to the contrary:
+
+[source,bash]
+----
+>> example = Knowledge.new
+=> #<Knowledge:0x007fa8da045198>
+>> example.pi
+NoMethodError: undefined method `pi' for #<Knowledge:0x007fa8da045198>
+	from (irb):4
+>> exit
+----
+
+There are different notations for defining class methods. The two most
+common ones are `self.xyz` and `class << self`:
+
+[source,ruby]
+----
+# Variant 1
+# with self.xyz
+#
+class Knowledge
+  def self.pi
+    3.14
+  end
+end
+----
+
+[source,ruby]
+----
+# Variant 2
+# with class << self
+#
+class Knowledge
+  class << self
+    def pi
+      3.14
+    end
+  end
+end
+----
+
+The result is always the same.
+
+Of course you can use the same method name for a class and an instance
+method. Obviously that doesn't make code easier to read. Here is
+an example with `pi` as a class and an instance method:
+
+[source,ruby]
+.pi-c.rb
+----
+class Knowledge
+  def pi
+    3.14
+  end
+
+  def self.pi
+    3.14159265359
+  end
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './pi-c.rb'
+=> true
+>> Knowledge.pi
+=> 3.14159265359
+>> example = Knowledge.new
+=> #<Knowledge:0x007f8379846f30>
+>> example.pi
+=> 3.14
+>> exit
+----
+
+[[list-of-all-instance-methods]]
+=== List of All Instance Methods
+
+You can read out all defined methods for a class with the method
+`instance_methods`. We try it out with the class `Knowledge` (first we
+create it once again in the irb):
+
+[source,ruby]
+.pi-a.rb
+----
+class Knowledge
+  def pi
+    3.14
+  end
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './pi-a.rb'
+=> true
+>> Knowledge.instance_methods
+=> [:pi, :instance_of?, :kind_of?, :is_a?, :tap, :public_send,
+:remove_instance_variable, :singleton_method, :instance_variable_set,
+:define_singleton_method, :method, :public_method, :extend, :to_enum,
+:enum_for, :<=>, :===, :=~, :!~, :eql?, :respond_to?, :freeze,
+:inspect, :object_id, :send, :display, :to_s, :nil?, :hash, :class,
+:singleton_class, :clone, :dup, :itself, :taint, :tainted?, :untaint,
+:untrust, :untrusted?, :trust, :frozen?, :methods, :singleton_methods,
+:protected_methods, :private_methods, :public_methods,
+:instance_variable_get, :instance_variables,
+:instance_variable_defined?, :!, :==, :!=, :__send__, :equal?,
+:instance_eval, :instance_exec, :__id__]
+>>
+----
+
+But that is much more than we have defined! Why? It's because Ruby gives
+every new class a basic set of methods by default. If we only want to
+list the methods that we have defined, then we can do it like this:
+
+[source,bash]
+----
+>> Knowledge.instance_methods(false)
+=> [:pi]
+>> exit
+----
+
+[[basic-classes]]

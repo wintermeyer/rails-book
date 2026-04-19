@@ -1,0 +1,222 @@
+[[basic-classes]]
+= Basic Classes
+
+There are many pre defined Classes available in Ruby. For a newbie the probably
+most important ones handle numbers and strings.
+
+[[strings]]
+== Strings
+
+Let's experiment a little bit in the `irb`. The method `.class` tells us
+which class we are dealing with.
+
+[source,bash]
+----
+$ irb
+>> "First test"
+=> "First test"
+>> "First test".class
+=> String
+----
+
+That was easy. As you can see, Ruby “automagically” creates an object of
+the class `String`. We could also do this by explicitly calling the
+method `new`:
+
+[source,bash]
+----
+>> String.new("Second test")
+=> "Second test"
+>> String.new("Second test").class
+=> String
+----
+
+If we call `String.new` or `String.new()` without a parameter, this also
+creates an object of the class `String`. But it is an empty String:
+
+[source,bash]
+----
+>> String.new
+=> ""
+>> String.new.class
+=> String
+>> exit
+----
+
+[[single-and-double-quotations-marks]]
+=== Single and Double Quotations Marks
+
+Strings can be defined either in single quotes or double quotes.
+
+There is a special feature for the double quotes: you can integrate
+expressions with the construct `#{}`. The result is then automatically
+inserted in the corresponding place in the string.
+
+To show this we have to jump ahead and use variables in the example:
+
+[source,bash]
+----
+$ irb
+>> a = "blue"
+=> "blue"
+>> b = "Color: #{a}"
+=> "Color: blue"
+>> exit
+----
+
+If the result of the expression is not a string, Ruby tries to apply the
+method `to_s` in order to convert the value of the object into a string.
+Let's try that by integrating an Integer into a String:
+
+[source,bash]
+----
+$ irb
+>> a = 1
+=> 1
+>> b = "A test: #{a}"
+=> "A test: 1"
+>> a.class
+=> Integer
+>> b.class
+=> String
+>> exit
+----
+
+NOTE: If we mention single or double quotation marks in the
+      context of strings, we do not mean typographically correct
+      curly quotation marks (see http://en.wikipedia.org/wiki/Quotation_mark[wikipedia.org/wiki/Quotation_mark]), but the ASCII symbols referred to as _apostrophe_ (`'`) or _quotation mark_(`"`).
+
+[[built-in-methods-for-string]]
+=== Built-In Methods for String
+
+Most classes already come with a bundle of very useful methods. These
+methods are always written after the relevant object, separated by a
+point.
+
+Here are a few examples for methods of the class `String`.
+
+[source,bash]
+----
+$ irb
+>> a = 'A dog'
+=> "A dog"
+>> a.class
+=> String
+>> a.size
+=> 5
+>> a.downcase
+=> "a dog"
+>> a.upcase
+=> "A DOG"
+>> a.reverse
+=> "god A"
+>> exit
+----
+
+With `instance_methods(false)` you can get a list of the build in
+methods:
+
+[source,bash]
+----
+$ irb
+>> String.instance_methods(false)
+=> [:include?, :%, :*, :+, :to_c, :unicode_normalize, :unicode_normalize!,
+:unicode_normalized?, :count, :partition, :unpack, :unpack1, :sum, :next,
+:casecmp, :casecmp?, :insert, :bytesize, :match, :match?, :succ!, :+@,
+:-@, :index, :rindex, :<=>, :replace, :clear, :upto, :getbyte, :==, :===,
+:setbyte, :=~, :scrub, :[], :[]=, :chr, :scrub!, :dump, :byteslice,
+:upcase, :next!, :empty?, :eql?, :downcase, :capitalize, :swapcase,
+:upcase!, :downcase!, :capitalize!, :swapcase!, :hex, :oct, :split,
+:lines, :reverse, :chars, :codepoints, :prepend, :bytes, :concat, :<<,
+:freeze, :inspect, :intern, :end_with?, :crypt, :ljust, :reverse!, :chop,
+:scan, :gsub, :ord, :start_with?, :length, :size, :rstrip, :succ, :center,
+:sub, :chomp!, :sub!, :chomp, :rjust, :lstrip!, :gsub!, :chop!, :strip,
+:to_str, :to_sym, :rstrip!, :tr, :tr_s, :delete, :to_s, :to_i, :tr_s!,
+:delete!, :squeeze!, :each_line, :squeeze, :strip!, :each_codepoint,
+:lstrip, :slice!, :rpartition, :each_byte, :each_char, :to_f, :slice,
+:ascii_only?, :encoding, :force_encoding, :b, :valid_encoding?, :tr!,
+:encode, :encode!, :hash, :to_r]
+>> exit
+----
+
+[[numbers]]
+== Numbers
+
+[[integers]]
+=== Integers
+
+Ruby used to have different types of Integers depending on the length of the
+number. Since Ruby version 2.4 things are easier: We just deal with `Integer`.
+
+[source,bash]
+----
+$ irb
+>> 23.class
+=> Integer
+>> 230000000000000000000.class
+=> Integer
+>> (23*10000).class
+=> Integer
+>> exit
+----
+
+[[floats]]
+=== Floats
+
+`Float` is a class for real numbers (“floating point numbers”). The
+decimal separator is a point.
+
+[source,bash]
+----
+$ irb
+>> a = 20.424
+=> 20.424
+>> a.class
+=> Float
+>> exit
+----
+
+[[mixed-class-calculations]]
+=== Mixed Class Calculations
+
+Adding two integers will result in an integer. Adding an integer and a float
+will result in a float:
+
+[source,bash]
+----
+$ irb
+>> a = 10
+=> 10
+>> b = 23
+=> 23
+>> (a + b).class
+=> Integer
+>> (a + 3.13).class
+=> Float
+>> exit
+----
+
+[[boolean-values-and-nil]]
+== Boolean Values and nil
+
+For boolean values (`true` and `false`) and for `nil` (no value) there
+are separate classes:
+
+[source,bash]
+----
+$ irb
+>> true.class
+=> TrueClass
+>> false.class
+=> FalseClass
+>> nil.class
+=> NilClass
+>> exit
+----
+
+`nil` (no value) is, by the way, the contraction of the Latin word
+_nihil_ (nothing) or, if you look at it in terms of programming history,
+the term derives from “_not in list_” from the legacy of the programming
+language Lisp (the name is an acronym of _List Processing_).
+
+[[variables]]

@@ -1,0 +1,234 @@
+[[arrays-and-hashes]]
+= Arrays and Hashes
+
+As in many programming languages, _arrays_ and _hashes_ are popular
+structures in Ruby for storing data.
+
+[[arrays]]
+== Arrays
+
+An array is a list of objects. Let's play around in `irb:`
+
+[source,bash]
+----
+$ irb
+>> a = [1,2,3,4,5]
+=> [1, 2, 3, 4, 5]
+>> a.class
+=> Array
+>> exit
+----
+
+That is simple and easy to understand.
+
+Let's see if it also works with strings in the array:
+
+[source,bash]
+----
+$ irb
+>> a = ['Test', 'Banana', 'blue']
+=> ["Test", "Banana", "blue"]
+>> a.class
+=> Array
+>> a[1]
+=> "Banana"
+>> a[1].class
+=> String
+>> exit
+----
+
+That also works.
+
+So all that's missing now is an array with a mixture of both. Obviously
+that will work, too, because the array stores objects and it does not
+matter which kind of objects they are (i.e. `String`, `Integer`, `Float`,
+...). But a little test can't hurt:
+
+[source,bash]
+----
+$ irb
+>> a = [1, 2.2, 'House', nil]
+=> [1, 2.2, "House", nil]
+>> a.class
+=> Array
+>> a[0]
+=> 1
+>> a[0].class
+=> Integer
+>> a[1].class
+=> Float
+>> a[2].class
+=> String
+>> a[3].class
+=> NilClass
+>> exit
+----
+
+Arrays can also be created via the method `new` (like
+any class). Individual new elements can then be added at the end of an
+array via the method `<<`. Here is the corresponding example:
+
+[source,bash]
+----
+$ irb
+>> a = Array.new
+=> []
+>> a << 'first item'
+=> ["first item"]
+>> a << 'second item'
+=> ["first item", "second item"]
+>> exit
+----
+
+[[iterator-each]]
+=== Iterator `each`
+
+You can work your way through an array piece by piece via the method
+`each`. Example:
+
+[source,bash]
+----
+$ irb
+>> cart = ['eggs', 'butter']
+=> ["eggs", "butter"]
+>> cart.each do |item|
+?>   puts item
+>> end
+eggs
+butter
+=> ["eggs", "butter"]
+>> exit
+----
+
+`ri Array.each` provides help and an example in case you forget how to
+use `each`.
+
+[[hashes]]
+== Hashes
+
+A _Hash_ is a list of _key/value pairs_. Here is an example with
+strings as keys:
+
+[source,bash]
+----
+$ irb
+>> prices = { 'egg' => 0.1, 'butter' => 0.99 }
+=> {"egg"=>0.1, "butter"=>0.99}
+>> prices['egg']
+=> 0.1
+>> prices.count
+=> 2
+>> exit
+----
+
+Of course, hashes can store not just strings as objects in the values,
+but - as with arrays - also classes that you define yourself (see
+<<arrays,the section called "Arrays">>).
+
+[[symbols]]
+=== Symbols
+
+_Symbols_ are a strange concept and difficult to explain. But they are
+very useful and used frequently, amongst others with hashes.
+
+Normally, variables always create new objects:
+
+[source,bash]
+----
+$ irb
+>> a = 'Example 1'
+=> "Example 1"
+>> a.object_id
+=> 70124141350360
+>> a = 'Example 2'
+=> "Example 2"
+>> a.object_id
+=> 70124141316700
+>> exit
+----
+
+In both cases, we have the variable `a`, but object ID is different. We
+could carry on in this way indefinitely. Each time, it would generate a
+different object ID and therefore a new object. In principle, this is no
+big deal and entirely logical in terms of object orientation. But it is
+also rather a waste of memory space.
+
+A symbol is defined by a colon before the name and cannot store any
+values itself, but it always has the same object ID, so it is very well
+suited to be a _key_:
+
+[source,bash]
+----
+$ irb
+>> :a.class
+=> Symbol
+>> :a.object_id
+=> 702428
+>> exit
+----
+
+Let's do another little experiment to make the difference clearer. We
+use a string object with the content “`white`” three times in a row and
+then the symbol `:white` three times in a row. For `"white"`, a new
+object is created each time. For the symbol `:white`, only the first
+time:
+
+[source,bash]
+----
+$ irb
+>> 'white'.object_id
+=> 70342874305700
+>> 'white'.object_id
+=> 70342874300640
+>> 'white'.object_id
+=> 70342874271720
+>> :white.object_id
+=> 1088668
+>> :white.object_id
+=> 1088668
+>> :white.object_id
+=> 1088668
+>> exit
+----
+
+Using symbols as key for hashes is much more memory efficient:
+
+[source,bash]
+----
+$ irb
+>> colors = { black: '#000000', white: '#FFFFFF' }
+=> {:black=>"#000000", :white=>"#FFFFFF"}
+>> puts colors[:white]
+#FFFFFF
+=> nil
+>> exit
+----
+
+You will frequently see symbols in Rails. If you want to find out more
+about symbols, go to the help page about the class Symbol via
+`ri Symbol`.
+
+[[iterator-each-1]]
+=== Iterator each
+
+With the method `each` you can work your way through a `Hash` step by
+step. Example:
+
+[source,bash]
+----
+$ irb
+>> colors = {black: '#000000', white: '#FFFFFF' }
+=> {:black=>"#000000", :white=>"#FFFFFF"}
+>> colors.each do |key, value|
+?>   puts "#{key} #{value}"
+>> end
+black #000000
+white #FFFFFF
+=> {:black=>"#000000", :white=>"#FFFFFF"}
+>> exit
+----
+
+Again, `ri Hash.each` offers help and an example, in case you cannot remember one
+day how to use each.
+
+[[range]]

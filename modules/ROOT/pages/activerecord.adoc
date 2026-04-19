@@ -195,7 +195,7 @@ record.
 === Getters and Setters
 
 To read and write values of a SQL table row you can use getters and setters by
-ActiveRecord provided xref:ruby-basics.adoc#getters-and-setters[getters and setters].
+ActiveRecord provided link:https://wintermeyer-consulting.de/ruby/book/methods-once-again.html#getters-and-setters[getters and setters].
 These `attr_accessors` are automatically
 created. The getter of the field `updated_at` for a given `Country` with
 the name `germany` would be `germany.updated_at`.
@@ -620,7 +620,7 @@ Until than it stores the request in a `ActiveRecord::Relation`.
 The result of `Country.all` is actually an `Array` of `Country`.
 
 If `Country.all` returns an array, then we should also be able to use
-xref:ruby-basics.adoc#iterators[iterators] and xref:ruby-basics.adoc#iterator-each[each],
+link:https://wintermeyer-consulting.de/ruby/book/loops.html#iterators[iterators] and link:https://wintermeyer-consulting.de/ruby/book/collections.html#iterator-each[each],
 right? Yes, of course! That is the beauty of it. Here is a little experiment
 with `each`:
 
@@ -916,7 +916,7 @@ created_at: "2017-03-22 18:19:06", updated_at: "2017-03-22 18:19:06">]>
 => 3
 ----
 
-You can also use `where` to search for xref:ruby-basics.adoc#range[ranges]:
+You can also use `where` to search for link:https://wintermeyer-consulting.de/ruby/book/ranges.html#range[ranges]:
 
 [source,bash]
 ----

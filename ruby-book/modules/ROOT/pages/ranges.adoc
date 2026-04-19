@@ -1,0 +1,57 @@
+[[range]]
+= Range
+
+The class Range represents an interval. The start and end points of the
+interval are defined enclosed in normal brackets and separated by two
+dots in between them. Here is an example in which we use a range like an
+iterator with each:
+
+[source,bash]
+----
+$ irb
+>> (0..3)
+=> 0..3
+>> (0..3).class
+=> Range
+>> (0..3).each do |i|
+?>   puts i
+>> end
+0
+1
+2
+3
+=> 0..3
+>>
+----
+
+Via the method `to_a` you can generate an array from a `Range`:
+
+[source,bash]
+----
+>> (0..3).to_a
+=> [0, 1, 2, 3]
+>>
+----
+
+A range can be generated from objects of any type. Important is only
+that the objects can be compared via `<=>` and use the method `succ` for
+counting on to the next value. So you can also use `Range` to represent
+letters:
+
+[source,bash]
+----
+>> ('a'..'h').to_a
+=> ["a", "b", "c", "d", "e", "f", "g", "h"]
+>>
+----
+
+As alternative notation, you may sometimes come across `Range.new()`. In
+this case, the start and end points are not separated by two dots, but
+by a comma. This is what it looks like:
+
+[source,bash]
+----
+>> (0..3) == Range.new(0,3)
+=> true
+>> exit
+----

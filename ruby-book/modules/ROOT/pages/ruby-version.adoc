@@ -1,0 +1,20 @@
+[[ruby-version]]
+= Ruby 4.0
+
+We are going to use Ruby 4.0. Most examples will also run on Ruby
+3.x, but the output formatting in this book matches Ruby 4.0. You
+can check the installed Ruby version by running the command
+`ruby -v`:
+
+[source,bash]
+$ ruby -v
+ruby 4.0.2 (2026-03-17 revision d3da9fec82) +PRISM [arm64-darwin25]
+$
+
+NOTE: If your system runs an older version and you want to upgrade it
+      have a look at https://mise.jdx.dev/[mise] which is my preferred
+      way of installing and using different Ruby versions. See
+      link:https://wintermeyer-consulting.de/rails/book/installing.html#installing[the install appendix] for a
+      step-by-step guide.
+
+[[chapter1-basics]]

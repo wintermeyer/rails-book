@@ -28,7 +28,7 @@ fact that many beginners use scaffolding to get quick results without
 having proper basic knowledge of Ruby and without knowing what
 ActiveRecord is. They don't know what to do next. Fortunately, you
 have worked your way through the chapters
-xref:ruby-basics.adoc#ruby-basics["Ruby Basics"],
+link:https://wintermeyer-consulting.de/ruby/book/["Ruby Basics"],
 xref:first-steps-with-rails.adoc#first-steps-with-rails["First Steps with Rails"]
 and xref:activerecord.adoc#activerecord["ActiveRecord"], so you will
 be able to understand and use scaffolding straight away.

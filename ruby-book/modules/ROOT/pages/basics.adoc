@@ -1,0 +1,157 @@
+[[chapter1-basics]]
+= Basics
+
+Ruby is a scripting language. So it is not compiled and then executed,
+but read by an interpreter and then processed line by line.
+
+[[hello-world]]
+== Hello World
+
+A simple `hello-world.rb` program consists of one line of code:
+
+[source,ruby]
+.hello-world.rb
+----
+puts 'Hello World!'
+----
+
+Use your favorite editor to open a new file with the filename
+`hello-world.rb` and insert the above line into it. You can then execute
+this Ruby program in the command line as follows:
+
+[source,bash]
+----
+$ ruby hello-world.rb
+Hello World!
+$
+----
+
+NOTE: A program line in a Ruby program does not have to end with a semicolon.
+      The Ruby interpreter is even so intelligent that it recognizes if a
+      program line was split over two or more lines for the sake of
+      readability. Indenting code is also not necessary. But it does make it
+      much easier to read for human beings!
+
+[[puts-and-print]]
+== puts and print
+
+If you go looking for examples on Ruby on the Internet, you will find
+two typical ways of printing text on the screen:
+
+* `puts` prints a string, followed by a newline.
+* `print` prints a string (without newline).
+
+Example program (an extension of the program `hello-world.rb`):
+
+[source,ruby]
+.hello-world.rb
+----
+puts 'Hello World!'
+puts
+puts 'zzz'
+print 'Hello World!'
+print
+puts 'zzz'
+----
+
+On the screen, you will see this:
+
+[source,bash]
+----
+$ ruby hello-world.rb
+Hello World!
+
+zzz
+Hello World!zzz
+----
+
+[[comments]]
+== Comments
+
+A comment in a Ruby program starts with a `#`-sign and ends with a
+newline. As an example, I can add a comment to the `hello-world.rb`
+above:
+
+[source,ruby]
+.hello-world.rb
+----
+# Program for displaying "Hello World!"
+# by Stefan Wintermeyer
+
+puts 'Hello World!'
+----
+
+A comment can also follow a program line:
+
+[source,ruby]
+.hello-world.rb
+----
+puts 'Hello World!'  # Example comment
+----
+
+A `#`-sign within strings in inverted commas is not treated as the start
+of a comment. Example program:
+
+[source,ruby]
+.hello-world.rb
+----
+# Example program
+# by Stefan Wintermeyer
+
+puts 'Hello World!'
+puts '############'
+puts
+puts '1#2#3#4#5#6#'  # Comment on this
+----
+
+[[help-via-ri]]
+== Help via ri
+
+When programming, you do not always have a Ruby handbook available.
+Fortunately, the Ruby developers thought of this and provided a built-in
+help feature in form of the program `ri`.
+
+NOTE: Of course only if you have installed the documentation, which
+      is the default. Some minimal installations (e.g. slim Docker
+      images) strip ri pages; in that case `gem install rdoc` and
+      `rdoc --all` on a gem's source will regenerate them.
+
+This is a typical chicken and egg situation. How can I explain the Ruby
+help feature, if we are only just getting started with Ruby? So I am
+going to jump ahead a little and show you how you can search for
+information on the class String:
+
+[source,bash]
+----
+$ ri String
+  [...]
+$
+----
+
+TIP: Many times it is easier and more informative to use Google instead of ri.
+
+[[irb]]
+== irb
+
+`irb` stands for **I**nteractive **R**u**b**y and is a kind of sandbox where
+you can play around with Ruby at your leisure. `irb` is launched by
+entering `irb` on the shell and ends if you enter `exit`.
+
+An example is worth a thousand words:
+
+[source,bash]
+----
+$ irb
+irb(main):001> puts 'Hello World!'
+Hello World!
+=> nil
+irb(main):002> exit
+$
+----
+
+NOTE: I the future examples I use `IRB.conf[:PROMPT_MODE] = :SIMPLE` in
+      my `.irbrc` config file to generate shorter irb output (without
+      the `irb(main):001>` part). You can do the
+      same by using `irb --simple-prompt`.
+
+[[ruby-is-object-oriented]]

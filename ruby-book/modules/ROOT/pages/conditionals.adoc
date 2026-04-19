@@ -1,0 +1,110 @@
+[[if-condition]]
+= if-Condition
+
+An abstract `if`-condition looks like this:
+
+[source,ruby]
+----
+if expression
+  program
+end
+----
+
+The program between the expression and `end` is executed if the result
+of the expression is not `false` and not `nil`.
+
+[NOTE]
+====
+You can also use a `then` after the expression:
+
+[source,ruby]
+----
+if expression then
+  program
+end
+----
+====
+
+The construct for a simple `if`-branch in a Ruby program looks like the
+following example program:
+
+[source,ruby]
+----
+a = 10
+
+if a == 10
+  puts 'a is 10'
+end
+----
+
+IMPORTANT: The `==` is used to compare two values.
+           Please don't mix it up with the single `=`.
+
+You can test an _expression_ really well in `irb`:
+
+[source,bash]
+----
+$ irb
+>> a = 10
+=> 10
+>> a == 10
+=> true
+>> exit
+$
+----
+
+[[shorthand]]
+== Shorthand
+
+A frequently used shorthand notation of an `if`-condition can be found
+in the following code:
+
+[source,ruby]
+----
+a = 10
+
+# long version
+#
+if a == 10
+  puts 'a is 10'
+end
+
+# short version
+#
+puts 'a is 10' if a == 10
+----
+
+[[else]]
+== else
+
+You can probably imagine how this works, but for the sake of
+completeness, here is a little example:
+
+[source,ruby]
+----
+a = 10
+
+if a == 10
+  puts 'a is 10'
+else
+  puts 'a is not 10'
+end
+----
+
+[[elsif]]
+== elsif
+
+Again, most programmers will know what this is all about. Example:
+
+[source,ruby]
+----
+a = 10
+
+if a == 10
+  puts 'a is 10'
+elsif a == 20
+  puts 'a is 20'
+end
+----
+
+[[loops]]

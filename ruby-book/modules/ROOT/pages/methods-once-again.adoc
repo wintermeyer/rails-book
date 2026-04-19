@@ -1,0 +1,373 @@
+[[methods-once-again]]
+= Methods Once Again
+
+In order to keep the amount of chicken and egg problems in this chapter
+at a manageable level, we need to go back to the topic Methods and
+combine what we have learned so far.
+
+[[method-chaining]]
+== Method Chaining
+
+You may not think of it straight away, but once you have got used to
+working with Ruby, then it makes perfect sense (and is perfectly
+logical) to chain different methods.
+
+[source,bash]
+----
+$ irb
+>> a = 'a blue car'
+=> "a blue car"
+>> a.upcase
+=> "A BLUE CAR"
+>> a.upcase.reverse
+=> "RAC EULB A"
+>> exit
+----
+
+[[getters-and-setters]]
+== Getters and Setters
+
+As instance variables (“attributes”) only exist
+within the relevant instance, you always need to write a “getter” method
+for exporting such a variable. If we define a class `Room` that has the
+instance variables `@doors` and `@windows` (for the number of doors and
+windows in the room), then we can create the getter methods `doors` und
+`windows` (example program `room.rb`):
+
+[source,ruby]
+.room.rb
+----
+class Room
+  def initialize
+    @doors  = 1
+    @windows = 1
+  end
+
+  def doors
+    @doors
+  end
+
+  def windows
+    @windows
+  end
+end
+
+kitchen = Room.new
+
+puts "D: #{kitchen.doors}"
+puts "W: #{kitchen.windows}"
+----
+
+The execution of the program:
+
+[source,bash]
+----
+$ ruby room.rb
+D: 1
+W: 1
+$
+----
+
+As this scenario – wanting to simply return a value in identical form –
+is so common, there is already a ready-made getter method for it with
+the name `attr_reader`, which you would apply as follows in the program
+`room.rb`:
+
+[source,ruby]
+.room.rb
+----
+class Room
+  def initialize
+    @doors  = 1
+    @windows = 1
+  end
+
+  attr_reader :doors, :windows
+end
+
+kitchen = Room.new
+
+puts "D: #{kitchen.doors}"
+puts "W: #{kitchen.windows}"
+----
+
+`attr_reader` is a method which is called on the `Room` class. That is
+the reason why we use Symbols (e.g. `:doors` and `:windows`) instead of
+variables (e.g. `@doors` and `@windows`) as parameter.
+
+NOTE: `attr_reader` is a good example for meta programming in Ruby.
+      When working with Rails, you will frequently come across meta
+      programming and be grateful for how it works automagically.
+
+If you want to change the number of doors or windows from the outside,
+you need a “setter” method. It can be implemented as follows:
+
+[source,ruby]
+.room.rb
+----
+class Room
+  def initialize
+    @doors  = 1
+    @windows = 1
+  end
+
+  attr_reader :doors, :windows
+
+  def doors=(value)
+    @doors = value
+  end
+
+  def windows=(value)
+    @windows = value
+  end
+end
+
+kitchen = Room.new
+
+kitchen.windows = 2
+
+puts "D: #{kitchen.doors}"
+puts "W: #{kitchen.windows}"
+----
+
+The corresponding output is this:
+
+[source,bash]
+----
+$ **ruby room.rb**
+D: 1
+W: 2
+$
+----
+
+As you can probably imagine, there is of course also a ready-made and
+easier way of doing this. Via the setter method `attr_writer` you can
+simplify the code of `room.rb` further:
+
+[source,ruby]
+.room.rb
+----
+class Room
+  def initialize
+    @doors  = 1
+    @windows = 1
+  end
+
+  attr_reader :doors, :windows
+  attr_writer :doors, :windows
+end
+
+kitchen = Room.new
+
+kitchen.windows = 2
+
+puts "D: #{kitchen.doors}"
+puts "W: #{kitchen.windows}"
+----
+
+And (who would have thought!) there is even a method `attr_accessor`
+that combines getters and setters. The code for `room.rb` would then
+look like this:
+
+[source,ruby]
+.room.rb
+----
+class Room
+  def initialize
+    @doors  = 1
+    @windows = 1
+  end
+
+  attr_accessor :doors, :windows
+end
+
+
+kitchen = Room.new
+
+kitchen.windows = 2
+
+puts "D: #{kitchen.doors}"
+puts "W: #{kitchen.windows}"
+----
+
+
+[[converting-from-one-to-the-other-casting]]
+== Converting from One to the Other: Casting
+
+There is a whole range of useful instance methods for converting
+(“casting”) objects from one class to another. First, let's use the
+method `.to_s` to convert a `Fixnum` to a `String`.
+
+[source,bash]
+----
+$ irb
+>> a = 10
+=> 10
+>> a.class
+=> Integer
+>> b = a.to_s
+=> "10"
+>> b.class
+=> String
+>> exit
+----
+
+NOTE: Incidentally, that is exactly what `puts` does if you use `puts`
+      to output a `Fixnum` or a `Float` (for non-strings, it simply
+      implicitly adds the method `.to_s` and outputs the result).
+
+Now we use the method `.to_i` to change a `Float` to a `Fixnum`.
+
+[source,bash]
+----
+irb
+>> c = 10.0
+=> 10.0
+>> c.class
+=> Float
+>> d = c.to_i
+=> 10
+>> d.class
+=> Integer
+>> exit
+----
+
+[[method-to_s-for-your-own-classes]]
+== Method `to_s` for Your Own Classes
+
+Integrating a `to_s` method is often useful. Then you can simply
+output a corresponding object via `puts` (`puts` automatically outputs
+an object via the method `to_s`).
+
+Here is an example:
+
+[source,ruby]
+.person-a.rb
+----
+class Person
+  def initialize(first_name, last_name)
+    @first_name = first_name
+    @last_name = last_name
+  end
+
+  def to_s
+    "#{@first_name} #{@last_name}"
+  end
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './person-a.rb'
+=> true
+>> sw = Person.new('Stefan', 'Wintermeyer')
+=> #<Person:0x007fa95d030558 @first_name="Stefan", @last_name="Wintermeyer">
+>> puts sw
+Stefan Wintermeyer
+=> nil
+>> exit
+----
+
+[[is-a-method]]
+== Is `+` a Method?
+
+Why is there also a plus symbol in the list of methods for String? Let's
+find out by looking it up in `ri`:
+
+[source,bash]
+----
+$ ri -T String.+
+String.+
+
+(from ruby site)
+------------------------------------------------------------------------------
+  str + other_str   -> new_str
+
+------------------------------------------------------------------------------
+
+Concatenation---Returns a new String containing other_str
+concatenated to str.
+
+  "Hello from " + self.to_s   #=> "Hello from main"
+----
+
+hmmm ... Let's see what it says for `Integer`:
+
+[source,bash]
+----
+$ ri -T Integer.+
+Integer.+
+
+(from ruby site)
+------------------------------------------------------------------------------
+  int + numeric  ->  numeric_result
+
+------------------------------------------------------------------------------
+
+Performs addition: the class of the resulting object depends on the class of
+numeric and on the magnitude of the result. It may return a Bignum.
+----
+
+Let's have a go and play around with this in `irb`. So we should be able
+to add the `+` to an object, just as any other method, separated by a dot
+and add the second number in brackets as parameter:
+
+[source,bash]
+----
+$ irb
+>> 10 + 10
+=> 20
+>> 10+10
+=> 20
+>> 10.+10
+=> 20
+>> 10.+(10)
+=> 20
+>> exit
+----
+
+Aha! The plus symbol is indeed a method, and this method takes the next
+value as parameter. Really we should put this value in brackets, but
+thanks to Ruby's well thought-out syntax this is not necessary.
+
+[[can-i-overwrite-the-method]]
+=== Can I Overwrite the Method `+`?
+
+Yes, you can overwrite any method. Logically, this does not make much
+sense for methods such as `+`, unless you want to drive your fellow
+programmers mad. I am going to show you a little demo in `irb` so you
+will believe me.
+
+The aim is overwriting the method `+` for `Fixnum`. We want the result
+of every addition to be the number 42. We write a so call "monkey patch":
+
+[source,ruby]
+.monkey-patch-a.rb
+----
+class Integer
+  def +(name, *args, &blk)
+    42
+  end
+end
+----
+
+Now we use the `+` method before and after that monkey patch:
+
+[source,bash]
+----
+irb
+>> 10 + 10
+=> 20
+>> load './monkey-patch-a.rb'
+=> true
+>> 10 + 10
+=> 42
+>> exit
+----
+
+First we perform a normal addition. Than we redefine the method `+` for
+the class `Integer`, and after that we do the calculation again. But this
+time, with different results.
+
+[[if-condition]]

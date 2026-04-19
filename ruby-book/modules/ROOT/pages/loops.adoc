@@ -1,0 +1,217 @@
+[[loops]]
+= Loops
+
+There are different ways of implementing loops in Ruby. The iterator
+variation is used particularly often in the Rails environment.
+
+[[while-and-until]]
+== while and until
+
+An abstract while loop looks like this:
+
+[source,ruby]
+----
+while expression do
+  program
+end
+----
+
+[NOTE]
+====
+The `do` that follows the `expression` is optional. Often you will also
+see this:
+
+[source,ruby]
+----
+while expression
+  program
+end
+----
+====
+
+Here is an `irb` example:
+
+[source,bash]
+----
+$ irb
+>> i = 0
+=> 0
+>> while i < 3 do
+?>   puts i
+>>   i = i + 1
+>> end
+0
+1
+2
+=> nil
+>> exit
+----
+
+`Until` loops are built similarly:
+
+[source,ruby]
+----
+until expression
+  program
+ends
+----
+
+Again, here is the corresponding `irb` example:
+
+[source,bash]
+----
+$ irb
+>> i = 5
+=> 5
+>> until i == 0
+>>   i = i - 1
+>>   puts i
+>> end
+4
+3
+2
+1
+0
+=> nil
+>> exit
+----
+
+[[blocks-and-iterators]]
+== Blocks and Iterators
+
+“Block” and “iterator” are some of the favorite words of many Ruby
+programmers. Now I am going to show you why.
+
+In the loop
+
+[source,ruby]
+----
+5.times { |i| puts i }
+----
+
+`i` is the iterator and `puts i` is the block.
+
+You can also express the whole thing in the following syntax:
+
+[source,ruby]
+----
+5.times do |i|
+  puts i
+end
+----
+
+[[iterators]]
+=== Iterators
+
+Iterators are just a specific type of method. As you probably know, the
+word “_iterate_” means to repeat something. For example, the class
+`Integer` has the iterator `times()`. Let's see what help `ri Integer.times`
+offers:
+
+[source,bash]
+----
+$ ri -T Integer.times
+Integer.times
+
+(from ruby site)
+------------------------------------------------------------------------------
+  int.times {|i| block }  ->  self
+  int.times               ->  an_enumerator
+
+------------------------------------------------------------------------------
+
+Iterates the given block int times, passing in values from zero to
+int - 1.
+
+If no block is given, an Enumerator is returned instead.
+
+  5.times do |i|
+    print i, " "
+  end
+  #=> 0 1 2 3 4
+----
+
+And it also gives a nice example that we are going to try out in irb:
+
+[source,bash]
+----
+$ irb
+>> 5.times do |i|
+?>   puts i
+>> end
+0
+1
+2
+3
+4
+=> 5
+>> exit
+----
+
+There is also a single-line notation for small blocks:
+
+[source,bash]
+----
+$ irb
+>> 5.times { |i| puts i }
+0
+1
+2
+3
+4
+=> 5
+>> exit
+----
+
+By the way, an iterator does not necessarily have to pass a variable to
+the block:
+
+[source,bash]
+----
+$ irb
+>> 5.times { puts 'example' }
+example
+example
+example
+example
+example
+=> 5
+>> exit
+----
+
+[[blocks]]
+=== Blocks
+
+A block is the code that is triggered by an iterator. In the block, you
+have access to the local variable(s) passed by the iterator.
+
+[[method-upto]]
+=== Method upto
+
+Apart from `times` there is also the method `upto`, for easily
+implementing a loop. `ri` offers a nice example for this, too:
+
+[source,bash]
+----
+$ ri -T Integer.upto
+Integer.upto
+
+(from ruby site)
+------------------------------------------------------------------------------
+  int.upto(limit) {|i| block }  ->  self
+  int.upto(limit)               ->  an_enumerator
+
+------------------------------------------------------------------------------
+
+Iterates the given block, passing in integer values from int up to and
+including limit.
+
+If no block is given, an Enumerator is returned instead.
+
+For example:
+
+  5.upto(10) { |i| print i, " " }
+  #=> 5 6 7 8 9 10
+----
+
+[[arrays-and-hashes]]

@@ -1,0 +1,171 @@
+[[variables]]
+= Variables
+
+[[naming-conventions]]
+== Naming Conventions
+
+Normal variables are written in lower case. Please use `snake_case`. Same goes
+for symbols and methods.
+
+[source,bash]
+----
+$ irb
+>> pi = 3.14
+=> 3.14
+>> exit
+----
+
+=== Constants
+
+Constants start with an upper case letter.
+
+WARNING: A constant can also be overwritten with a new value (you
+         will get a warning message). So please do not rely on the
+         constancy of a constant.
+
+[source,bash]
+----
+$ irb
+>> Pi = 3.14
+=> 3.14
+>> Pi = 123
+(irb):2: warning: already initialized constant Pi
+(irb):1: warning: previous definition of Pi was here
+=> 123
+>> puts Pi
+123
+=> nil
+>> exit
+----
+
+You are on the safe side if you are using only ASCII symbols. But
+Ruby source files are UTF-8 by default, so you could also use special characters
+(for example German Umlaute) more or less without any problems in a
+variable name. But if you want to be polite towards other programmers
+who probably do not have those characters directly available on their
+keyboards, it is better to stick to pure ASCII.
+
+
+[[scope-of-variables]]
+== Scope of Variables
+
+Variables have a different scope (or “reach”) within the Ruby
+application and therefore also within a Ruby on Rails application.
+
+IMPORTANT: You need to keep this scope in mind while programming.
+           Otherwise you can end up with odd effects.
+
+[[local-variables-aaa-or-_aaa]]
+=== Local Variables (`aaa` or `_aaa`)
+
+Local variables either start with a lower case letter or an underscore
+(`_`). Their scope is limited to the current environment (for example
+the current method). The following example defines two methods which use
+the same local variable radius. Because they are local they don't
+interact with each other:
+
+[source,ruby]
+.variable-a.rb
+----
+def area(radius)
+  3.14 * radius * radius
+end
+
+def circumference(radius)
+  2 * 3.14 * radius
+end
+----
+
+[source,bash]
+----
+$ irb
+>> load './variable-a.rb'
+=> true
+>> area(10)
+=> 314.0
+>> circumference(1)
+=> 6.28
+>> exit
+----
+
+[[global-variables-aaa]]
+=== Global Variables (`$aaa`)
+
+A global variable starts with a `$`-sign and is accessible in the entire
+programm. Example programm:
+
+[source,ruby]
+.variable-b.rb
+----
+$value = 10
+
+def example
+  $value = 20
+end
+
+puts $value
+example
+puts $value
+----
+
+[source,bash]
+----
+$ ruby variable-b.rb
+10
+20
+----
+
+Global variables are used very rarely! You wouldn't harm yourself by
+forgetting that they exist right now.
+
+[[instance-variables-aaa]]
+=== Instance Variables (`@aaa`)
+
+Instance variables (“*A*ttributes”, hence the `@`) only apply within a
+class, but everywhere in it – a mini version of global variables, so to
+speak. Unlike global variables, you will find instance variables all
+over the place in a Rails application. Let's tackle them in form of an
+example program with the name `color.rb`:
+
+[source,ruby]
+.color.rb
+----
+class Wall
+  def initialize
+    @color = 'white'
+  end
+
+  def color
+    @color
+  end
+
+  def paint_it(value)
+    @color = value
+  end
+end
+
+my_wall = Wall.new
+puts my_wall.color
+
+my_wall.paint_it('red')
+puts my_wall.color
+----
+
+If you start this program, the following output will appear:
+
+[source,bash]
+----
+$ ruby color.rb
+white
+red
+$
+----
+
+In the method `initialize` we set the instance variable `@color` to the
+value “white”. The method `paint_it(value)` changes this instance
+variable.
+
+With the method `color` we can access the value of `@color` outside of
+the instance. This kind of method is called a setter method.
+
+[[methods-once-again]]

@@ -12,7 +12,7 @@ you use today. What doesn't go stale is the workflow: what to
 feed an agent, how to verify what it produced, how to keep the
 blast radius small when it inevitably gets something wrong.
 
-WARNING: Do the xref:ruby-basics.adoc#ruby-basics[Ruby Basics]
+WARNING: Do the link:https://wintermeyer-consulting.de/ruby/book/[Ruby Basics]
          and xref:first-steps-with-rails.adoc#first-steps-with-rails[First Steps]
          chapters by hand first. If you let an agent drive
          while you're learning the language, you end up
@@ -623,7 +623,7 @@ similar scanners in CI, and review every `git add`.
 Short honest list.
 
 * *When you're learning Rails for the first time.* Do the
-  xref:ruby-basics.adoc#ruby-basics[Ruby Basics] and
+  link:https://wintermeyer-consulting.de/ruby/book/[Ruby Basics] and
   xref:first-steps-with-rails.adoc#first-steps-with-rails[First Steps]
   chapters by hand. The fastest way to a long career is
   to understand what the agent is doing.

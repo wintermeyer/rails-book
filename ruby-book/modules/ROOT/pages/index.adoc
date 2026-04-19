@@ -1,0 +1,16 @@
+= Welcome
+
+This chapter is a tightrope walk between oversimplification and a degree of
+detail that is unnecessary for a Rails newbie. After all, the objective is not
+becoming a Ruby guru, but understanding Ruby on Rails. I am going to elaborate
+on the most important points. The rest is then up to you. If you would like to
+know more about Ruby, then I recommend the book "The Ruby Programming Language"
+by David Flanagan and https://en.wikipedia.org/wiki/Yukihiro_Matsumoto[Yukihiro
+Matsumoto].
+
+[quote, Yukihiro Matsumoto]
+It is easy to program in Ruby, but Ruby is not a simple language.
+
+[[ruby-version]]
+
+Pick a chapter from the sidebar. The material here is lifted from the Ruby Introduction chapter in the link:https://wintermeyer-consulting.de/rails/book/ruby-basics.html[_Learn Ruby on Rails_ book], split page-per-section so each topic has its own URL.

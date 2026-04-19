@@ -5,7 +5,7 @@
 * xref:how-to.adoc[How to Work with This Book]
 
 .Ruby
-* xref:ruby-basics.adoc[Ruby Introduction]
+* https://wintermeyer-consulting.de/ruby/book/[Ruby Introduction ↗]
 
 .Rails Foundations
 * xref:first-steps-with-rails.adoc[First Steps with Rails]

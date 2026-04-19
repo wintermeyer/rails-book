@@ -2,7 +2,7 @@
 = First Steps with Rails
 
 Now that you have painstakingly read your way through
-xref:ruby-basics.adoc#ruby-basics[Ruby Basics] we can move on
+link:https://wintermeyer-consulting.de/ruby/book/[Ruby Basics] we can move on
 to a more exciting bit. In this chapter we will create our first
 small Ruby on Rails project.
 
@@ -548,7 +548,7 @@ Now you understand how Ruby code is used in the view.
 [qanda]
 I don't understand anything. I can't cope with the Ruby code. Could you please explain it again?::
   Is it possible that you have not completely worked your way through
-  xref:ruby-basics.adoc#ruby-basics[Ruby Basics]? Please do take
+  link:https://wintermeyer-consulting.de/ruby/book/[Ruby Basics]? Please do take
   your time with it and have another thorough look. Otherwise, the
   rest won't make any sense here.
 I can understand the Ruby code and the HTML output. But I don't get why some HTML code was rendered around it if I didn't even write that HTML code. Where does it come from, and can I influence it?::
@@ -639,7 +639,7 @@ to display in the view, then I need a mechanism for this. This is
 referred to as _instance variable_ and always starts with a `@`. If
 you are not 100 % sure any more which variable has which _scope_, then
 please have another quick look at
-xref:ruby-basics.adoc#scope-of-variables[Scope of Variables].
+link:https://wintermeyer-consulting.de/ruby/book/variables.html#scope-of-variables[Scope of Variables].
 
 In the following example we insert an instance variable for the
 current time which we get by `Time.now` in the controller and then
@@ -825,7 +825,7 @@ https://guides.rubyonrails.org/layouts_and_rendering.html#using-partials
 == The Rails Console
 
 The _console_ in Rails is nothing more than an `irb` (see
-xref:ruby-basics.adoc#irb[section "irb"]) built around the Rails
+link:https://wintermeyer-consulting.de/ruby/book/basics.html#irb[section "irb"]) built around the Rails
 environment. The console is very useful both for developing and for
 administration purposes because the whole Rails environment is
 represented and available.
