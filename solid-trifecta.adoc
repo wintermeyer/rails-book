@@ -1,0 +1,155 @@
+[[solid-trifecta]]
+= Solid Queue, Solid Cache, Solid Cable
+
+Rails 8 introduced three database-backed backends — Solid
+Queue, Solid Cache and Solid Cable — that collectively let you
+run a production Rails application without Redis, without
+Memcached, and (for smaller apps) without any extra
+infrastructure at all. The Rails team refers to them as the
+"Solid trifecta".
+
+Each gem is independent but they share a philosophy: use the
+database you already have. A small-to-mid-sized app can ship
+with nothing more than a Rails container and a PostgreSQL (or
+SQLite) database.
+
+A fresh `rails new myapp` wires up all three.
+
+== Solid Queue
+
+Solid Queue is a production-grade Active Job adapter. It
+persists jobs in the database, supports schedules (cron-style
+recurring jobs), concurrency controls, and multiple worker
+queues.
+
+Configuration lives in two files:
+
+* `config/queue.yml` — worker/dispatcher sizing.
+* `config/recurring.yml` — cron-style schedules.
+
+Jobs are scheduled the usual way:
+
+[source,ruby]
+----
+ExampleJob.perform_later(user)
+ExampleJob.set(wait: 1.hour).perform_later(user)
+----
+
+In production you run a worker process:
+
+[source,bash]
+----
+$ bin/jobs
+----
+
+Kamal's generated `config/deploy.yml` already defines `jobs` as
+a separate service that runs `bin/jobs`.
+
+See xref:active-job.adoc#active-job[Active Job] for the full
+chapter.
+
+== Solid Cache
+
+Solid Cache is the default `Rails.cache` backend. It stores
+entries in a dedicated database (default: a separate SQLite
+file for development, PostgreSQL for production) and is
+optimized for write-heavy workloads with SSDs. The writers are
+fire-and-forget, so cache writes don't slow down requests.
+
+Use it exactly like any other Rails cache:
+
+[source,ruby]
+----
+Rails.cache.write("stats:today", counts, expires_in: 5.minutes)
+Rails.cache.fetch("user:#{user.id}:friends") { user.friends.to_a }
+Rails.cache.delete_matched("homepage:*")
+----
+
+Solid Cache is configured automatically in
+`config/environments/production.rb` by `rails new`:
+
+[source,ruby]
+----
+config.cache_store = :solid_cache_store
+----
+
+`config/cache.yml` controls the max age (default 60 days) and
+max size (default 256 MB). Inspect cache hits/misses with:
+
+[source,bash]
+----
+$ bin/rails console
+irb(main):001> Rails.cache.stats
+=> { hits: 12_345, misses: 678, ... }
+----
+
+See xref:caching.adoc#caching[Caching] for patterns that get
+the most out of it.
+
+== Solid Cable
+
+Solid Cable is the default Action Cable adapter. It pipes
+WebSocket messages through the database rather than through
+Redis Pub/Sub, so you can run real-time updates without a
+Redis server.
+
+It's configured in `config/cable.yml`:
+
+[source,yaml]
+----
+default: &default
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
+
+development:
+  <<: *default
+
+test:
+  adapter: test
+
+production:
+  <<: *default
+----
+
+The `polling_interval` of 100ms is a compromise between
+latency and database load. For most chat-style applications
+it's plenty.
+
+See xref:action-cable.adoc#action-cable[Action Cable] and the
+Turbo Streams examples in
+xref:hotwire.adoc#hotwire[Hotwire] for the client side.
+
+== When _Not_ to Use Them
+
+The Solid trifecta is a great default. It simplifies your
+infrastructure story and removes entire categories of
+bugs ("Redis was down but Postgres was fine, so the app
+accepted writes but dropped every background job"). That said:
+
+* *Extremely high-throughput background jobs* — if you are
+  running tens of thousands of jobs per minute, Sidekiq on
+  Redis is still faster than Solid Queue on Postgres. Start
+  with Solid Queue and switch if you actually hit a limit.
+* *Very high-frequency cache writes* — Solid Cache handles
+  thousands of writes per second, but millions per second is
+  what Redis is for. For a CMS, marketplace, or SaaS the
+  defaults are plenty.
+* *Multi-region / globally distributed apps* — a single
+  Postgres instance is a single point of failure. Consider a
+  Redis cluster or a global cache (Cloudflare Cache, etc.)
+  for that case.
+
+For the other 99% of Rails apps the Solid trifecta is the
+right choice.
+
+== Further Reading
+
+* Solid Queue: https://github.com/rails/solid_queue
+* Solid Cache: https://github.com/rails/solid_cache
+* Solid Cable: https://github.com/rails/solid_cable
+* 37signals blog on why Solid Queue exists:
+  https://dev.37signals.com

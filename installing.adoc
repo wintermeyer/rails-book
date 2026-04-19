@@ -6,192 +6,199 @@
 [[development-system]]
 == Development System
 
-This chapter's installation methods described are intended for
-development systems.
+This appendix shows how to install Ruby and Ruby on Rails on a fresh
+development machine. It is not meant to cover every Linux distribution
+or every version of macOS; it shows one well-travelled path that works
+today.
 
-[[ruby-on-rails-5.2-on-debian-9.3-stretch]]
-== Ruby on Rails 5.2 on Debian 9.3 (Stretch)
+The recipe in this chapter installs:
 
-((("Debian", "9.3 (Stretch)")))
-There are two main reasons for installing a Ruby on Rails system with
-RVM (Ruby Version Manager):
+* Ruby 4.0
+* Rails 8.1
+* SQLite (the only database we need for the book)
 
-* You simply do not have any root rights on the system. In that case,
-you have no other option.
-* You want to run several Rails systems that are separated cleanly, and
-perhaps also separate Ruby versions. Maybe not today but for a future system upgrade. This can be easily done with RVM.
+We use https://mise.jdx.dev/[*mise*] as a version manager for Ruby. A
+version manager lets you install several Rubies side-by-side without
+touching the Ruby that ships with the operating system. If you prefer
+https://github.com/rbenv/rbenv[rbenv] or https://asdf-vm.com/[asdf]
+they both work fine as well, the steps are almost identical.
 
-NOTE: Detailed information on RVM can be found on the
-      RVM homepage at https://rvm.io
+NOTE: Older editions of this book used RVM. RVM still works, but on
+      modern machines `mise` is easier to install, it is faster, and
+      it can also manage Node.js or Python if you ever need them.
 
-This description assumes that you have a freshly installed Debian
-GNU/Linux 9.3 ("Stretch"). You will find an ISO image for the
-installation at http://www.debian.org. I recommend the approximately 250
-MB net installation CD image. For instructions on how to install
-Debian-GNU/Linux, please go to http://www.debian.org/distrib/netinst.
+[[installing-on-macos]]
+== macOS (Apple Silicon and Intel)
 
-[[preparations]]
-=== Preparations
+Tested on macOS 15 (Sequoia) and macOS 26. Earlier versions that still
+receive security updates should also work.
 
-If you have root rights on the target system, you can use the following
-commands to ensure that all required programs for a successful
-installation of RVM are available. If you do not have root rights, you
-have to either hope that your admin has already installed everything you
-need, or send them a quick e-mail with the corresponding lines.
+[[xcode-command-line-tools]]
+=== Xcode Command Line Tools
 
-Login as root, update the package lists and upgrade the system:
-
-[source,bash]
-----
-root@debian:~# apt-get update
-[..]
-root@debian:~# apt-get upgrade
-----
-
-Installation of the packages required for the RVM installation:
+Ruby ships as source code and needs a C compiler. On macOS that
+compiler comes with Apple's Command Line Tools. If you have never
+installed them, run:
 
 [source,bash]
 ----
-root@debian:~# apt-get -y install curl gawk g++ \
-make libreadline6-dev zlib1g-dev libssl-dev \
-libyaml-dev libsqlite3-dev sqlite3 autoconf \
-libgdbm-dev libncurses5-dev libtool bison nodejs \
-pkg-config libffi-dev libgmp-dev libgmp-dev git \
-dirmngr
+$ xcode-select --install
 ----
 
-Now is a good time to log out as root:
+A system dialog will appear. Click *Install* and wait for it to
+finish. You do not need the full Xcode app, only the Command Line
+Tools.
+
+[[install-homebrew-and-mise]]
+=== Homebrew and mise
+
+https://brew.sh[Homebrew] is the de-facto package manager on macOS. If
+you do not have it yet, install it with the one-liner from the
+Homebrew homepage.
+
+Once Homebrew is installed, add mise:
 
 [source,bash]
 ----
-root@debian:~# exit
-logout
-xyz@debian:~$
+$ brew install mise
 ----
 
-[[installing-ruby-2.5-and-ruby-on-rails-5.2-with-rvm]]
-=== Installing Ruby 2.5 and Ruby on Rails 5.2 with RVM
-
-((("RVM")))
-Log in with your normal user account (in our case, it's the user `xyz`).
-
-RVM, Ruby, and Ruby on Rails can be installed in various ways. I
-recommend using the following commands and get at least one cup of
-tea/coffee/favorite drink:
+Then activate mise in your shell. For Zsh (the default on macOS) add
+this line to `~/.zshrc`:
 
 [source,bash]
 ----
-xyz@debian:~$ gpg --keyserver hkp://keys.gnupg.net --recv-keys \
-409B6B1796C275462A1703113804BB82D39DC0E3 \
-7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-[...]
-xyz@debian:~$ curl -sSL https://get.rvm.io | bash
-[...]
+eval "$(mise activate zsh)"
 ----
 
-To be able to use RVM you need to run a script first.
-rvm will tell you which script (it's path depends on the user name):
+Open a new terminal window so the change takes effect.
+
+[[install-ruby-with-mise]]
+=== Install Ruby
 
 [source,bash]
 ----
-xyz@debian:~$ source /home/xyz/.rvm/scripts/rvm
+$ mise use --global ruby@4.0
 ----
 
-Now you can use RVM to install Ruby 2.5 and after that the current
-Rails version with 'gem':
-
-[source,bash]
-----
-xyz@debian:~$ rvm install 2.5
-[...]
-xyz@debian:~$ gem install rails
-[...]
-xyz@debian:~$
-----
-
-TIP: `gem install rails` installs the current stable Rails version. You can use the
-     format `gem install rails -v 5.2.0` to install a specific version and
-     `gem install rails --pre` to install a current beta version.
-
-RVM, Ruby 2.6 and Rails 5.2 are now installed. You can check it
-with the following commands.
-
-[source,bash]
-----
-xyz@debian:~$ ruby -v
-ruby 2.5.0p0 (2017-12-25 revision 61468) [x86_64-linux]
-xyz@debian:~$ rails -v
-Rails 5.2.0
-xyz@debian:~$
-----
-
-[[ruby-on-rails-5.2-on-mac-os-10.13-high-sierra]]
-== Ruby on Rails 5.2 on macOS 10.13 (High Sierra)
-
-((("macOS", "10.13 (High Sierra)")))
-macOS 10.13 includes Ruby by default. Not interesting for our purposes.
-We want Ruby 2.5 and Rails 5.2. To avoid interfering with the existing
-Ruby and Rails installation and therefore the packet management of Mac
-OS X, we install Ruby 2.5 and Rails 5.2 with RVM (Ruby Version Manager).
-
-With RVM, you can install and run any number of Ruby and Rails versions
-as normal user (without root rights and in your home directory).
-
-NOTE: Detailed information on RVM can be found at the RVM
-      homepage at https://rvm.io/
-
-[[xcode-installation-or-upgrade]]
-=== Xcode Installation or Upgrade
-
-Before you start installing Ruby on Rails, you must install the _latest_
-Apple Xcode tools on your system. The easiest way is via the Mac App
-Store (search for "xcode") or via the website
-https://developer.apple.com/xcode/
-
-IMPORTANT: Please take care to install all the command line tools!
-
-[[installing-ruby-2.5-and-ruby-on-rails-5.2-with-rvm-1]]
-=== Installing Ruby 2.5 and Ruby on Rails 5.2 with RVM
-
-RVM can be installed in various ways. I recommend using the following
-monster command (please copy it exactly) that installs the latest RVM,
-Ruby and Ruby on Rails in your home directory:
-
-[source,bash]
-----
-$ gpg --keyserver hkp://keys.gnupg.net --recv-keys \
-409B6B1796C275462A1703113804BB82D39DC0E3 \
-7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-[...]
-$ curl -sSL https://get.rvm.io | bash
-[...]
-----
-
-rvm will tell you a source command which you can run to setup rvm
-for your current shell/terminal. Most times it is just easier to close
-the current shell and open a new terminal window. Than everything in
-the new terminal is setup properly.
-
-[source,bash]
-----
-$ rvm install 2.5
-[...]
-$ gem install rails
-[...]
-$
-----
-
-TIP: `gem install rails` installs the current stable Rails version. You can use the
-     format `gem install rails -v 5.2.0` to install a specific version and
-     `gem install rails --pre` to install a current beta version.
-
-RVM, Ruby 2.5 and Rails 5.2 are now fully installed. You can check it
-with the following commands.
+The first run compiles Ruby, which takes a few minutes. When it is
+done, check the version:
 
 [source,bash]
 ----
 $ ruby -v
-ruby 2.5.0p0 (2017-12-25 revision 61468) [x86_64-darwin17]
-$ rails -v
-Rails 5.2.0
+ruby 4.0.2 (2026-03-17 revision d3da9fec82) +PRISM [arm64-darwin25]
 ----
+
+[[install-rails]]
+=== Install Rails
+
+Rails is just a Ruby gem. Install the latest stable release:
+
+[source,bash]
+----
+$ gem install rails
+----
+
+Verify:
+
+[source,bash]
+----
+$ rails -v
+Rails 8.1.3
+----
+
+TIP: `gem install rails` always fetches the current stable Rails. To
+     pin a specific version use `gem install rails -v 8.1.3`. For a
+     pre-release add `--pre`.
+
+That's it. You are ready to create your first Rails application.
+
+[[installing-on-linux]]
+== Linux (Debian/Ubuntu)
+
+Tested on Debian 13 (Trixie) and Ubuntu 24.04 LTS. Other modern
+distributions use the same idea, only the package names change.
+
+[[install-build-dependencies]]
+=== Build dependencies
+
+Ruby still compiles from source, so you need a C compiler and a handful
+of libraries. Log in as a normal user and run:
+
+[source,bash]
+----
+$ sudo apt update
+$ sudo apt install -y build-essential curl git libssl-dev \
+    libreadline-dev zlib1g-dev libyaml-dev libffi-dev \
+    libgmp-dev libsqlite3-dev sqlite3 pkg-config
+----
+
+[[install-mise-linux]]
+=== mise
+
+The mise homepage has an installer. The short version:
+
+[source,bash]
+----
+$ curl https://mise.run | sh
+$ echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
+----
+
+Open a new terminal.
+
+[[install-ruby-linux]]
+=== Ruby and Rails
+
+The rest is identical to the macOS path:
+
+[source,bash]
+----
+$ mise use --global ruby@4.0
+$ ruby -v
+ruby 4.0.2 (2026-03-17 revision d3da9fec82) [aarch64-linux]
+$ gem install rails
+$ rails -v
+Rails 8.1.3
+----
+
+[[installing-on-windows]]
+== Windows (WSL 2)
+
+The recommended way to develop Rails applications on Windows is not
+native Windows at all, but the *Windows Subsystem for Linux*. You get
+a real Linux environment, your editor on Windows talks to it over
+the filesystem bridge, and every Linux gem (including ones with C
+extensions) just works.
+
+Open an elevated PowerShell and run:
+
+[source,powershell]
+----
+PS> wsl --install
+----
+
+Reboot when prompted. After the reboot Windows installs Ubuntu and
+asks you to pick a Linux username and password. From that point on,
+follow the <<installing-on-linux,Linux instructions>> above inside
+the Ubuntu window.
+
+[[what-you-just-installed]]
+== What you just installed
+
+After running the commands above you have:
+
+* A Ruby 4.0 interpreter, managed by `mise`, living under your home
+  directory so it cannot collide with the system Ruby.
+* RubyGems 4.0, which is the package manager for Ruby libraries
+  ("gems"). `gem install X` downloads and installs the gem `X`.
+* Bundler, which is bundled with Ruby 4.0 and is the tool every Rails
+  application uses to lock its dependencies to known versions (see
+  xref:bundler-and-gems.adoc#bundler-and-gems[Bundler and Gems]).
+* The Rails gem itself. `rails new myapp` creates a new Rails
+  application.
+
+Whenever you want to try a fresh Ruby version later, `mise install
+ruby@X.Y` installs it and `mise use ruby@X.Y` switches. Your existing
+projects are unaffected because each Rails project pins its Ruby
+version in a `.ruby-version` file in the project root.

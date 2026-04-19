@@ -51,15 +51,15 @@ We create the new Rails app:
 
 [source,bash]
 ----
-$ rails new phone_book
+$ bin/rails new phone_book
   [...]
 $ cd phone_book
-$ rails generate scaffold company name
+$ bin/rails generate scaffold company name
   [...]
-$ rails generate scaffold employee company:references \
+$ bin/rails generate scaffold employee company:references \
   last_name first_name phone_number
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
@@ -221,10 +221,10 @@ We populate it via `rails db:seed`
 
 [source,bash]
 ----
-$ rails db:seed
+$ bin/rails db:seed
 ----
 
-You can start the application with `rails server` and retrieve the
+You can start the application with `bin/rails server` and retrieve the
 example data with a web browser by going to the URLs
 http://localhost:3000/companies or http://localhost:3000/companies/1
 
@@ -232,12 +232,12 @@ http://localhost:3000/companies or http://localhost:3000/companies/1
 === Normal Speed of the Pages to Optimize
 
 In this chapter, we optimize the following web pages. Start the Rails
-application in development mode with `rails server`. The relevant
+application in development mode with `bin/rails server`. The relevant
 time values of course depend on the hardware you are using.
 
 [source,bash]
 ----
-$ rails server
+$ bin/rails server
 ----
 
 To access the web pages, we use the command line tool curl
@@ -700,12 +700,12 @@ Application"]).
 === Enabling Fragment Caching in Development Mode
 
 Fragement caching is by default disabled in the development
-environment. You can active it with the command `rails dev:cache` which
+environment. You can active it with the command `bin/rails dev:cache` which
 touches the file `tmp/caching-dev.txt`.
 
 [source,bash]
 ----
-$ rails dev:cache
+$ bin/rails dev:cache
 Development mode is now being cached.
 ----
 
@@ -714,7 +714,7 @@ To deactivate caching run the same command again (it will delete the file
 
 [source,bash]
 ----
-$ rails dev:cache
+$ bin/rails dev:cache
 Development mode is no longer being cached.
 ----
 
@@ -774,7 +774,7 @@ Please edit the file `app/views/companies/index.html.erb` as follows:
 <%= link_to 'New Company', new_company_path %>
 ----
 
-Then you can start the Rails server with `rails server` and go to the
+Then you can start the Rails server with `bin/rails server` and go to the
 URL http://localhost:3000/companies.
 
 The first time a page which has a fragment cache is a little bit slower
@@ -973,36 +973,93 @@ caches will expire.
 [[cache-store]]
 === Cache Store
 
-The cache store manages the stored fragment caches. If not configured
-otherwise, this is the Rails MemoryStore. This cache store is good for
-developing, but less suitable for a production system because it acts
-independently for each Ruby on Rails process. So if you have several
-Ruby on Rails processes running in parallel in the production system,
-each process holds its own MemoryStore.
+The cache store manages the stored fragment caches. In development the
+default is the Rails `MemoryStore` — good for hacking, less suitable
+for production because it acts independently for each Ruby on Rails
+process. In a Rails 8 application the default in _production_ is
+https://github.com/rails/solid_cache[Solid Cache]: a
+database-backed, disk-friendly cache store written by the Rails team.
+It's configured for you in a fresh `rails new myapp`.
 
-[[memcachestore]]
-==== MemCacheStore
+[[solid-cache-store]]
+==== Solid Cache (the Rails 8 default)
 
-Most production systems use memcached (http://memcached.org/) as cache
-store. To enable memcached as cache store in the production system, you
-need to add the following line in the file
-`config/environments/production.rb`:
+Solid Cache stores cache entries in the same database (or a
+dedicated one) that powers the rest of your app. That means no
+extra infrastructure, no Redis/memcached to run, and the cache
+survives deploys. Rails 8 adds it to your Gemfile, generates
+`config/cache.yml`, and creates a `db/cache_schema.rb` for you.
+
+The minimum you'd need to be aware of in
+`config/environments/production.rb` is already there:
 
 [source,ruby]
 .config/environments/production.rb
 ----
-config.cache_store = :mem_cache_store
+config.cache_store = :solid_cache_store
 ----
 
-The combination of appropriately used auto-expiring caches and memcached
-is an excellent recipe for a successful web page.
+And `config/cache.yml`:
+
+[source,yaml]
+.config/cache.yml
+----
+default: &default
+  store_options:
+    max_age: <%= 60.days.to_i %>
+    max_size: <%= 256.megabytes %>
+    namespace: <%= Rails.env %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  database: cache
+  <<: *default
+----
+
+The combination of appropriately used auto-expiring caches and
+Solid Cache is an excellent recipe for a fast web page without the
+operational complexity of a separate cache server.
+
+[[memcachestore]]
+==== MemCacheStore
+
+If you already run memcached (http://memcached.org/) in production
+and want to keep using it, you can. Add the `dalli` gem and set
+`config.cache_store` in `config/environments/production.rb`:
+
+[source,ruby]
+.config/environments/production.rb
+----
+config.cache_store = :mem_cache_store, "cache-1.example.com", "cache-2.example.com"
+----
+
+This is a perfectly fine choice. For new projects we recommend
+Solid Cache only because it removes one whole piece of
+infrastructure from the picture.
+
+[[redis-cache-store]]
+==== RedisCacheStore
+
+Similarly, if your stack already has Redis you can use
+`:redis_cache_store`:
+
+[source,ruby]
+.config/environments/production.rb
+----
+config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"] }
+----
 
 [[other-cache-stores]]
 ==== Other Cache Stores
 
-In the official Rails documentation you will find a list of other cache
-stores at
-http://guides.rubyonrails.org/caching_with_rails.html#cache-stores.
+In the official Rails documentation you'll find a list of other
+cache stores at
+https://guides.rubyonrails.org/caching_with_rails.html#cache-stores
 
 [[page-caching]]
 == Page Caching
@@ -1141,7 +1198,7 @@ public/
 └── robots.txt
 ----
 
-After starting the appliation with `rails server` and going to the URLs
+After starting the appliation with `bin/rails server` and going to the URLs
 http://localhost:3000/companies and http://localhost:3000/companies/1
 via a web browser, it looks like this:
 
@@ -1335,7 +1392,7 @@ The purpose of preheating is once more saving server ressources and
 achieving better quality for the user, as the web page is displayed more
 quickly.
 
-[[further-information]]
+[[further-information-on-caching]]
 == Further Information
 
 The best source of information on this topic can be found in the Rails

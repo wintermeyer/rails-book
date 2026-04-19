@@ -1,0 +1,239 @@
+[[hotwire]]
+= Hotwire (Turbo + Stimulus)
+
+Rails 7 introduced _Hotwire_, Basecamp's HTML-over-the-wire
+approach to modern web apps, as the default frontend stack. It
+continues to be the default in Rails 8. You don't have to write
+a single line of JavaScript to get SPA-like navigation,
+in-place form submissions, and real-time push updates — Rails
+sends plain HTML over the existing request cycle and Hotwire
+applies it to the DOM.
+
+Hotwire has three parts:
+
+* *Turbo Drive* — makes every link and form submission an Ajax
+  call, replacing only the `<body>` without a full page reload.
+  Think of it as Turbolinks' smarter successor.
+* *Turbo Frames* — lets you cut a page into independent pieces
+  (`<turbo-frame>`), each of which can be replaced independently
+  by the server.
+* *Turbo Streams* — the server pushes small, targeted HTML
+  patches (prepend/append/replace/remove/update) to the client,
+  either in response to a form submission or over Action Cable.
+* *Stimulus* — a tiny JavaScript framework for sprinkling
+  behaviour on top of server-rendered HTML.
+
+A fresh `rails new myapp` already wires up all four.
+
+== Turbo Drive
+
+Turbo Drive hijacks every `<a href="..">` and `<form>` and turns
+it into an Ajax request. When the response comes back, Turbo
+swaps the `<body>` while keeping the `<head>` (minus
+`data-turbo-track="reload"` assets that changed) intact. No
+full page reload, no JavaScript state loss, no flash of blank
+page.
+
+You don't do anything to opt in. It Just Works.
+
+To opt out of Turbo on a specific link or form, set
+`data-turbo="false"`:
+
+[source,erb]
+----
+<%= link_to "Download CSV", csv_users_path, data: { turbo: false } %>
+<%= form_with(model: @report, data: { turbo: false }) do |f| ... %>
+----
+
+`data-turbo="false"` tells Turbo to get out of the way and let
+the browser handle the request natively (full reload, download
+prompt, etc.).
+
+Confirmation dialogs are triggered via `data-turbo-confirm`:
+
+[source,erb]
+----
+<%= button_to "Delete", @user, method: :delete,
+    data: { turbo_confirm: "Are you sure?" } %>
+----
+
+== Turbo Frames
+
+A `<turbo-frame>` is a region of the page that Turbo can update
+independently. Any link or form inside a frame targets that
+frame by default — only the frame gets replaced, not the whole
+page.
+
+Example: an inline-edit product name.
+
+[source,erb]
+.app/views/products/show.html.erb
+----
+<%= turbo_frame_tag @product do %>
+  <%= @product.name %>
+  <%= link_to "Edit", edit_product_path(@product) %>
+<% end %>
+----
+
+[source,erb]
+.app/views/products/edit.html.erb
+----
+<%= turbo_frame_tag @product do %>
+  <%= form_with(model: @product) do |form| %>
+    <%= form.text_field :name %>
+    <%= form.submit %>
+  <% end %>
+<% end %>
+----
+
+`turbo_frame_tag @product` generates `<turbo-frame
+id="product_7">...</turbo-frame>`. When the user clicks "Edit",
+Turbo fetches `/products/7/edit`, finds the `<turbo-frame
+id="product_7">` in the response, and swaps it for the current
+one. The rest of the page stays untouched.
+
+== Turbo Streams
+
+Turbo Streams let the server return (or broadcast) a small list
+of DOM operations to apply:
+
+- `append` — add to the end of a container
+- `prepend` — add to the beginning
+- `replace` — swap the targeted element
+- `update` — swap the contents (keep the tag)
+- `remove` — delete
+- `before` / `after` — insert adjacent
+
+They look like this on the wire:
+
+[source,html]
+----
+<turbo-stream action="prepend" target="messages">
+  <template>
+    <div id="message_42">Hello!</div>
+  </template>
+</turbo-stream>
+----
+
+=== Form Responses
+
+The simplest use: respond to a form submission with a Turbo
+Stream instead of (or alongside) an HTML redirect.
+
+[source,ruby]
+.app/controllers/messages_controller.rb
+----
+def create
+  @message = Message.new(message_params)
+
+  if @message.save
+    respond_to do |format|
+      format.turbo_stream  # renders app/views/messages/create.turbo_stream.erb
+      format.html { redirect_to messages_path }
+    end
+  else
+    render :new, status: :unprocessable_entity
+  end
+end
+----
+
+[source,erb]
+.app/views/messages/create.turbo_stream.erb
+----
+<%= turbo_stream.prepend "messages" do %>
+  <%= render @message %>
+<% end %>
+<%= turbo_stream.update "message_form" do %>
+  <%= render "form", message: Message.new %>
+<% end %>
+----
+
+The form submits, Rails prepends the new message to `#messages`
+and clears the form — without writing any JavaScript.
+
+=== Broadcasts Over Action Cable
+
+Even better: have the model itself broadcast on changes. One
+line on the model side gives every open browser live updates.
+
+[source,ruby]
+.app/models/message.rb
+----
+class Message < ApplicationRecord
+  belongs_to :chatroom
+
+  broadcasts_to ->(message) { [message.chatroom, :messages] }, inserts_by: :append
+end
+----
+
+[source,erb]
+.app/views/chatrooms/show.html.erb
+----
+<h1><%= @chatroom.name %></h1>
+
+<%= turbo_stream_from @chatroom, :messages %>
+
+<div id="messages">
+  <%= render @chatroom.messages %>
+</div>
+
+<%= render "messages/form", chatroom: @chatroom %>
+----
+
+`turbo_stream_from` opens an Action Cable subscription (on the
+stream `[@chatroom, :messages]`). When anyone calls
+`Message.create!(chatroom: ...)`, Rails renders the `_message`
+partial, wraps it in a `<turbo-stream action="append"
+target="messages">`, and broadcasts it to every subscriber. Each
+browser appends the new message to the `#messages` div in real
+time.
+
+Zero JavaScript. This is the secret sauce that makes Hotwire
+feel like magic.
+
+== Stimulus
+
+Stimulus is for the parts where you _do_ need a sprinkle of
+JavaScript: toggling a dropdown, copying text to the clipboard,
+auto-growing a textarea. It keeps your JavaScript close to the
+HTML that needs it and refuses to take over rendering the page.
+
+A Stimulus controller lives in
+`app/javascript/controllers/<name>_controller.js`:
+
+[source,javascript]
+.app/javascript/controllers/hello_controller.js
+----
+import { Controller } from "@hotwired/stimulus"
+
+// Connects to data-controller="hello"
+export default class extends Controller {
+  static targets = ["name", "output"]
+
+  greet() {
+    this.outputTarget.textContent = `Hello, ${this.nameTarget.value}!`
+  }
+}
+----
+
+Wire it up from HTML:
+
+[source,erb]
+----
+<div data-controller="hello">
+  <input data-hello-target="name" type="text">
+  <button data-action="click->hello#greet">Greet</button>
+  <span data-hello-target="output"></span>
+</div>
+----
+
+No imports, no build step — importmap-rails picks up the file
+automatically because `app/javascript/controllers/` is pinned via
+`pin_all_from` in `config/importmap.rb`.
+
+== Further Reading
+
+The official Hotwire handbook is excellent:
+https://hotwired.dev. The Rails guides on Turbo
+(https://guides.rubyonrails.org/hotwire.html) cover Rails-
+specific integration points.

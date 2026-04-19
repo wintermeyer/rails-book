@@ -4,45 +4,56 @@
 [[tdd-introduction]]
 == Introduction
 
-I have been programming for over 30 years and most of the time I have managed
-quite well without test-driven development (TDD). I am not going to be mad at
-you if you decide to just skip this chapter. You can create Rails applications
-without tests and are not likely to get any bad karma as a result (at least, I
-hope not - but you can never be entirely sure with the whole karma thing).
+I have been programming for over 30 years and most of the time I
+have managed quite well without test-driven development (TDD). I am
+not going to be mad at you if you decide to just skip this chapter.
+You can create Rails applications without tests and are not likely
+to get any bad karma as a result (at least I hope not, but you can
+never be entirely sure with the whole karma thing).
 
-But if you should decide to go for TDD, then I can promise you that it is an
-enlightenment. The basic idea of TDD is that you write a test for each
-programming function to check this function. In the pure TDD teaching, this test
-is written before the actual programming. Yes, you will have a lot more to do
-initially. But later, you can run all the tests and see that the application
-works exactly as you wanted it to. The real advantage only becomes apparent
-after a few weeks or months, when you look at the project again and write an
-extension or new variation. Then you can safely change the code and check it
-still works properly by running the tests. This avoids a situation where you
-find yourself saying "oops, that went a bit wrong, I just didn’t think of this
-particular problem".
+But if you do decide to go for TDD then I can promise you that it
+is an enlightenment. The basic idea of TDD is that you write a
+test for each programming function to verify that function. In the
+pure TDD teaching this test is written _before_ the actual
+programming. Yes, you will have a lot more to do initially. But
+later you can run all the tests and see that the application works
+exactly as you wanted it to. The real advantage only becomes
+apparent after a few weeks or months when you look at the project
+again and write an extension or new variation. Then you can safely
+change the code and check it still works properly by running the
+tests. This avoids a situation where you find yourself saying
+"oops, that went a bit wrong, I just didn't think of that
+particular case".
 
-Often, the advantage of TDD already becomes evident when writing a program.
-Tests can reveal many careless mistakes that you would otherwise only have
-stumbled across much later on.
+Often the advantage of TDD already becomes evident while writing a
+program. Tests can reveal many careless mistakes that you would
+otherwise only have stumbled across much later on.
 
-This chapter is a brief overview of the topic test-driven development with
-Rails. If you want to find out more, you can dive into the official Rails
-documentation at http://guides.rubyonrails.org/testing.html
+This chapter is a brief overview of the topic of test-driven
+development with Rails. If you want to find out more you can dive
+into the official Rails testing guide at
+https://guides.rubyonrails.org/testing.html
 
-NOTE: TDD is just like driving a car. The only way to learn it is by doing it.
+NOTE: TDD is just like driving a car. The only way to learn it is
+      by doing it.
+
+NOTE: Rails ships two test runners out of the box: Minitest (the
+      default) and a thin wrapper that lets you use RSpec via the
+      `rspec-rails` gem if you prefer. This chapter uses the
+      default — Minitest — because a fresh Rails application
+      already has it wired up.
 
 [[example-for-a-user-in-a-web-shop]]
 == Example for a User in a Web Shop
 
-Let’s start with a user scaffold in an imaginary web shop:
+Let's start with a user scaffold in an imaginary web shop:
 
 [source,bash]
 ----
 $ rails new webshop
   [...]
 $ cd webshop
-$ rails generate scaffold user login_name first_name last_name birthday:date
+$ bin/rails generate scaffold user login_name first_name last_name birthday:date
     [...]
     invoke    test_unit
     create      test/models/user_test.rb
@@ -55,38 +66,43 @@ $ rails generate scaffold user login_name first_name last_name birthday:date
     create      app/helpers/users_helper.rb
     invoke      test_unit
     [...]
-$ rails db:migrate
+$ bin/rails db:migrate
     [...]
 ----
 
-You already know all about scaffolds (if not, please go and read the chapter
-xref:scaffolding-and-rest.adoc#scaffolding-and-rest["Scaffolding and REST"] first)
-so you know what the application we have just created does. The scaffold
-created a few tests (they are easy to recognise because the word `test`
-is in the file name).
+You already know all about scaffolds (if not, please go and read the
+chapter xref:scaffolding-and-rest.adoc#scaffolding-and-rest["Scaffolding and REST"]
+first) so you know what the application we just created does. The
+scaffold created a few tests (they are easy to recognise because
+the word `test` is in the file name).
 
-The complete test suite of a Rails project is processed with the command
-`rails test`. Let’s have a go and see what a test produces at this stage
-of development:
+The complete test suite of a Rails project is processed with the
+command `bin/rails test`. Let's have a go and see what a test
+produces at this stage of development:
 
 [source,bash]
 ----
-$ rails test
-Running via Spring preloader in process 2440
-Run options: --seed 62885
+$ bin/rails test
+Running 7 tests in a single process (parallelization threshold is 50)
+Run options: --seed 11137
 
 # Running:
 
 .......
 
-Finished in 1.361143s, 5.1427 runs/s, 6.6121 assertions/s.
-7 runs, 9 assertions, 0 failures, 0 errors, 0 skips
+Finished in 0.114609s, 61.0772 runs/s, 95.9785 assertions/s.
+7 runs, 11 assertions, 0 failures, 0 errors, 0 skips
 ----
 
-The output `7 runs, 9 assertions, 0 failures, 0 errors, 0 skips` looks
-good. By default, a test will run through in a standard scaffold.
+The output `7 runs, 11 assertions, 0 failures, 0 errors, 0 skips`
+looks good. By default a test will pass in a standard scaffold.
 
-Let’s edit the `app/models/user.rb` and insert a few validations (if
+NOTE: Rails 7+ runs tests _in parallel_ by default once the number
+      of tests in a single file crosses the `parallelization
+      threshold` (50 by default). Below that threshold tests run
+      in a single process, as you can see in the output.
+
+Let's edit `app/models/user.rb` and insert a few validations (if
 these are not entirely clear to you, please read the section
 xref:activerecord.adoc#validation["Validation"]):
 
@@ -103,12 +119,12 @@ class User < ApplicationRecord
 end
 ----
 
-Then we execute `rails test` again:
+Then we execute `bin/rails test` again:
 
 [source,bash]
 ----
-$ rails test
-Running via Spring preloader in process 89164
+$ bin/rails test
+Running 7 tests in a single process (parallelization threshold is 50)
 Run options: --seed 40163
 
 # Running:
@@ -117,10 +133,7 @@ Run options: --seed 40163
 
 Failure:
 UsersControllerTest#test_should_update_user [/.../webshop/test/controllers/users_controller_test.rb:38]:
-Expected response to be a <3XX: redirect>, but was a <200: OK>
-
-
-bin/rails test test/controllers/users_controller_test.rb:36
+Expected response to be a <3XX: redirect>, but was a <422: Unprocessable Entity>
 
 F
 
@@ -130,9 +143,6 @@ UsersControllerTest#test_should_create_user [/.../webshop/test/controllers/users
 Expected: 3
   Actual: 2
 
-
-bin/rails test test/controllers/users_controller_test.rb:18
-
 .
 
 Finished in 0.262099s, 26.7075 runs/s, 30.5228 assertions/s.
@@ -140,16 +150,16 @@ Finished in 0.262099s, 26.7075 runs/s, 30.5228 assertions/s.
 7 runs, 8 assertions, 2 failures, 0 errors, 0 skips
 ----
 
-Boom! This time we have `2 failures`. The error happens in the
-`UsersControllerTest#test_should_update_user` and the
-`UsersControllerTest#test_should_create_user`. The
-explanation for this is in our validation. The example data created by
-the scaffold generator went through in the first `rails test` (without
-validation). The errors only occurred the second time (with validation).
+Boom! This time we have `2 failures`. The errors happen in
+`UsersControllerTest#test_should_update_user` and
+`UsersControllerTest#test_should_create_user`. The explanation for
+this is in our validation. The example data created by the scaffold
+generator passed the first `bin/rails test` (without validation).
+The errors only occurred the second time (with validation).
 
-This example data is created as _fixtures_tests tests
-in YAML format in the directory `test/fixtures/`. Let’s have a look at
-the example data for `User` in the file `test/fixtures/users.yml`:
+This example data is created as _fixtures_ in YAML format in the
+directory `test/fixtures/`. Let's have a look at the example data
+for `User` in `test/fixtures/users.yml`:
 
 [source,yaml]
 .test/fixtures/users.yml
@@ -158,18 +168,18 @@ one:
   login_name: MyString
   first_name: MyString
   last_name: MyString
-  birthday: 2018-01-25
+  birthday: 2026-01-25
 
 two:
   login_name: MyString
   first_name: MyString
   last_name: MyString
-  birthday: 2018-01-25
+  birthday: 2026-01-25
 ----
 
-There are two example records there that do not fulfill the requirements
-of our validation. The `login_name` should have a length of at least 10.
-Let’s change the `login_name` in `test/fixtures/users.yml` accordingly:
+There are two example records that do not fulfill the requirements
+of our validation. The `login_name` should have a length of at
+least 10. Let's change it in `test/fixtures/users.yml`:
 
 [source,yaml]
 .test/fixtures/users.yml
@@ -178,21 +188,21 @@ one:
   login_name: MyString12
   first_name: MyString
   last_name: MyString
-  birthday: 2018-01-25
+  birthday: 2026-01-25
 
 two:
   login_name: MyString12
   first_name: MyString
   last_name: MyString
-  birthday: 2018-01-25
+  birthday: 2026-01-25
 ----
 
-Now, a `rails test` completes without any errors again:
+Now a `bin/rails test` completes without any errors again:
 
 [source,bash]
 ----
-$ rails test
-Running via Spring preloader in process 89807
+$ bin/rails test
+Running 7 tests in a single process (parallelization threshold is 50)
 Run options: --seed 50152
 
 # Running:
@@ -204,10 +214,10 @@ Finished in 0.271182s, 25.8129 runs/s, 33.1880 assertions/s.
 7 runs, 9 assertions, 0 failures, 0 errors, 0 skips
 ----
 
-Now we know that valid data has to be contained in the
-`test/fixtures/users.yml` so that the standard test created via scaffold
-will succeed. But nothing more. Next step is to change the
-`test/fixtures/users.yml` to a minimum (for example, we do not need a
+Now we know that valid data has to be contained in
+`test/fixtures/users.yml` so that the standard test created via
+scaffold will succeed. But nothing more. Next step is to trim the
+`test/fixtures/users.yml` to a minimum (we do not need a
 `first_name`):
 
 [source,yaml]
@@ -222,13 +232,13 @@ two:
   last_name: Scully
 ----
 
-To be on the safe side, let’s do another `rails test` after making
-our changes (you really can’t do that often enough):
+To be on the safe side let's do another `bin/rails test` after
+making our changes (you really can't do that often enough):
 
 [source,bash]
 ----
-$ rails test
-Running via Spring preloader in process 89972
+$ bin/rails test
+Running 7 tests in a single process (parallelization threshold is 50)
 Run options: --seed 40198
 
 # Running:
@@ -240,14 +250,14 @@ Finished in 0.255256s, 27.4234 runs/s, 35.2587 assertions/s.
 7 runs, 9 assertions, 0 failures, 0 errors, 0 skips
 ----
 
-IMPORTANT: All fixtures are loaded into the database when a test is
-           started. You need to keep this in mind for your test,
-           especially if you use `uniqueness` in your validation.
+IMPORTANT: All fixtures are loaded into the database when a test
+           starts. You need to keep this in mind for your tests,
+           especially if you use `uniqueness` in your validations.
 
 [[functional-tests]]
-=== Functional Tests
+=== Functional (Controller) Tests
 
-Let’s take a closer look at the point where the original errors
+Let's take a closer look at the point where the original errors
 occurred:
 
 [source,bash]
@@ -260,15 +270,14 @@ Expected: 3
   Actual: 2
 ----
 
-In the `UsersControllerTest` the User could not be created.
-The controller tests are located in the directory `test/functional/`.
-Let’s now take a good look at the file
-`test/controllers/users_controller_test.rb`
+In the `UsersControllerTest` the User could not be created. The
+controller tests are located in `test/controllers/`. Let's take a
+good look at `test/controllers/users_controller_test.rb`:
 
 [source,ruby]
 .test/controllers/users_controller_test.rb
 ----
-require 'test_helper'
+require "test_helper"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -286,10 +295,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create user" do
-    assert_difference('User.count') do
-      post users_url, params: { user: { birthday: @user.birthday,
-      first_name: @user.first_name, last_name: @user.last_name,
-      login_name: @user.login_name } }
+    assert_difference("User.count") do
+      post users_url, params: { user: { birthday: @user.birthday, first_name: @user.first_name, last_name: @user.last_name, login_name: @user.login_name } }
     end
 
     assert_redirected_to user_url(User.last)
@@ -306,14 +313,12 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update user" do
-    patch user_url(@user), params: { user: { birthday: @user.birthday,
-    first_name: @user.first_name, last_name: @user.last_name,
-    login_name: @user.login_name } }
+    patch user_url(@user), params: { user: { birthday: @user.birthday, first_name: @user.first_name, last_name: @user.last_name, login_name: @user.login_name } }
     assert_redirected_to user_url(@user)
   end
 
   test "should destroy user" do
-    assert_difference('User.count', -1) do
+    assert_difference("User.count", -1) do
       delete user_url(@user)
     end
 
@@ -322,7 +327,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 end
 ----
 
-At the beginning, we find a `setup` instruction:
+At the beginning we find a `setup` instruction:
 
 [source,ruby]
 ----
@@ -331,22 +336,23 @@ setup do
 end
 ----
 
-These three lines of code mean that for the start of each individual
-test, an instance `@user` with the data of the item `one` from the file
-`test/fixtures/users.yml` is created. `setup` is a predefined callback
-that - if present - is started by Rails before each test. The opposite
-of setup is `teardown`. A `teardown` - if present - is called automatically
-after each test.
+These three lines of code mean that for the start of each
+individual test an instance `@user` with the data of the item `one`
+from `test/fixtures/users.yml` is created. `setup` is a predefined
+callback that (if present) is started by Rails before each test.
+The opposite of `setup` is `teardown`. A `teardown` (if present)
+is called automatically after each test.
 
-NOTE: For every test (in other words, at each run of `rails test`), a
-      fresh and therefore empty test database is created automatically. This
-      is a different database than the one that you access by default via
-      `rails console` (that is the development database). The databases are
-      defined in the configuration file `config/database.yml`. If you want to
-      do debugging, you can access the test database with
-      `rails console test`.
+NOTE: For every test run (in other words, every time you run
+      `bin/rails test`) a fresh and therefore empty test database
+      is created automatically. This is a different database than
+      the one that you access by default via `bin/rails console`
+      (that is the development database). The databases are
+      defined in the configuration file `config/database.yml`. If
+      you want to debug, you can access the test database with
+      `bin/rails console -e test`.
 
-This functional test then tests various web page functions. First,
+This controller test exercises various web page functions. First,
 accessing the index page:
 
 [source,ruby]
@@ -360,47 +366,48 @@ end
 The command `get users_url` accesses the page `/users`.
 `assert_response :success` means that the page was delivered.
 
-Let’s look more closely at the `should create user` problem from earlier.
+Let's look more closely at the `should create user` problem from
+earlier:
 
 [source,ruby]
 ----
 test "should create user" do
-  assert_difference('User.count') do
-    post users_url, params: { user: { birthday: @user.birthday,
-    first_name: @user.first_name, last_name: @user.last_name,
-    login_name: @user.login_name } }
+  assert_difference("User.count") do
+    post users_url, params: { user: { birthday: @user.birthday, first_name: @user.first_name, last_name: @user.last_name, login_name: @user.login_name } }
   end
 
   assert_redirected_to user_url(User.last)
 end
 ----
 
-The block `assert_difference('User.count') do ... end` expects a change
-by the code contained within it. `User.count` after should result in +1.
+The block `assert_difference("User.count") do ... end` expects a
+change by the code contained within it: `User.count` after should
+result in +1.
 
-The last line `assert_redirected_to user_path(User.last)` checks if
-after the newly created record the redirection to the corresponding view
-`show` occurs.
+The last line `assert_redirected_to user_url(User.last)` checks
+that after the newly-created record a redirect to the
+corresponding `show` view occurs.
 
-Without describing each individual functional test line by line, it's
-becoming clear what these tests do: they execute real queries to the Web
-interface (or actually to the controllers) and so they can be used for
-testing the controllers.
+Without describing each individual controller test line by line,
+it's becoming clear what these tests do: they make real requests
+to the web interface (through the controllers) and can therefore
+be used to test controllers.
 
 [[unit-tests]]
-=== Unit Tests
+=== Model (Unit) Tests
 
-For testing the validations that we have entered in
-`app/models/user.rb`, units tests are more suitable. Unlike the
-functional tests, these test only the model, not the controller’s work.
+For testing the validations we have entered in
+`app/models/user.rb`, unit tests are more suitable. Unlike the
+controller tests, they test only the model, not the controller's
+work.
 
-The unit tests are located in the directory `test/models/`. But a look
-into the file `test/models/user_test.rb` is rather sobering:
+The model tests are located in `test/models/`. But a look into
+`test/models/user_test.rb` is rather sobering:
 
 [source,ruby]
 .test/models/user_test.rb
 ----
-require 'test_helper'
+require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
   # test "the truth" do
@@ -409,7 +416,7 @@ class UserTest < ActiveSupport::TestCase
 end
 ----
 
-By default, scaffold only writes a commented-out dummy test.
+By default scaffold only writes a commented-out dummy test.
 
 A unit test always consists of the following structure:
 
@@ -421,14 +428,14 @@ end
 ----
 
 The word `assert` already indicates that we are dealing with an
-assertion in this context. If this assertion is `true`, the test will
-complete and all is well. If this assertion is `false`, the test fails
-and we have an error in the program (you can specify the output of the
-error as string at the end of the assert line).
+assertion in this context. If this assertion is `true` the test
+will complete and all is well. If it is `false` the test fails
+and we have an error in the program (you can specify the output of
+the error as a string at the end of the assert line).
 
-If you have a look at http://guides.rubyonrails.org/testing.html[guides.rubyonrails.org/testing.html]
-you'll see that there are some other `assert` variations. Here
-are a few examples:
+If you have a look at
+https://guides.rubyonrails.org/testing.html you'll see that there
+are many `assert` variations. Here are a few examples:
 
 * `assert( boolean, [msg] )`
 * `assert_equal( obj1, obj2, [msg] )`
@@ -439,32 +446,33 @@ are a few examples:
 * `assert_not_nil( obj, [msg] )`
 * `assert_match( regexp, string , [msg] )`
 * `assert_no_match( regexp, string , [msg] )`
+* `assert_changes( expression, [from:], [to:], [msg] )`
+* `assert_no_changes( expression, [msg] )`
 
-Let’s breathe some life into the first test in the
-`test/unit/user_test.rb`:
+Let's breathe some life into `test/models/user_test.rb`:
 
 [source,ruby]
-.test/unit/user_test.rb
+.test/models/user_test.rb
 ----
-require 'test_helper'
+require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  test 'a user with no attributes is not valid' do
+  test "a user with no attributes is not valid" do
     user = User.new
-    assert_not user.save, 'Saved a user with no attributes.'
+    assert_not user.save, "Saved a user with no attributes."
   end
 end
 ----
 
-This test checks if a newly created User that does not contain any data
-is valid (it shouldn't be).
+This test checks if a newly-created User that does not contain any
+data is valid (it shouldn't be).
 
-We can run a `rails test` for the complete test suite:
+We can run a `bin/rails test` for the complete test suite:
 
 [source,bash]
 ----
-$ rails test
-Running via Spring preloader in process 91049
+$ bin/rails test
+Running 8 tests in a single process (parallelization threshold is 50)
 Run options: --seed 8014
 
 # Running:
@@ -476,34 +484,35 @@ Finished in 0.248883s, 32.1436 runs/s, 40.1795 assertions/s.
 8 runs, 10 assertions, 0 failures, 0 errors, 0 skips
 ----
 
-Now we integrate two asserts in a test to check if the two fixture
-entries in the `test/fixtures/users.yml` are really valid. The first
-one is just a shorter version of the empty user test.
+Now we integrate two asserts into a test to check if the two
+fixture entries in `test/fixtures/users.yml` are really valid:
 
 [source,ruby]
 ----
-require 'test_helper'
+require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  test 'an empty user is not valid' do
-    assert !User.new.valid?, 'Saved an empty user.'
+  test "an empty user is not valid" do
+    assert_not User.new.valid?, "Saved an empty user."
   end
 
   test "the two fixture users are valid" do
-    assert User.new(last_name: users(:one).last_name, login_name:
-    users(:one).login_name ).valid?, 'First fixture is not valid.'
-    assert User.new(last_name: users(:two).last_name, login_name:
-    users(:two).login_name ).valid?, 'Second fixture is not valid.'
+    assert User.new(last_name: users(:one).last_name,
+                    login_name: users(:one).login_name).valid?,
+           "First fixture is not valid."
+    assert User.new(last_name: users(:two).last_name,
+                    login_name: users(:two).login_name).valid?,
+           "Second fixture is not valid."
   end
 end
 ----
 
-Then once more a `rails test`:
+Then once more `bin/rails test`:
 
 [source,bash]
 ----
-$ rails test
-Running via Spring preloader in process 91434
+$ bin/rails test
+Running 9 tests in a single process (parallelization threshold is 50)
 Run options: --seed 57493
 
 # Running:
@@ -515,26 +524,93 @@ Finished in 0.256179s, 35.1317 runs/s, 46.8422 assertions/s.
 9 runs, 12 assertions, 0 failures, 0 errors, 0 skips
 ----
 
+[[system-tests]]
+=== System Tests
+
+System tests are new-ish: they were introduced in Rails 5.1.
+Unlike controller or model tests they open a real browser
+(headless by default) and click through your application the way
+a human user would, verifying the rendered HTML and even
+JavaScript behaviour.
+
+A fresh Rails 8 scaffold already creates a system test at
+`test/system/users_test.rb`:
+
+[source,ruby]
+.test/system/users_test.rb
+----
+require "application_system_test_case"
+
+class UsersTest < ApplicationSystemTestCase
+  setup do
+    @user = users(:one)
+  end
+
+  test "visiting the index" do
+    visit users_url
+    assert_selector "h1", text: "Users"
+  end
+
+  test "should create user" do
+    visit users_url
+    click_on "New user"
+
+    fill_in "Birthday", with: @user.birthday
+    fill_in "First name", with: @user.first_name
+    fill_in "Last name", with: @user.last_name
+    fill_in "Login name", with: @user.login_name
+    click_on "Create User"
+
+    assert_text "User was successfully created"
+    click_on "Back to users"
+  end
+  # [...]
+end
+----
+
+System tests are driven by Capybara and run by default against
+headless Chrome via Selenium. The base class is defined in
+`test/application_system_test_case.rb`:
+
+[source,ruby]
+.test/application_system_test_case.rb
+----
+require "test_helper"
+
+class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+  driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
+end
+----
+
+Run them with `bin/rails test:system` (or as part of the complete
+suite with `bin/rails test:all`). When a system test fails Rails
+automatically saves a PNG screenshot to `tmp/screenshots/` so you
+can see what the browser saw at the point of failure.
+
+TIP: If you prefer a lighter-weight headless browser, swap
+     Selenium for https://github.com/rubycdp/cuprite[Cuprite]:
+     `driven_by :cuprite`. Cuprite talks directly to Chrome via
+     CDP, boots faster, and avoids the Selenium driver.
+
 [[fixtures]]
 == Fixtures
 
-With _fixtures_ you can generate example data for tests. The default
-format for this is YAML. The files for this can be found in the
-directory `test/fixtures/` and are automatically created with
-`rails generate scaffold`. But of course you can also define your own
-files. All fixtures are loaded new into the test database by default
-with every test.
+With _fixtures_ you can generate example data for tests. The
+default format is YAML. The files can be found in `test/fixtures/`
+and are automatically created by `bin/rails generate scaffold`. Of
+course you can also define your own files. All fixtures are loaded
+anew into the test database by default on every test run.
 
-Examples for alternative formats (e.g. CSV) can be found at
-http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html[api.rubyonrails.org/classes/ActiveRecord/Fixtures.html].
+Examples for alternative formats (e.g. CSV) are at
+https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 [[static-fixtures]]
 === Static Fixtures
 
-The simplest variant for fixtures is static data. The fixture for `User` used in
-xref:test-driven-development.adoc#example-for-a-user-in-a-web-shop["Example for a
-User in a Web Shop"] statically should look as follows (please change the
-content of the file accordingly):
+The simplest variant is static data. The fixture for `User` used
+in xref:test-driven-development.adoc#example-for-a-user-in-a-web-shop["Example for a
+User in a Web Shop"] statically should look as follows (please
+change the content of the file accordingly):
 
 [source,yaml]
 .test/fixtures/users.yml
@@ -548,17 +624,18 @@ two:
   last_name: Scully
 ----
 
-You simply write the data in YAML format into the corresponding file.
+You simply write the data in YAML format into the corresponding
+file.
 
 [[fixtures-with-erb]]
 === Fixtures with ERB
 
-Static YAML fixtures are sometimes too unintelligent. In these cases,
-you can work with ERB.
+Static YAML fixtures are sometimes too limited. In those cases
+you can use ERB.
 
-If we want to dynamically enter today’s day 20 years ago for the
-birthdays, then we can simply do it with ERB in
-`test/fixtures/users.yml`
+If we want to dynamically enter today's date 20 years ago for the
+birthdays, we can simply do it with ERB in
+`test/fixtures/users.yml`:
 
 [source,yaml]
 .test/fixtures/users.yml
@@ -566,69 +643,83 @@ birthdays, then we can simply do it with ERB in
 one:
   login_name: fox.mulder
   last_name: Mulder
-  birthday: <%= 20.years.ago.to_s(:db) %>
+  birthday: <%= 20.years.ago.to_fs(:db) %>
 
 two:
   login_name: dana.scully
   last_name: Scully
-  birthday: <%= 20.years.ago.to_s(:db) %>
+  birthday: <%= 20.years.ago.to_fs(:db) %>
 ----
+
+NOTE: Older editions used `to_s(:db)`. That short form was
+      deprecated in Rails 7 and removed later. The current call is
+      `to_fs(:db)` — the `fs` stands for "formatted string". For
+      plain `to_s` without a format argument the old call still
+      works.
 
 [[integration-tests]]
 == Integration Tests
 
-Integration tests are tests that work like functional tests but can go
-over several controllers and additionally analyze the content of a
-generated view. So you can use them to recreate complex workflows within
-the Rails application. As an example, we will write an integration test
-that tries to create a new user via the Web GUI, but omits the
-`login_name` and consequently gets corresponding flash error messages.
+Integration tests work like controller tests but can span several
+controllers and additionally analyse the content of a generated
+view. So you can use them to recreate complex workflows within
+the Rails application. As an example we will write an integration
+test that tries to create a new user via the web GUI but omits
+the `login_name` and consequently gets corresponding error
+messages.
 
-A `rails generate scaffold` generates unit and functional tests, but not
-integration tests. You can either do this manually in the directory
-`test/integration/` or more comfortably with
-`rails generate integration_test`. So let’s create an integration test:
+`bin/rails generate scaffold` generates model, controller and
+system tests, but not standalone integration tests. You can
+either do this manually in the directory `test/integration/` or
+more comfortably with `bin/rails generate integration_test`:
 
 [source,bash]
 ----
-$ rails generate integration_test invalid_new_user_workflow
-Running via Spring preloader in process 91538
+$ bin/rails generate integration_test invalid_new_user_workflow
       invoke  test_unit
       create    test/integration/invalid_new_user_workflow_test.rb
 ----
 
-We now populate this file
-`test/integration/invalid_new_user_workflow_test.rb` with the following
-test:
+We populate the file
+`test/integration/invalid_new_user_workflow_test.rb` with the
+following test:
 
 [source,ruby]
 .test/integration/invalid_new_user_workflow_test.rb
 ----
-require 'test_helper'
+require "test_helper"
 
 class InvalidNewUserWorkflowTest < ActionDispatch::IntegrationTest
   fixtures :all
 
-  test 'try to create a new user without a login' do
+  test "try to create a new user without a login" do
     @user = users(:one)
 
-    get '/users/new'
+    get "/users/new"
     assert_response :success
 
     post users_url, params: { user: { last_name: @user.last_name } }
-    assert_equal '/users', path
-    assert_select 'li', "Login name can't be blank"
-    assert_select 'li', "Login name is too short (minimum is 10 characters)"
+    assert_response :unprocessable_entity
+    assert_select "li", "Login name can't be blank"
+    assert_select "li", "Login name is too short (minimum is 10 characters)"
   end
 end
 ----
 
-Let’s run all tests:
+NOTE: In Rails 5.2 (and the previous edition of this book) the
+      expectation above was `assert_equal "/users", path` because
+      a failed create used to render a `200 OK` and let the
+      request reuse the `/users` URL. Rails 7+ instead returns
+      `422 Unprocessable Entity` so that Turbo can recognise the
+      form-with-errors response. The assertion
+      `assert_response :unprocessable_entity` is the modern check.
+
+Let's run all tests:
 
 [source,bash]
 ----
-$ rails test
-Running via Spring preloader in process 91837
+$ bin/rails test
+Running 10 tests in a single process (parallelization threshold is 50)
 Run options: --seed 4153
 
 # Running:
@@ -640,21 +731,21 @@ Finished in 0.277714s, 36.0083 runs/s, 57.6132 assertions/s.
 10 runs, 16 assertions, 0 failures, 0 errors, 0 skips
 ----
 
-The example clearly shows that you can program much without manually
-using a web browser to try it out. Once you have written a test for the
-corresponding workflow, you can rely in future on the fact that it will
-run through and you don’t have to try it out manually in the browser as
-well.
+The example clearly shows that you can write a lot of application
+code without manually using a web browser to try it out. Once you
+have written a test for the corresponding workflow, you can rely
+in the future on the fact that it still passes, and you don't
+have to click through the browser every time.
 
 [[rails-stats]]
-== rails stats
+== bin/rails stats
 
-rails stats With `rails stats` you get an overview of your Rails project.
-For an example, it looks like this:
+With `bin/rails stats` you get an overview of your Rails project.
+For example, it looks like this:
 
 [source,bash]
 ----
-$ rails stats
+$ bin/rails stats
 +----------------------+--------+--------+---------+---------+-----+-------+
 | Name                 |  Lines |    LOC | Classes | Methods | M/C | LOC/M |
 +----------------------+--------+--------+---------+---------+-----+-------+
@@ -664,12 +755,10 @@ $ rails stats
 | Models               |     11 |     10 |       2 |       0 |   0 |     0 |
 | Mailers              |      4 |      4 |       1 |       0 |   0 |     0 |
 | Channels             |      8 |      8 |       2 |       0 |   0 |     0 |
+| Stylesheets          |      0 |      0 |       0 |       0 |   0 |     0 |
 | JavaScripts          |     31 |      4 |       0 |       1 |   0 |     2 |
-| Libraries            |      0 |      0 |       0 |       0 |   0 |     0 |
 | Controller tests     |     48 |     38 |       1 |       7 |   7 |     3 |
-| Helper tests         |      0 |      0 |       0 |       0 |   0 |     0 |
 | Model tests          |     14 |     12 |       1 |       2 |   2 |     4 |
-| Mailer tests         |      0 |      0 |       0 |       0 |   0 |     0 |
 | Integration tests    |     17 |     13 |       1 |       1 |   1 |    11 |
 | System tests         |      9 |      3 |       1 |       0 |   0 |     0 |
 +----------------------+--------+--------+---------+---------+-----+-------+
@@ -678,18 +767,26 @@ $ rails stats
   Code LOC: 88     Test LOC: 63     Code to Test Ratio: 1:0.7
 ----
 
-In this project, we have a total of 88 LOC (Lines Of Code) in the
+In this project we have a total of 88 LOC (Lines Of Code) in the
 controllers, helpers and models. We have a total of 63 LOC for
-tests. This gives us a test relation of 1:1.0.7. Logically, this does
-not say anything about the quality of tests.
+tests. This gives us a test ratio of 1 to 0.7. Of course this
+does not say anything about the _quality_ of the tests.
 
 [[more-on-testing]]
 == More on Testing
 
-We just scratched the surface of the topic TDD in Rails. Have a
-look at http://guides.rubyonrails.org/testing.html for more information.
-There you will also find several good examples on this topic.
+We just scratched the surface of TDD in Rails. Have a look at
+https://guides.rubyonrails.org/testing.html for more information.
+There you will also find several good examples.
 
-One cool feature of Ruby on Rails testing is the ability to
-run the tests in real browsers (e.g. Chrome) and to take screenshots
-while doing so.
+For tools beyond the built-in Minitest set-up, explore:
+
+- https://rspec.info/[RSpec] — the other popular Ruby test
+  framework; add via the `rspec-rails` gem.
+- https://github.com/thoughtbot/factory_bot[FactoryBot] — a more
+  flexible alternative to YAML fixtures.
+- https://github.com/thoughtbot/shoulda-matchers[Shoulda Matchers]
+  — one-liners for common ActiveRecord and controller assertions.
+- https://github.com/teamcapybara/capybara[Capybara] — the
+  engine Rails system tests already use under the hood, also
+  useful standalone.

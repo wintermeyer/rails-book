@@ -1,23 +1,39 @@
 [[action-cable]]
 = Action Cable
 
-Most modern webpages are not just static. They often get updates from
-the server without interaction from the user. Your Twitter or GMail
-browser client will display new Tweets or E-Mails without you reloading
+Most modern webpages are not just static. They often get updates
+from the server without interaction from the user. Your email or
+chat application gets new messages pushed in without you reloading
 the page. The server pushes the information via WebSockets
-(https://en.wikipedia.org/wiki/WebSocket). Action Cable provides the
-tools you need to use these mechanisms without diving deep into the
-technical aspects of WebSockets.
+(https://en.wikipedia.org/wiki/WebSocket). Action Cable provides
+the tools you need to use these mechanisms without diving deep
+into the technical aspects of WebSockets.
 
-The use of Action Cable always includes JavaScript and this book is
-about Ruby and Ruby on Rails. So I will only show you a minimal
-Hello World example of how Action Cable works to give you an idea how
-to proceed.
+The use of Action Cable always includes JavaScript and this book
+is about Ruby and Ruby on Rails. So I will only show you a
+minimal Hello World example of how Action Cable works to give you
+an idea how to proceed.
+
+NOTE: Rails 8 ships with https://github.com/rails/solid_cable[Solid
+      Cable] as the default Action Cable adapter. Solid Cable is
+      database-backed — no Redis server needed in development _or_
+      production. A fresh `rails new myapp` already configures it
+      in `config/cable.yml`. This example takes advantage of that.
+
+TIP: For many classic "just push a DOM update" use-cases you
+      don't even need to write JavaScript yourself. Rails 8 ships
+      https://turbo.hotwired.dev/handbook/streams[Turbo Streams],
+      which gives you a declarative `broadcasts_to` API on the
+      server side that sends small HTML patches over Action Cable
+      and lets Turbo apply them to the page. See the
+      xref:hotwire.adoc#hotwire[Hotwire chapter] for a deeper
+      dive. The plain Action Cable example below is still the
+      best introduction to _how_ it works under the hood.
 
 == Hello World Action Cable Example
 
-In our first example we are going to push content from the Rails console
-into a browser which shows the `page#index` view.
+In our first example we are going to push content from the Rails
+console into a browser which shows the `page#index` view.
 
 === The Rails Application
 
@@ -28,8 +44,8 @@ Please create the following Rails application:
 $ rails new hello-world-action-cable
   [...]
 $ cd hello-world-action-cable
-$ rails db:migrate
-$ rails generate controller page index
+$ bin/rails db:prepare
+$ bin/rails generate controller page index
   [...]
 ----
 
@@ -40,8 +56,8 @@ http://localhost:3000
 .config/routes.rb
 ----
 Rails.application.routes.draw do
-  get 'page/index'
-  root 'page#index'
+  get "page/index"
+  root "page#index"
 end
 ----
 
@@ -55,81 +71,46 @@ The content of the view:
 <div id="messages"></div>
 ----
 
-=== Setting up jQuery
-
-We are going to append HTML to `<div id="messages"></div>` in the DOM.
-To do that we use https://jquery.com[jQuery] which is not installed by
-default in Rails any more. There are two ways of doing this.
-The old way was to add `gem 'jquery-rails'` followed by a `bundle`. This
-still works but Rails 5.2 has yarn build in and that is the new way.
-If you haven't installed yarn yet have a look at
-https://yarnpkg.com/en/docs/install
-
-If you are using macOS and https://brew.sh[Homebrew] you can install
-it via `brew install yarn`:
-
-[source,bash]
-----
-brew install yarn
-----
-
-Within Rails 5.2 you can use yarn now to install jQuery:
-
-[source,bash]
-----
-$ bin/yarn add jquery
-yarn add v1.3.2
-info No lockfile found.
-[1/4] 🔍  Resolving packages...
-[2/4] 🚚  Fetching packages...
-[3/4] 🔗  Linking dependencies...
-[4/4] 📃  Building fresh packages...
-success Saved lockfile.
-success Saved 1 new dependency.
-└─ jquery@3.3.1
-✨  Done in 0.52s.
-----
-
-To load 'jQuery' we have to add it in the
-`app/assets/javascripts/application.js` file:
-
-[source,javascript]
-.app/assets/javascripts/application.js
-----
-//= require jquery
-//= require rails-ujs
-//= require activestorage
-//= require turbolinks
-//= require_tree .
-----
-
 === Creating a Channel
 
-Rails provides a handy generator to create a new WebSockets channel which we
-need to push information to the client. We call our channel "WebNotifications".
+Rails provides a handy generator to create a new WebSockets
+channel which we use to push information to the client. We call
+our channel "WebNotifications".
 
 [source,bash]
 ----
-$ rails generate channel WebNotifications
-Running via Spring preloader in process 13267
+$ bin/rails generate channel WebNotifications
       create  app/channels/web_notifications_channel.rb
-   identical  app/assets/javascripts/cable.js
-      create  app/assets/javascripts/channels/web_notifications.coffee
+      create  app/javascript/channels/web_notifications_channel.js
 ----
 
-When ever somebody requests the `page#index` view we want him/her to
-automatically subscribe to the `WebNotificationsChannel` channel.
-We do this by adding this piece of CoffeeScript:
+Rails 8 puts the client-side channel file under
+`app/javascript/channels/`, loaded via Stimulus + importmap. We
+edit `app/javascript/channels/web_notifications_channel.js` to
+append whatever HTML the server sends to the `#messages` div:
 
 [source,javascript]
-.app/assets/javascripts/page.coffee
+.app/javascript/channels/web_notifications_channel.js
 ----
-App.room = App.cable.subscriptions.create "WebNotificationsChannel",
-  received: (data) ->
-    $('#messages').append data['message']
+import consumer from "channels/consumer"
+
+consumer.subscriptions.create("WebNotificationsChannel", {
+  connected() {
+    // Called when the subscription is ready for use.
+  },
+
+  disconnected() {
+    // Called when the subscription has been terminated.
+  },
+
+  received(data) {
+    const el = document.getElementById("messages")
+    if (el) el.insertAdjacentHTML("beforeend", data.message)
+  }
+})
 ----
 
-Lastly we have to add this code to the channel.
+And we wire the server side of the channel:
 
 [source,ruby]
 .app/channels/web_notifications_channel.rb
@@ -144,122 +125,131 @@ class WebNotificationsChannel < ApplicationCable::Channel
 end
 ----
 
-We are going to start a `rails server` and a `rails console`
-in separate terminals. We need to use the Redis gem to make
-this work. This is not the default in the development setup.
+NOTE: Older editions of this book used jQuery and CoffeeScript to
+      add messages to the DOM. Neither is shipped with Rails 8.
+      The plain `document.getElementById(...).insertAdjacentHTML(...)`
+      above does the same job in three lines of modern JavaScript,
+      no dependencies needed.
 
-To activate the Redis gem by include this line in the 'Gemfile':
+=== Verify the Cable Adapter
 
-[source,ruby]
-.Gemfile
-----
-gem 'redis', '~> 4.0'
-----
-
-After that change you have to run 'bundle' once more:
-
-[source,bash]
-----
-$ bundle
-----
-
-Obviously you need a running Redis server. If you are running
-macOS with Homebrew you can install Redis with `brew install redis`
-and start it with `brew services start redis` but don't forget to
-stop it with `brew services stop redis` after using it.
-
-And we have to configure the use of Redis:
+A fresh Rails 8 app's `config/cable.yml` already points at Solid
+Cable in both development and production:
 
 [source,yaml]
 .config/cable.yml
 ----
-redis: &redis
-  adapter: redis
-  url: redis://localhost:6379/1
+default: &default
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
 
-production: *redis
-development: *redis
-test: *redis
+development:
+  <<: *default
+
+test:
+  adapter: test
+
+production:
+  <<: *default
 ----
 
-To make things a little bit more complicated we have to
-configure the Content-Security-Policy in `config/initializers/content_security_policy.rb`
-to allow the use of Action Cable in the development
-environment by adding `p.connect_src :self, :https, 'ws://localhost:3000'`:
+You do not need a separate Redis server. The necessary database
+tables were created for you when you ran `bin/rails db:prepare`.
 
-[source,ruby]
-.config/initializers/content_security_policy.rb
-----
-Rails.application.config.content_security_policy do |p|
-  p.default_src :self, :https
-  p.font_src    :self, :https, :data
-  p.img_src     :self, :https, :data
-  p.object_src  :none
-  p.script_src  :self, :https
-  p.style_src   :self, :https, :unsafe_inline
-  p.connect_src :self, :https, 'ws://localhost:3000'
-end
-----
+NOTE: If you prefer the old Redis adapter you can still use it —
+      add `gem "redis"` and change `config/cable.yml` to
+      `adapter: redis` with a `url:` pointing at your Redis
+      server. We recommend sticking with Solid Cable for the
+      simplicity.
 
-TIP: Have a look at https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
-     for more info about Content-Security-Policy (CSP).
+=== Fire It Up
 
-Finally it's time to start up our development rails server
-in the first terminal:
+Start the development server in one terminal:
 
 [source,bash]
 ----
-$ rails server
+$ bin/rails server
 ----
 
-And load http://localhost:3000 in your webbrowser. In the
-log you'll see this entry:
+Load http://localhost:3000 in your web browser. In the log
+you'll see something like:
 
 [source,log]
 ----
-Started GET "/" for 127.0.0.1 at 2018-01-27 23:30:56 +0100
+Started GET "/" for ::1 at 2026-04-19 23:30:56 +0200
 Processing by PageController#index as HTML
+  Rendering layout layouts/application.html.erb
   Rendering page/index.html.erb within layouts/application
-  Rendered page/index.html.erb within layouts/application (1.5ms)
-Completed 200 OK in 236ms (Views: 221.8ms | ActiveRecord: 0.0ms)
+  Rendered page/index.html.erb within layouts/application
+Completed 200 OK in 12ms (Views: 9.1ms)
 
-
-Finished "/cable/" [WebSocket] for 127.0.0.1 at 2018-01-27 23:30:56 +0100
-WebNotificationsChannel stopped streaming from web_notifications_channel
-Started GET "/cable" for 127.0.0.1 at 2018-01-27 23:30:56 +0100
-Started GET "/cable/" [WebSocket] for 127.0.0.1 at 2018-01-27 23:30:56 +0100
-Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Started GET "/cable" for ::1 at 2026-04-19 23:30:57 +0200
+Started GET "/cable/" [WebSocket] for ::1 at 2026-04-19 23:30:57 +0200
+Successfully upgraded to WebSocket
 WebNotificationsChannel is transmitting the subscription confirmation
 WebNotificationsChannel is streaming from web_notifications_channel
 ----
 
-Now start a second terminal and go to the directory where your
-Rails project is locate. Fire up the console and use
-`ActionCable.server.broadcast` to broadcast a message to
-`web_notifications_channel`:
+Now open a second terminal, go into the Rails project and use
+`ActionCable.server.broadcast` in the console to broadcast a
+message to `web_notifications_channel`:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 19706
-Loading development environment (Rails 5.2.0)
->> ActionCable.server.broadcast 'web_notifications_channel',
-message: '<p>Hello World!</p>'
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
+irb(main):001> ActionCable.server.broadcast("web_notifications_channel", { message: "<p>Hello World!</p>" })
 [ActionCable] Broadcasting to web_notifications_channel:
 {:message=>"<p>Hello World!</p>"}
 => 1
 ----
 
-Now you can see the update in your browser window.
+Now you can see the update in your browser window:
 
 image::screenshots/chapter-action-cable/hello-world.png[hello world example]
 
 You can add other messages by calling
-`ActionCable.server.broadcast 'web_notifications_channel',
-message: '<p>Hello World!</p>'` again.
+`ActionCable.server.broadcast("web_notifications_channel", { message: "<p>Hello again!</p>" })`
+again.
 
-Congratulation! You have your first working Action Cable application.
+Congratulations! You have your first working Action Cable
+application.
 
-TIP: By using `$('#messages').replaceWith data['message']` in
-     `app/assets/javascripts/page.coffee` you can replace the HTML content
-     instead of appending it. See http://api.jquery.com/replaceWith/
+TIP: If you want to _replace_ the whole `#messages` content
+     instead of appending to it, change `insertAdjacentHTML(...)`
+     to `el.innerHTML = data.message` in the channel JavaScript.
+
+== When to Use Turbo Streams Instead
+
+Writing the JavaScript yourself is educational but rarely what
+you actually want in a real Rails 8 application. Turbo Streams
+lets you broadcast the rendered HTML of a partial directly to
+every subscriber of a channel from the server side, with no
+hand-written JS. The canonical example looks like this:
+
+[source,ruby]
+.app/models/message.rb
+----
+class Message < ApplicationRecord
+  broadcasts_to ->(message) { [message.chatroom, :messages] }, inserts_by: :append
+end
+----
+
+[source,erb]
+.app/views/chatrooms/show.html.erb
+----
+<%= turbo_stream_from @chatroom, :messages %>
+
+<div id="messages">
+  <%= render @chatroom.messages %>
+</div>
+----
+
+Any `Message.create!(chatroom: chatroom, body: "hi")` now appends
+a fresh `<div>` to every browser open on that chat room — no
+channel, no JavaScript, no manual broadcast. See the
+xref:hotwire.adoc#hotwire[Hotwire chapter] for the full story.

@@ -1,0 +1,167 @@
+[[authentication]]
+= Authentication
+
+Rails 8 ships with a built-in authentication generator. It
+scaffolds a complete, production-worthy email/password login
+flow in a few seconds — `User` model, session controller,
+password reset mailer, rate limiting, everything. For the vast
+majority of Rails apps this is enough; you no longer need to
+reach for `devise` or roll your own system for simple cases.
+
+NOTE: The authentication generator was added in Rails 8. It is
+      deliberately minimal and opinionated: email + password,
+      secure session cookies, password reset via signed tokens.
+      No OAuth, no 2FA, no social login. If you need those,
+      extend the generated code or reach for a gem.
+
+== Generate
+
+Start a fresh app or use any existing Rails 8 application and
+run:
+
+[source,bash]
+----
+$ bin/rails generate authentication
+      invoke  active_record
+      create    db/migrate/20260419121501_create_users.rb
+      create    db/migrate/20260419121502_create_sessions.rb
+      create    app/models/user.rb
+      create    app/models/session.rb
+      invoke  test_unit
+      create    test/models/user_test.rb
+      create    test/models/session_test.rb
+      create  app/controllers/concerns/authentication.rb
+      create  app/controllers/passwords_controller.rb
+      create  app/controllers/sessions_controller.rb
+      create  app/views/sessions/new.html.erb
+      create  app/views/passwords/new.html.erb
+      create  app/views/passwords/edit.html.erb
+      create  app/mailers/passwords_mailer.rb
+      create  app/views/passwords_mailer/reset.html.erb
+      create  app/views/passwords_mailer/reset.text.erb
+[...]
+
+$ bin/rails db:migrate
+----
+
+That's it. Your app now has:
+
+* A `User` model with `has_secure_password` and an
+  `email_address` column. Email normalisation (strip + downcase)
+  is declared via `normalizes :email_address, with: -> e {
+  e.strip.downcase }`.
+* A `Session` model that stores each logged-in browser session
+  in the database so you can revoke individual sessions.
+* Controllers for `SessionsController` (login/logout) and
+  `PasswordsController` (password reset).
+* A mailer for the reset token.
+* A `Authentication` concern in
+  `app/controllers/concerns/authentication.rb` that every
+  controller inherits. It exposes `current_user`,
+  `authenticated?`, a `require_authentication` before-filter,
+  and helpers for signing in/out.
+
+== Create a User
+
+There is no default registration view (the generator is about
+authentication, not sign-up — that's a different decision for
+every app). You usually scaffold your own. The simplest way is
+from the console:
+
+[source,bash]
+----
+$ bin/rails console
+irb(main):001> User.create!(email_address: "you@example.com", password: "secret123", password_confirmation: "secret123")
+----
+
+== Log In
+
+Visit `http://localhost:3000/session/new`, enter the email and
+password, and you're logged in. The generator wires
+`root_url` (whatever you've set in `config/routes.rb`) as the
+default post-login redirect.
+
+If the user tries to visit a protected page first, they are
+redirected to the login form and after successful login bounced
+back to the original page. That logic lives in the
+`Authentication` concern — search for `after_authentication_url`
+if you want to customise it.
+
+== Protect a Controller
+
+Every controller gets the `require_authentication` filter by
+default (the `ApplicationController` includes the
+`Authentication` concern and calls `before_action
+:require_authentication`). To _allow_ unauthenticated access to
+a specific controller or action, use `allow_unauthenticated_access`:
+
+[source,ruby]
+.app/controllers/welcome_controller.rb
+----
+class WelcomeController < ApplicationController
+  allow_unauthenticated_access only: :show
+end
+----
+
+Inside any controller (or view) you have:
+
+* `current_user` — the logged-in user or `nil`.
+* `authenticated?` — `true` when someone is logged in.
+* `start_new_session_for(user)` — log a user in from your own code
+  (after they finish sign-up, for example).
+* `terminate_session` — log out.
+
+== Password Reset
+
+The generator ships a token-based password reset flow:
+
+1. User visits `/passwords/new`, enters their email.
+2. Rails sends an email with a signed, time-limited URL.
+3. User clicks the link, lands on `/passwords/:token/edit`,
+   sets a new password.
+
+The mailer uses Action Mailer so you need an SMTP provider
+configured for production — see
+xref:action-mailer.adoc#action-mailer[Action Mailer].
+
+== Rate Limiting
+
+Rails 8 added a small, opinionated rate limiter to
+`ActionController`. The generated `SessionsController` uses it
+to throttle brute-force login attempts:
+
+[source,ruby]
+.app/controllers/sessions_controller.rb
+----
+class SessionsController < ApplicationController
+  allow_unauthenticated_access only: %i[new create]
+  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_session_url, alert: "Try again later." }
+
+  # ... create / destroy actions ...
+end
+----
+
+Ten attempts per 3 minutes per IP is a sensible default; tune
+it if you need more strictness.
+
+== When You Need More
+
+Swap in a third-party gem when you need:
+
+* OAuth / SSO (Google, GitHub, Microsoft, Apple...) — look at
+  https://github.com/omniauth/omniauth[omniauth] and its
+  per-provider strategy gems.
+* Two-factor authentication — start from the generator's code
+  and add a TOTP column to `User` plus a `Sessions` flow that
+  requires the second factor. Or use `rotp` + a well-maintained
+  gem wrapper.
+* Magic links (passwordless) — the generator's password reset
+  flow is a decent starting point for a generic "signed-URL
+  login". Or use `sign_in_by_email` style gems.
+* A battle-tested, everything-included solution —
+  https://github.com/heartcombo/devise[devise] is still the
+  workhorse of the Ruby on Rails ecosystem.
+
+For simple apps, though, the built-in generator _is_ the
+solution — no gem, no vendor lock-in, and every line of code
+lives in your repository where you can see it and modify it.

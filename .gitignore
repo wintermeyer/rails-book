@@ -2,6 +2,7 @@
 /Gemfile.lock
 /.bundle/
 /output/
+/.scratch/
 *.html
 *.pdf
 *.xml

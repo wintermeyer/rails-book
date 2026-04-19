@@ -2,14 +2,17 @@
 
 Source for the book _Learn Ruby on Rails_ by Stefan Wintermeyer.
 
-The current chapter content was originally written for Rails 5.2 / Ruby 2.5
-and is being brought forward to current Rails releases. The build toolchain
-is evergreen (Asciidoctor 2).
+The book targets **Ruby 4.0** and **Ruby on Rails 8.1**. Examples
+have been re-run against these versions and screenshots are taken
+from fresh Rails 8 scaffolds. Chapters added during the 5.2 → 8.1
+refresh include Hotwire (Turbo + Stimulus), the built-in
+authentication generator, and the Solid trifecta (Solid Queue /
+Solid Cache / Solid Cable).
 
 ## Requirements
 
-- Ruby (any modern version; `mise` recommended for management)
-- Bundler
+- Ruby 4.0 (`mise use --global ruby@4.0` recommended)
+- Bundler (ships with Ruby 4.0)
 
 ## Install
 

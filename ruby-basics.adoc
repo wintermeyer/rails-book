@@ -13,20 +13,23 @@ Matsumoto].
 It is easy to program in Ruby, but Ruby is not a simple language.
 
 [[ruby-version]]
-== Ruby 2.5
+== Ruby 4.0
 
-We are going to use Ruby 2.5. But for most part of this book you can use
-older versions too. Ruby 2.5 is just a bit faster. You can check the installed
-Ruby version by running the command `ruby -v`:
+We are going to use Ruby 4.0. Most examples will also run on Ruby
+3.x, but the output formatting in this book matches Ruby 4.0. You
+can check the installed Ruby version by running the command
+`ruby -v`:
 
 [source,bash]
 $ ruby -v
-ruby 2.5.0p0 (2017-12-25 revision 61468) [x86_64-darwin17]
+ruby 4.0.2 (2026-03-17 revision d3da9fec82) +PRISM [arm64-darwin25]
 $
 
-NOTE: If your system runs an older version and you want to upgrade it have a
-      look at https://rvm.io which is my prefered way of installing and using
-      different Ruby versions.
+NOTE: If your system runs an older version and you want to upgrade it
+      have a look at https://mise.jdx.dev/[mise] which is my preferred
+      way of installing and using different Ruby versions. See
+      xref:installing.adoc#installing[the install appendix] for a
+      step-by-step guide.
 
 [[chapter1-basics]]
 == Basics
@@ -141,9 +144,10 @@ When programming, you do not always have a Ruby handbook available.
 Fortunately, the Ruby developers thought of this and provided a built-in
 help feature in form of the program `ri`.
 
-NOTE: Of course only if you have installed the documentation which is
-      the default. If you used `rvm` to install Ruby you can run
-      `rvm docs generate` to generate the documentation
+NOTE: Of course only if you have installed the documentation, which
+      is the default. Some minimal installations (e.g. slim Docker
+      images) strip ri pages; in that case `gem install rdoc` and
+      `rdoc --all` on a gem's source will regenerate them.
 
 This is a typical chicken and egg situation. How can I explain the Ruby
 help feature, if we are only just getting started with Ruby? So I am
@@ -172,16 +176,16 @@ An example is worth a thousand words:
 [source,bash]
 ----
 $ irb
-irb(main):001:0> puts 'Hello World!'
+irb(main):001> puts 'Hello World!'
 Hello World!
 => nil
-irb(main):002:0> exit
+irb(main):002> exit
 $
 ----
 
 NOTE: I the future examples I use `IRB.conf[:PROMPT_MODE] = :SIMPLE` in
       my `.irbrc` config file to generate shorter irb output (without
-      the `irb(main):001:0>` part). You can do the
+      the `irb(main):001>` part). You can do the
       same by using `irb --simple-prompt`.
 
 [[ruby-is-object-oriented]]
@@ -335,7 +339,6 @@ the error message: `wrong number of arguments (0 for 1)`:
 ArgumentError: wrong number of arguments (given 0, expected 1)
 	from /Users/.../hello-worldx3c.rb:1:in `three_times'
 	from (irb):2
-	from /Users/stefan/.rvm/rubies/ruby-2.5.0/bin/irb:11:in `<main>'
 >> exit
 ----
 
@@ -406,7 +409,6 @@ Now we try to call the method `three_times`:
 >> This_and_that.three_times
 NoMethodError: undefined method `three_times' for This_and_that:Class
 	from (irb):2
-	from /Users/stefan/.rvm/rubies/ruby-2.5.0/bin/irb:11:in `<main>'
 >>
 ----
 
@@ -470,7 +472,6 @@ a
 >> abc.b
 NoMethodError: private method `b' called for #<Example:0x007fa530037910>
 	from (irb):4
-	from /Users/stefan/.rvm/rubies/ruby-2.5.0/bin/irb:11:in `<main>'
 >> exit
 ----
 
@@ -661,7 +662,6 @@ $ irb
 >> example1.d
 NoMethodError: undefined method `d' for #<Abc:0x007fac5a845630>
 	from (irb):6
-	from /Users/stefan/.rvm/rubies/ruby-2.5.0/bin/irb:11:in `<main>'
 >> example1.a
 => "a"
 >> exit
@@ -710,7 +710,6 @@ $ irb
 >> Knowledge.pi
 NoMethodError: undefined method `pi' for Knowledge:Class
 	from (irb):2
-	from /Users/stefan/.rvm/rubies/ruby-2.5.0/bin/irb:11:in `<main>'
 >>
 ----
 
@@ -760,7 +759,6 @@ And the proof to the contrary:
 >> example.pi
 NoMethodError: undefined method `pi' for #<Knowledge:0x007fa8da045198>
 	from (irb):4
-	from /Users/stefan/.rvm/rubies/ruby-2.5.0/bin/irb:11:in `<main>'
 >> exit
 ----
 
@@ -1117,9 +1115,9 @@ $ irb
 
 Constants start with an upper case letter.
 
-WARNING: A constant can also be overwritten with a new value since
-         Ruby 2.3 (but you will get a warning message). So please
-         do not rely on the constancy of a constant.
+WARNING: A constant can also be overwritten with a new value (you
+         will get a warning message). So please do not rely on the
+         constancy of a constant.
 
 [source,bash]
 ----
@@ -1136,8 +1134,8 @@ $ irb
 >> exit
 ----
 
-You are on the safe side if you are using only ASCII symbols. But with
-Ruby 2.5 and the right encoding, you could also use special characters
+You are on the safe side if you are using only ASCII symbols. But
+Ruby source files are UTF-8 by default, so you could also use special characters
 (for example German Umlaute) more or less without any problems in a
 variable name. But if you want to be polite towards other programmers
 who probably do not have those characters directly available on their

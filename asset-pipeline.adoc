@@ -1,272 +1,230 @@
 [[asset-pipeline]]
-= Asset Pipeline
+= The Asset Pipeline
 
-The asset pipeline offers the Rails developer the opportunity of delivering CSS,
-JavaScript and image files to the browser more optimally. Depending on the type
-this can be a compression or a file name fingerprint. Different CSS files are
-combined into one big file. The fingerprinting enables the browser and any proxy in between
-to optimally cache the data, so the browser can load these files more quickly
-on subsequent visits.
+The asset pipeline gives the Rails developer a way to deliver CSS,
+JavaScript and image files to the browser optimally. Files get
+fingerprinted (a digest is added to the filename) so that browsers
+and any proxy in between can cache them aggressively — the digest
+changes whenever the file changes, so a fresh deploy always
+invalidates the cache automatically.
 
-NOTE: When running your webserver on HTTP/2 it might be a good idea to
-      break up this flow into smaller chunks to optimize HTTP-Caching. But
-      that depends on the specifics of your web application.
+Rails 8 ships two pieces to handle this:
 
-Within the asset pipeline, you can program CSS, SASS, JavaScript and
-CoffeeScript extensively and clearly, in order to let them be delivered later as
-automatically compressed CSS and JavaScript files.
+* https://github.com/rails/propshaft[Propshaft], the asset
+  pipeline itself.
+* https://github.com/rails/importmap-rails[importmap-rails],
+  which serves and pins JavaScript modules without a Node.js
+  build step.
 
-As an example we use once more our web shop with a product scaffold:
+They are both configured out of the box in a fresh
+`rails new myapp`.
+
+NOTE: Rails 5/6/7 used Sprockets for the asset pipeline and, for
+      JavaScript, Webpacker (Rails 5/6) or jsbundling-rails (Rails
+      7). Propshaft and importmap-rails are the new defaults
+      since Rails 7. Sprockets still works if you need it — add
+      `gem "sprockets-rails"` and Rails will use it instead of
+      Propshaft.
+
+As an example we use once more our web shop with a product
+scaffold:
 
 [source,bash]
 ----
 $ rails new webshop
   [...]
 $ cd webshop
-$ rails generate scaffold product name 'price:decimal{7,2}'
+$ bin/rails generate scaffold product name 'price:decimal{7,2}'
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
-In the directory `app/assets` you will then find the following files:
+In the directory `app/assets` you will find the following files:
 
 [source,bash]
 ----
 app/assets/
-├── config
-│   └── manifest.js
 ├── images
-├── javascripts
-│   ├── application.js
-│   ├── cable.js
-│   ├── channels
-│   └── products.coffee
 └── stylesheets
-    ├── application.css
-    ├── products.scss
-    └── scaffolds.scss
+    └── application.css
 ----
 
-The files `app/assets/javascripts/application.js` and
-`app/assets/stylesheets/application.css` are what is referred to as
-manifest files. They automatically include the other files in the
-relevant directory.
+And in `app/javascript`:
 
-[[application.js]]
-== application.js
-
-The file `app/assets/javascripts/application.js` has the following
-content:
-
-[source,javascript]
-.app/assets/javascripts/application.js
+[source,bash]
 ----
-// [...]
-//
-//= require rails-ujs
-//= require activestorage
-//= require turbolinks
-//= require_tree .
+app/javascript/
+├── application.js
+└── controllers
+    ├── application.js
+    ├── hello_controller.js
+    └── index.js
 ----
 
-This file and all sub files (which are integrated via `required_tree`)
-are merged into on file and the asset
-pipeline optimizes it. The not yet optimized version can be downloaded
-in the development environment with this URL:
-http://localhost:3000/assets/application.js
+Propshaft serves anything below `app/assets/*` and any other
+path you add to `Rails.application.config.assets.paths`.
+importmap-rails serves the files under `app/javascript/` as ES
+modules.
 
-[[application.css]]
+[[application-css]]
 == application.css
 
-The file `app/assets/stylesheets/application.css` has the following
-content:
+`app/assets/stylesheets/application.css` is the entry point for
+your stylesheet bundle. In a fresh Rails 8 app it looks like
+this:
 
 [source,css]
 .app/assets/stylesheets/application.css
 ----
 /*
- * [...]
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
  *
- *= require_tree .
- *= require_self
+ * Any CSS (and SCSS, if configured) file within this directory, lib/assets/stylesheets, or any plugin's
+ * vendor/assets/stylesheets directory can be referenced here using a relative path.
+ *
+ * [...]
  */
 ----
 
-With the command `require_tree .` all files in this directory are
-automatically integrated.
+Propshaft does not concatenate or preprocess CSS; each `.css`
+file under `app/assets/stylesheets/` is served independently,
+with its filename fingerprinted. Write CSS the way you'd write it
+for any static site and let the browser cache each file on its
+own.
 
-The not yet optimized CSS can be downloaded with the URL:
-http://localhost:3000/assets/application.css
+If you want SASS/SCSS you can add the `dartsass-rails` gem (for
+SCSS) or `tailwindcss-rails` (for Tailwind). Both compile your
+source to plain CSS during `bin/rails assets:precompile`.
 
-[[rake-assetsprecompile]]
-== rails assets:precompile
+[[application-js]]
+== application.js
 
-When using the asset pipeline, you need to remember that you have to
-precompile the assets before starting the Rails server in the production
-environment. This happens via the command `rails assets:precompile` with a
-prefixed `RAILS_ENV=production` for the production environment.
+`app/javascript/application.js` is the entry point for your
+JavaScript bundle:
+
+[source,javascript]
+.app/javascript/application.js
+----
+// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
+import "@hotwired/turbo-rails"
+import "controllers"
+----
+
+With importmap-rails you `import` a module name (like
+`"@hotwired/turbo-rails"`) and the import map tells the browser
+which URL corresponds to that module. This is ES modules as the
+browser natively supports them — no bundler, no Node step, no
+build output to commit or deploy.
+
+The import map itself lives in `config/importmap.rb`:
+
+[source,ruby]
+.config/importmap.rb
+----
+# Pin npm packages by running ./bin/importmap
+pin "application"
+pin "@hotwired/turbo-rails", to: "turbo.min.js"
+pin "@hotwired/stimulus", to: "stimulus.min.js"
+pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
+pin_all_from "app/javascript/controllers", under: "controllers"
+----
+
+You add JavaScript packages with the `importmap` binstub:
+
+[source,bash]
+----
+$ bin/importmap pin lodash
+Pinning "lodash" to https://ga.jspm.io/npm:lodash@4.17.21/lodash.js
+----
+
+After that you can write `import _ from "lodash"` in any of your
+files under `app/javascript/`.
+
+TIP: Import maps are ideal when your JavaScript is small-to-
+     medium and you don't need a heavy framework like React. If
+     you _do_ need React/Vue/Svelte or a true bundler, add
+     `gem "jsbundling-rails"` and run `rails new myapp --javascript=esbuild`
+     (or `bun`/`rollup`/`webpack`). Propshaft keeps handling the
+     CSS and static assets in that setup too.
+
+[[images-and-other-assets]]
+== Images and Other Assets
+
+Images go in `app/assets/images/`. They are fingerprinted just
+like CSS. Reference them from ERB via `asset_path` or the
+purpose-specific helpers:
+
+[source,erb]
+----
+<%= image_tag "rails.png" %>
+<%= asset_path("rails.png") %>
+<img src="<%= asset_path("rails.png") %>" alt="Rails">
+----
+
+In CSS use the `url(...)` helper:
+
+[source,css]
+----
+.logo { background: url("rails.png"); }
+----
+
+[[precompile-in-production]]
+== Precompile In Production
+
+When you deploy you run:
 
 [source,bash]
 ----
 $ RAILS_ENV=production bin/rails assets:precompile
-Yarn executable was not detected in the system.
-Download Yarn at https://yarnpkg.com/en/docs/install
-I, [2018-01-27T17:56:51.650389 #8573]  INFO -- : Writing /.../public/assets/application-9eca361cfc054d474ebb4c8c6b16465dd4cd42664fe474b8d9a52573c1e2d2e3.js
-I, [2018-01-27T17:56:51.656011 #8573]  INFO -- : Writing /.../public/assets/application-9eca361cfc054d474ebb4c8c6b16465dd4cd42664fe474b8d9a52573c1e2d2e3.js.gz
-I, [2018-01-27T17:56:51.700670 #8573]  INFO -- : Writing /.../public/assets/application-35729bfbaf9967f119234595ed222f7ab14859f304ab0acc5451afb387f637fa.css
-I, [2018-01-27T17:56:51.700920 #8573]  INFO -- : Writing /.../public/assets/application-35729bfbaf9967f119234595ed222f7ab14859f304ab0acc5451afb387f637fa.css.gz
 ----
 
-If you forget to do this, you will find the following error message in
-the log:
+This copies every asset from `app/assets/` and `app/javascript/`
+into `public/assets/`, each file's name suffixed with its SHA-256
+digest, and writes a `.sprockets-manifest-*.json` map that
+translates logical names to fingerprinted names at runtime.
+Rails 8's default `Dockerfile` runs this command as one of the
+build steps, and so does Kamal when it builds a deploy image.
 
-[source,log]
-----
-ActionView::Template::Error (application.css isn't precompiled)
-----
+Because every file in `public/assets/` is static, you should let
+your web server (Thruster, Nginx, a CDN) serve them directly —
+no Ruby involvement.
 
-The files created by `rails assets:precompile` appear in the directory
-`public/assets`
+[[live-recompile-dev]]
+== Live Recompile In Development
+
+In development Propshaft re-serves the latest version of a file
+on every request. No cache bust, no server restart. Just edit
+`app/assets/stylesheets/application.css` or
+`app/javascript/application.js` and reload.
+
+For tailwindcss-rails or dartsass-rails you usually start the
+watcher alongside the Rails server by using `bin/dev`:
 
 [source,bash]
 ----
-public/assets/
-├── application-35729bfbaf9967f119234595ed222f7ab14859f304ab0acc5451afb387f637fa.css
-├── application-35729bfbaf9967f119234595ed222f7ab14859f304ab0acc5451afb387f637fa.css.gz
-├── application-443bf66d6410ac6de6fd02a73fd8279e83ae0baee64d3832cc67a0909e8329d9.css
-├── application-443bf66d6410ac6de6fd02a73fd8279e83ae0baee64d3832cc67a0909e8329d9.css.gz
-├── application-9eca361cfc054d474ebb4c8c6b16465dd4cd42664fe474b8d9a52573c1e2d2e3.js
-├── application-9eca361cfc054d474ebb4c8c6b16465dd4cd42664fe474b8d9a52573c1e2d2e3.js.gz
-├── application-b59f735b008e94c6f72a3b7c43cf31aea2ab324386b7a378482d17887e683a61.js
-└── application-b59f735b008e94c6f72a3b7c43cf31aea2ab324386b7a378482d17887e683a61.js.gz
+$ bin/dev
 ----
 
-Go ahead and use your favorite editor to have a look at the created
-`css` and `js` files. You will find minimized and optimized code.
-If the web server supports it, the zipped `gz` files are delivered
-directly, which speeds things up a bit more.
+`bin/dev` reads `Procfile.dev` (generated by the CSS or JS
+framework when you add it) and runs all the processes you need
+(server + css watcher + js bundler) at the same time. That file
+looks something like:
 
-The difference in file size is enormous. The file `application.js`
-created in the development environment has a file size of 80 KB. The
-file `js.gz` created by `rails assets:precompile` is only 20 KB.
-Users of cellphones in particular will be grateful for smaller
-file sizes.
-
-The speed advantage incidentally lies not just in the file size, but
-also in the fact that only one file is downloaded, not several.
-The HTTP/1.1 overhead for loading multiple files is time-consuming. Things
-are changing with HTTP/2 but that is beyond the scope of this book. 
-
-NOTE: jQuery used to be an essential part of the JavaScript
-      world in the Ruby on Rails world. Since Rails version 5.1
-      jQuery it no longer needed. Most people will still use it
-      but you don't have to.
-
-[[the-fingerprint]]
-== The Fingerprint
-
-The fingerprint in the file name consists of a hash sum generated from
-the content of the relevant file. This fingerprint ensures optimal
-caching and prevents an old cache being used if any changes are made to
-the content. A simple but very effective method.
-
-[[coding-links-to-an-asset]]
-== Coding Links to an Asset
-
-All files below the directory `app/assets` are delivered in normal
-form by the Rails server. For example, you can go to the URL
-http://localhost:3000/assets/rails.png to view the Rails logo saved
-under `app/assets/images/rails.png` and to
-http://localhost:3000/assets/application.js to view the content of
-`app/assets/javascripts/application.js`. The Rails image `rails.png` is
-delivered 1:1 and the file `application.js` is first created by the
-asset pipeline.
-
-But you should never enter these files as hard-wired in a view. To make
-the most of the asset pipeline, you must use the helpers described here.
-
-[[coding-link-to-an-image]]
-== Coding Link to an Image
-
-You want to save all images in the directory `app/assets/images/`.
-The asset pipeline will search for them there. To actually use them
-in your erb code you can use the `image_tag` helper. Assumed we have
-a file `app/assets/images/rails.png` we can recreate an `<img>` element
-with this code:
-
-[source,erb]
+[source,text]
+.Procfile.dev
 ----
-<%= image_tag "rails.png", alt: "Rails Logo" %>
+web: bin/rails server
+css: bin/rails tailwindcss:watch
 ----
 
-In development mode, the following HTML code results from this:
+[[further-info]]
+== Further Information
 
-[source,erb]
-----
-<img alt="Rails Logo" src="/assets/rails.png" />
-----
-
-In production mode, you get an HTML code that points to a precompiled
-file with fingerprint:
-
-[source,erb]
-----
-<img alt="Rails Logo" src="/assets/rails-be...as0.png" />
-----
-
-[[coding-link-to-a-javascript-file]]
-== Coding Link to a JavaScript File
-
-You can use the helper `javascript_include_tag` to retrieve a JavaScript
-file compiled by the asset pipeline. This is what it would look like in
-the view for the file `app/assets/javascripts/application.js`:
-
-[source,erb]
-----
-<%= javascript_include_tag "application" %>
-----
-
-Normaly you don't have to care about this because the default
-`app/views/layouts/application.html.erb` takes care of it.
-
-[[coding-link-to-a-css-file]]
-== Coding Link to a CSS File
-
-A stylesheet compiled by the asset pipeline can be retrieved via the
-helper `stylesheet_link_tag`. In the view, it would look like this for
-the file `app/assets/stylesheets/application.css`:
-
-[source,erb]
-----
-<%= stylesheet_link_tag "application" %>
-----
-
-Normaly you don't have to care about this because the default
-`app/views/layouts/application.html.erb` takes care of it.
-
-[[defaults-in-the-application.html.erb]]
-== Defaults in the application.html.erb
-
-Incidentally, the file `app/views/layouts/application.html.erb` that the
-scaffold generator creates by default already contains the coding links
-for these JavaScript and stylesheet files:
-
-[source,erb]
-.app/views/layouts/application.html.erb
-----
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Webshop</title>
-    <%= csrf_meta_tags %>
-
-    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
-  </head>
-
-  <body>
-    <%= yield %>
-  </body>
-</html>
-----
+* The Rails guides page on the asset pipeline:
+  https://guides.rubyonrails.org/asset_pipeline.html
+* The Propshaft README:
+  https://github.com/rails/propshaft
+* The importmap-rails README:
+  https://github.com/rails/importmap-rails

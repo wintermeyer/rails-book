@@ -5,75 +5,75 @@
 
 In xref:first-steps-with-rails.adoc#creating-html-dynamically-with-erb["Creating HTML
 Dynamically with erb"] and
-xref:scaffolding-and-rest.adoc#scaffolding-and-rest["Scaffolding and REST"] we came
-across _routes_. The configuration in `config/routes.rb` defines what happens in
-the Rails application when a user of a Rails application fetches a URL. A route
-can be static and dynamic and pass any dynamic values with variables to the
-controller. If several routes apply to the same URL, the one that is listed at
-the top of `config/routes.rb` wins.
+xref:scaffolding-and-rest.adoc#scaffolding-and-rest["Scaffolding and REST"] we
+came across _routes_. The configuration in `config/routes.rb` defines what
+happens in the Rails application when a user fetches a URL. A route can be
+static or dynamic and it can pass any dynamic values from the URL to the
+controller as parameters. If several routes apply to the same URL, the
+one that is listed higher up in `config/routes.rb` wins.
 
-TIP: If you do not have much time, you can skip this chapter for now
+TIP: If you do not have much time you can skip this chapter for now
      and get back to it later if you have any specific questions.
 
-Let’s first build a test Rails application so we can experiment:
+Let's first build a test Rails application so we can experiment:
 
 [source,bash]
 ----
 $ rails new shop
   [...]
 $ cd shop
-$ rails db:migrate
+$ bin/rails db:prepare
 ----
 
-With `rails routes` we can display the routes of a project. Let’s try it
-straight away in the freshly created project:
+With `bin/rails routes` we can display the routes of a project. Let's
+try it straight away in the freshly created project:
 
 [source,bash]
 ----
-$ rails routes
-You don't have any routes defined!
-
-Please add some routes in config/routes.rb.
-
-For more information about routes, see the Rails guide:
-http://guides.rubyonrails.org/routing.html.
+$ bin/rails routes
+                             Prefix Verb URI Pattern   Controller#Action
+                 rails_health_check GET  /up(.:format) rails/health#show
+[...]
 ----
 
-That’s what I call a good error message. It’s a new Rails project, there
-are no routes yet.
+NOTE: A fresh Rails 8 app already has a handful of built-in routes:
+      a health-check endpoint at `/up`, Turbo helpers, Action Mailbox
+      ingresses, Active Storage and so on. Our _own_ routes will
+      appear at the top of the list, above all of these.
 
 [[http-get-requests-for-singular-resources]]
 == HTTP GET Requests for Singular Resources
 
-As you might know the HTTP protocol uses different so called verbs to
-access content on the web server (e.g. GET to request a page or POST to
-send a form to the server). First we’ll have a look at GET requests.
+As you might know the HTTP protocol uses different so-called verbs to
+access content on the web server (e.g. GET to request a page or POST to
+send a form to the server). First we'll have a look at GET requests.
 
 Create a controller with three pages:
 
 [source,bash]
 ----
-$ rails generate controller Home index ping pong
+$ bin/rails generate controller Home index ping pong
       create  app/controllers/home_controller.rb
-       route  get "home/pong"
-       route  get "home/ping"
        route  get "home/index"
+              get "home/ping"
+              get "home/pong"
        [...]
 ----
 
-Now `rails routes` lists a route for these three pages:
+Now `bin/rails routes` lists a route for these three pages:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
     Prefix Verb URI Pattern           Controller#Action
 home_index GET  /home/index(.:format) home#index
  home_ping GET  /home/ping(.:format)  home#ping
  home_pong GET  /home/pong(.:format)  home#pong
+[...]
 ----
 
-The pages can be accessed at the following URLs after starting the Rails
-server with `rails server`:
+The pages can be accessed at the following URLs after starting the
+Rails server with `bin/rails server`:
 
 * http://localhost:3000/home/index
 +
@@ -87,11 +87,11 @@ for `home_pong GET /home/pong(.:format) home#pong`
 
 image::screenshots/chapter06/home_ping.png[home ping,title="Home ping"]
 
-With the output `home#index`, Rails tells us that the route `home/index`
-goes into the controller home and there to the action/method `index`.
-These routes are defined in the file `config/routes.rb`.
-`rails generate controller Home index ping pong` has automatically
-inserted the following lines there:
+With the output `home#index`, Rails tells us that the route
+`home/index` goes into the controller `home` and there to the
+action/method `index`. These routes are defined in the file
+`config/routes.rb`. `bin/rails generate controller Home index ping
+pong` has automatically inserted the following lines there:
 
 [source,ruby]
 .config/routes.rb
@@ -104,7 +104,7 @@ get "home/pong"
 [[naming-a-route]]
 === Naming a Route
 
-A route should always have an internal name which doesn’t change.
+A route should always have an internal name which doesn't change.
 In the section xref:routing.adoc#http-get-requests-for-singular-resources["HTTP Get
 Requests for Singular Resources"] there is the following route:
 
@@ -113,23 +113,24 @@ Requests for Singular Resources"] there is the following route:
 home_pong GET /home/pong(.:format)  home#pong
 ----
 
-This route has the automatically created name `home_pong`. Generally,
-you should always try to work with the name of the route within a Rails
-application. So you would point a `link_to` to `home_pong` and not to
-/home/pong. This has the big advantage that you can later edit (in the
-best case, optimize) the routing for visitors externally and do not need
-to make any changes internally in the application. Of course, you need
-to enter the old names with `:as` in that case.
+This route has the automatically-created name `home_pong`. Generally
+you should always try to work with the name of the route within a
+Rails application. So you would point a `link_to` to `home_pong` and
+not to `/home/pong`. This has the big advantage that you can later
+edit (in the best case, optimize) the routing for visitors
+externally and do not need to make any changes internally in the
+application. Of course you need to enter the old names with `:as` in
+that case.
 
 [[as]]
 === as
 
-If you want to define the name of a route yourself, you can do so with
-:as. For example, the line
+If you want to define the name of a route yourself you can do so
+with `:as`. For example, the line
 
 [source,ruby]
 ----
-get "home/pong", as: 'different_name'
+get "home/pong", as: "different_name"
 ----
 
 results in the route
@@ -142,8 +143,8 @@ different_name GET  /home/pong(.:format)  home#pong
 [[to]]
 === to
 
-With to you can define an other destination for a rout. For example, the
-line
+With `to` you can define a different destination for a route. For
+example, the line
 
 [source,ruby]
 ----
@@ -161,71 +162,71 @@ home_applepie GET  /home/applepie(.:format) home#ping
 === Parameters
 
 The routing engine can not just assign fixed routes but also pass
-parameters which are part of the URL. A typical example would be date
-specifications (e.g. http://example.com/2010/12/ for all December
-postings).
+parameters which are part of the URL. A typical example would be
+date specifications (e.g. http://example.com/2010/12/ for all
+December postings).
 
-To demonstrate this, let’s create a mini blog application:
+To demonstrate this, let's create a mini blog application:
 
 [source,bash]
 ----
 $ rails new blog
   [...]
 $ cd blog
-$ rails generate scaffold post subject content published_on:date
+$ bin/rails generate scaffold post subject content published_on:date
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
-As example data in the `db/seeds.rb` we take:
+As example data in `db/seeds.rb` we use:
 
 [source,ruby]
 .db/seeds.rb
 ----
-Post.create(subject: 'A test', published_on: '01.10.2011')
-Post.create(subject: 'Another test', published_on: '01.10.2011')
-Post.create(subject: 'And yet one more test', published_on: '02.10.2011')
-Post.create(subject: 'Last test', published_on: '01.11.2011')
-Post.create(subject: 'Very final test', published_on: '01.11.2012')
+Post.create(subject: "A test", published_on: "2011-10-01")
+Post.create(subject: "Another test", published_on: "2011-10-01")
+Post.create(subject: "And yet one more test", published_on: "2011-10-02")
+Post.create(subject: "Last test", published_on: "2011-11-01")
+Post.create(subject: "Very final test", published_on: "2012-11-01")
 ----
 
-With `rails db:seed` we populate the database with this data:
+With `bin/rails db:seed` we populate the database:
 
 [source,bash]
 ----
-$ rails db:seed
+$ bin/rails db:seed
 ----
 
-If we now start the Rails server with `rails server` and go to the
-page http://localhost:3000/posts in the browser, we will see this:
+If we now start the Rails server with `bin/rails server` and go to
+http://localhost:3000/posts in the browser we will see this:
 
 image::screenshots/chapter06/posts_index.png[posts index,title="Posts index"]
 
-For this kind of blog it would of course be very useful if you could
+For a blog like this it would of course be very useful if you could
 render all entries for the year 2010 with the URL
 http://localhost:3000/2010/ and all entries for October 1st 2010 with
 http://localhost:3000/2010/10/01. We can do this by using optional
-parameters. Please enter the following configuration in the
+parameters. Please enter the following configuration in
 `config/routes.rb`:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts
 
-  get ':year(/:month(/:day))', to: 'posts#index'
+  get ":year(/:month(/:day))", to: "posts#index"
 end
 ----
 
-The round brackets represent optional parameters. In this case, you have
-to specify the year, but not necessarily the month or day. `rails routes`
-shows the new route at the last line:
+The round brackets represent optional parameters. In this case you
+have to specify the year, but not necessarily the month or day.
+`bin/rails routes` shows the new route after the others:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
    Prefix Verb   URI Pattern                      Controller#Action
     posts GET    /posts(.:format)                 posts#index
           POST   /posts(.:format)                 posts#create
@@ -236,82 +237,65 @@ edit_post GET    /posts/:id/edit(.:format)        posts#edit
           PUT    /posts/:id(.:format)             posts#update
           DELETE /posts/:id(.:format)             posts#destroy
           GET    /:year(/:month(/:day))(.:format) posts#index
+[...]
 ----
 
 If we do not change anything else, we still get the same result when
-calling http://localhost:3000/2011/ and http://localhost:3000/2011/10/01
+calling http://localhost:3000/2011 and http://localhost:3000/2011/10/01
 as we did with http://localhost:3000/posts. But have a look at the
-output of rails server for the request http://localhost:3000/2011
+output of `bin/rails server` for the request http://localhost:3000/2011
 
 [source,bash]
 ----
-Started GET "/2011/" for 127.0.0.1 at 2017-03-24 11:18:52 +0100
-   (0.5ms)  SELECT "schema_migrations"."version" FROM "schema_migrations"
-   ORDER BY "schema_migrations"."version" ASC
+Started GET "/2011" for ::1 at 2026-04-19 11:07:12 +0200
 Processing by PostsController#index as HTML
   Parameters: {"year"=>"2011"}
-  Rendering posts/index.html.erb within layouts/application
-  Post Load (0.5ms)  SELECT "posts".* FROM "posts"
-  Rendered posts/index.html.erb within layouts/application (14.7ms)
-Completed 200 OK in 122ms (Views: 99.1ms | ActiveRecord: 1.0ms)
+[...]
 ----
 
-The route has been recognised and an `"year" => "2011"` has been
-assigned to the hash `params` (written misleadingly as `Parameters` in
-the output). Going to the URL http://localhost:3000/2010/12/24 results
-in the following output, as expected:
+The route has been recognised and a `"year" => "2011"` has been
+assigned to the `params` hash. Going to the URL
+http://localhost:3000/2010/12/24 results in the following output, as
+expected:
 
 [source,bash]
 ----
-Started GET "/2010/12/24" for 127.0.0.1 at 2017-03-24 11:19:38 +0100
+Started GET "/2010/12/24" for ::1 at 2026-04-19 11:07:22 +0200
 Processing by PostsController#index as HTML
   Parameters: {"year"=>"2010", "month"=>"12", "day"=>"24"}
-  Rendering posts/index.html.erb within layouts/application
-  Post Load (0.2ms)  SELECT "posts".* FROM "posts"
-  Rendered posts/index.html.erb within layouts/application (2.9ms)
-Completed 200 OK in 14ms (Views: 11.4ms | ActiveRecord: 0.2ms)
+[...]
 ----
 
-In case of the URL http://localhost:3000/2010/12/24, the following
-values have been saved in the hash `params`:
-`"year"=>"2010", "month"=>"12", "day"=>"24"`
-
-In the controller, we can access `params[]` to access the values defined
-in the URL. We simply need to adapt the index method in
-`app/controllers/posts_controller.rb` to output the `posts` entered for
-the corresponding date, month or year:
+In the controller we can access `params[]` to read the values from
+the URL. We simply need to adapt the `index` method in
+`app/controllers/posts_controller.rb` to output the `posts` entered
+for the corresponding date, month or year:
 
 [source,ruby]
 .app/controllers/posts_controller.rb
 ----
-# GET /posts
-# GET /posts.json
+# GET /posts or /posts.json
 def index
-  # Check if the URL requests a date.
-  if Date.valid_date? params[:year].to_i, params[:month].to_i, params[:day].to_i
+  if params[:year] && params[:month] && params[:day]
     start_date = Date.parse("#{params[:day]}.#{params[:month]}.#{params[:year]}")
     end_date = start_date
-
-  # Check if the URL requests a month
-  elsif Date.valid_date? params[:year].to_i, params[:month].to_i, 1
+  elsif params[:year] && params[:month]
     start_date = Date.parse("1.#{params[:month]}.#{params[:year]}")
     end_date = start_date.end_of_month
-
-  # Check if the URL requests a year
-  elsif params[:year] && Date.valid_date?(params[:year].to_i, 1, 1)
+  elsif params[:year]
     start_date = Date.parse("1.1.#{params[:year]}")
     end_date = start_date.end_of_year
   end
 
-  if start_date && end_date
-    @posts = Post.where(published_on: start_date..end_date)
+  @posts = if start_date && end_date
+    Post.where(published_on: start_date..end_date)
   else
-    @posts = Post.all
+    Post.all
   end
 end
 ----
 
-If we now go to http://localhost:3000/2011/10/01 , we can see all
+If we now go to http://localhost:3000/2011/10/01 we can see all
 `posts` of October 1st 2011.
 
 image::screenshots/chapter06/posts_2011_10_01.png[posts 2011-10-01,title="Posts 2011-10-01"]
@@ -319,143 +303,146 @@ image::screenshots/chapter06/posts_2011_10_01.png[posts 2011-10-01,title="Posts 
 [[constraints]]
 === Constraints
 
-In the section xref:routing.adoc#parameters["Parameters"] I showed you how
-you can read out parameters from the URL and pass them to the
-controller. Unfortunately, the entry defined there in the
+In the section xref:routing.adoc#parameters["Parameters"] I showed
+you how you can read out parameters from the URL and pass them to
+the controller. Unfortunately, the entry defined there in the
 `config/routes.rb`
 
 [source,ruby]
 ----
-get ':year(/:month(/:day))', to: 'posts#index'
+get ":year(/:month(/:day))", to: "posts#index"
 ----
 
 has one important disadvantage: it does not verify the individual
 elements. For example, the URL http://localhost:3000/just/an/example
-will be matched just the same and then of course results in an error:
+will also be matched by this route and then of course produces an
+error because `Date.parse("example.an.just")` doesn't work:
 
-image::screenshots/chapter06/ein_beispiel_dafuer_fehler.png[Fehlermeldung,title="Fehlermeldung"]
+image::screenshots/chapter06/ein_beispiel_dafuer_fehler.png[Error,title="Error"]
 
-In the log output in`log/development.log` we can see the following
-entry:
+In the log output in `log/development.log` we can see something like:
 
 [source,bash]
 ----
-Started GET "/just/an/example" for 127.0.0.1 at 2017-03-24 13:18:21 +0100
+Started GET "/just/an/example" for ::1 at 2026-04-19 11:08:01 +0200
 Processing by PostsController#index as HTML
   Parameters: {"year"=>"just", "month"=>"an", "day"=>"example"}
-Completed 500 Internal Server Error in 2ms (ActiveRecord: 0.0ms)
+Completed 500 Internal Server Error in 4ms (ActiveRecord: 0.0ms)
 
-ArgumentError (invalid date):
-
-app/controllers/posts_controller.rb:19:in `parse'
-app/controllers/posts_controller.rb:19:in `index'
+Date::Error (invalid date):
+  app/controllers/posts_controller.rb:7:in 'parse'
+  app/controllers/posts_controller.rb:7:in 'index'
 ----
 
-Obviously, `Date.parse("example.an.just")` does not work. A date is made
-up of numbers, not letters.
+Obviously, `Date.parse("example.an.just")` does not work. A date is
+made of numbers, not letters.
 
-Constraints can define the content of the URL more precisely via regular
-expressions. In the case of our blog, the `config/routes.rb` with
-contraints would look like this:
+Constraints can define the content of the URL more precisely via
+regular expressions. In the case of our blog, `config/routes.rb`
+with constraints would look like this:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts
 
-  get ':year(/:month(/:day))', to: 'posts#index',
-  constraints: { year: /\d{4}/, month: /\d{2}/, day: /\d{2}/ }
+  get ":year(/:month(/:day))", to: "posts#index",
+      constraints: { year: /\d{4}/, month: /\d{2}/, day: /\d{2}/ }
 end
 ----
 
-WARNING: Please note that you cannot use regex anchors such as "^" in regular
-         expressions in a constraint.
+WARNING: Please note that you cannot use regex anchors such as `^`
+         in regular expressions in a constraint.
 
-If we go to the URL again with this configuration, Rails gives us an
-error message "No route matches":
+If we go to the URL again with this configuration, Rails returns a
+404 with the message "No route matches":
 
 image::screenshots/chapter06/ein_beispiel_dafuer_no_route_matches.png[no route match,title="No route error"]
 
-[[redirects]]
+[[routes-redirects]]
 === Redirects
 
-Our current application answers request in the format YYYY/MM/DD (4
+Our current application answers requests in the format YYYY/MM/DD (4
 digits for the year, 2 digits for the month and 2 digits for the day).
-That is ok for machines but maybe a human would request a single digit
-month (like January) and a single digit day without adding the extra 0
-to make it two digits. We can fix that with a couple of redirect rules
-which catch these URLs and redirect them to the correct ones.
+That is OK for machines but a human would probably request a single-
+digit month (like January) and a single-digit day without adding the
+extra `0` to make it two digits. We can fix that with a couple of
+redirect rules which catch these URLs and redirect them to the
+correct ones.
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts
 
-  get ':year/:month/:day', to: redirect("/%{year}/0%{month}/0%{day}"),
-  constraints: { year: /\d{4}/, month: /\d{1}/, day: /\d{1}/ }
-  get ':year/:month/:day', to: redirect("/%{year}/0%{month}/%{day}"),
-  constraints: { year: /\d{4}/, month: /\d{1}/, day: /\d{2}/ }
-  get ':year/:month/:day', to: redirect("/%{year}/%{month}/0%{day}"),
-  constraints: { year: /\d{4}/, month: /\d{2}/, day: /\d{1}/ }
-  get ':year/:month', to: redirect("/%{year}/0%{month}"),
-  constraints: { year: /\d{4}/, month: /\d{1}/ }
+  get ":year/:month/:day", to: redirect("/%{year}/0%{month}/0%{day}"),
+      constraints: { year: /\d{4}/, month: /\d{1}/, day: /\d{1}/ }
+  get ":year/:month/:day", to: redirect("/%{year}/0%{month}/%{day}"),
+      constraints: { year: /\d{4}/, month: /\d{1}/, day: /\d{2}/ }
+  get ":year/:month/:day", to: redirect("/%{year}/%{month}/0%{day}"),
+      constraints: { year: /\d{4}/, month: /\d{2}/, day: /\d{1}/ }
+  get ":year/:month",      to: redirect("/%{year}/0%{month}"),
+      constraints: { year: /\d{4}/, month: /\d{1}/ }
 
-  get ':year(/:month(/:day))', to: 'posts#index',
-  constraints: { year: /\d{4}/, month: /\d{2}/, day: /\d{2}/ }
+  get ":year(/:month(/:day))", to: "posts#index",
+      constraints: { year: /\d{4}/, month: /\d{2}/, day: /\d{2}/ }
 end
 ----
 
-With this set of redirect rules, we can ensure that a user of the page
-can also enter single-digit days and months and still ends up in the
-right place, or is redirected to the correct format.
+With this set of redirect rules we can ensure that a user of the
+page can also enter single-digit days and months and still ends up
+in the right place, or is redirected to the correct format.
 
-NOTE: Redirects in the `config/routes.rb` are by default http redirects with
-      the code 301 ("Moved Permanently"). So even search engines will profit
-      from this.
+NOTE: Redirects in `config/routes.rb` are by default HTTP redirects
+      with the code 301 ("Moved Permanently"). So even search
+      engines will profit from this. Pass `status: 302` as a second
+      argument to `redirect()` if you need a temporary redirect
+      instead.
 
-[[root-to-welcomeindex]]
-== root :to => welcome#index
+[[root-route]]
+== root "controller#action"
 
-Rails provides a short cut for the `/` (root) route. Assuming
-you'd want to render the `index` view of the `posts` controller
-you'd have to use this configuration:
+Rails provides a shortcut for the `/` (root) route. Assuming you
+want to render the `index` view of the `posts` controller you'd use
+this configuration:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts
 
-  root :to => posts#index
+  root "posts#index"
 end
 ----
 
-If you don't want to show any of the resource pages you can
-create a new controller (e.g. `Page`) with an `index` view.
+If you don't want to show any of the resource pages you can create a
+new controller (for example `Page`) with an `index` action:
 
 [source,bash]
 ----
-$ rails new controller Page index
+$ bin/rails generate controller Page index
 ----
 
-Than you can use the following configuration to present it
-as your index (root) page:
+Then you can use the following configuration to present it as your
+root page:
 
+[source,ruby]
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts
 
-  get 'page/index'
-  root :to => page#index
+  get "page/index"
+  root "page#index"
 end
 ----
 
 [[resources]]
 == resources
 
-`resources` provides routes for a RESTful resource. Let’s try it with
+`resources` provides routes for a RESTful resource. Let's try it with
 the mini blog application:
 
 [source,bash]
@@ -463,31 +450,31 @@ the mini blog application:
 $ rails new blog
   [...]
 $ cd blog
-$ rails generate scaffold post subject content published_on:date
+$ bin/rails generate scaffold post subject content published_on:date
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
-The scaffold generator automatically creates a `resources` route in the
+The scaffold generator automatically creates a `resources` route in
 `config/routes.rb`:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts
 end
 ----
 
-NOTE: New routes are always added at the beginning of `config/routes.rb` by
-      `rails generate scripts`.
+NOTE: New routes are always added at the top of `config/routes.rb`
+      by `bin/rails generate` scripts.
 
 The resulting routes:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
    Prefix Verb   URI Pattern               Controller#Action
     posts GET    /posts(.:format)          posts#index
           POST   /posts(.:format)          posts#create
@@ -497,37 +484,39 @@ edit_post GET    /posts/:id/edit(.:format) posts#edit
           PATCH  /posts/:id(.:format)      posts#update
           PUT    /posts/:id(.:format)      posts#update
           DELETE /posts/:id(.:format)      posts#destroy
+[...]
 ----
 
-You have already encountered these RESTful routes in the chapter
-xref:first-steps-with-rails.adoc#creating-html-dynamically-with-erb["Scaffolding and
-REST"]. They are required for displaying and editing records.
+You have already encountered these RESTful routes in
+xref:scaffolding-and-rest.adoc#scaffolding-and-rest["Scaffolding and
+REST"]. They are what you need for displaying and editing records.
 
 [[selecting-specific-routes-with-only-or-except]]
 === Selecting Specific Routes with only: or except:
 
-If you only want to use specific routes from the finished set of RESTful
-routes, you can limit them with `:only` or `:except`.
+If you only want to use specific routes from the finished set of
+RESTful routes you can limit them with `:only` or `:except`.
 
-The following `config/routes.rb` defines only the routes for `index` and
-`show`:
+The following `config/routes.rb` defines only the routes for `index`
+and `show`:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts, only: [:index, :show]
 end
 ----
 
-With `rails routes` we can check the result:
+With `bin/rails routes` we can check the result:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
 Prefix Verb URI Pattern          Controller#Action
  posts GET  /posts(.:format)     posts#index
   post GET  /posts/:id(.:format) posts#show
+[...]
 ----
 
 `except` works exactly the other way round:
@@ -535,16 +524,16 @@ Prefix Verb URI Pattern          Controller#Action
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts, except: [:index, :show]
 end
 ----
 
-Now all routes except for `index` and `show` are possible:
+Now all routes except for `index` and `show` exist:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
    Prefix Verb   URI Pattern               Controller#Action
     posts POST   /posts(.:format)          posts#create
  new_post GET    /posts/new(.:format)      posts#new
@@ -552,48 +541,49 @@ edit_post GET    /posts/:id/edit(.:format) posts#edit
      post PATCH  /posts/:id(.:format)      posts#update
           PUT    /posts/:id(.:format)      posts#update
           DELETE /posts/:id(.:format)      posts#destroy
+[...]
 ----
 
-WARNING: When using `only` and `except`, please make sure you also adapt the
-         views generated by the scaffold generator. For example, there is a link
-         on the index page to the new view with
-         `<%= link_to 'New Post', new_post_path %>` but this view no longer
-         exists in the above only example.
+WARNING: When using `only` and `except` please make sure you also
+         adapt the views generated by the scaffold generator. For
+         example the index page links to the new view with
+         `<%= link_to "New post", new_post_path %>`, but that view
+         no longer exists in the first `only` example above.
 
 [[nested-resources]]
 === Nested Resources
 
 Nested resources refer to routes of resources that work with an
-association. These can be addressed precisely via
-routes. Let’s create a blog with `Post` and a second
-resource `Comment`:
+association. These can be addressed precisely via routes. Let's
+create a blog with `Post` and a second resource `Comment`:
 
 [source,bash]
 ----
 $ rails new nested-blog
   [...]
 $ cd nested-blog
+$ bin/rails generate scaffold post subject body:text
   [...]
-$ rails generate scaffold post subject body:text
+$ bin/rails generate scaffold comment post:references content
   [...]
-$ rails generate scaffold comment post:references content
-  [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
-Now we associate the two resources. In the file `app/models/post.rb`, we
-add a `has_many`:
+Now we associate the two resources. In `app/models/post.rb` we add a
+`has_many`:
 
 [source,ruby]
 .app/models/post.rb
 ----
 class Post < ApplicationRecord
-  has_many :comments
+  has_many :comments, dependent: :destroy
 end
 ----
 
-And in the file `app/models/comment.rb`, its counterpart `belongs_to`:
+And in `app/models/comment.rb` its counterpart `belongs_to` was
+already added for us by the `post:references` option when we
+generated the scaffold:
 
 [source,ruby]
 .app/models/comment.rb
@@ -607,7 +597,7 @@ The routes generated by the scaffold generator look like this:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
       Prefix Verb   URI Pattern                  Controller#Action
     comments GET    /comments(.:format)          comments#index
              POST   /comments(.:format)          comments#create
@@ -617,24 +607,26 @@ edit_comment GET    /comments/:id/edit(.:format) comments#edit
              PATCH  /comments/:id(.:format)      comments#update
              PUT    /comments/:id(.:format)      comments#update
              DELETE /comments/:id(.:format)      comments#destroy
-       posts POST   /posts(.:format)             posts#create
+       posts GET    /posts(.:format)             posts#index
+             POST   /posts(.:format)             posts#create
     new_post GET    /posts/new(.:format)         posts#new
    edit_post GET    /posts/:id/edit(.:format)    posts#edit
-        post PATCH  /posts/:id(.:format)         posts#update
+        post GET    /posts/:id(.:format)         posts#show
+             PATCH  /posts/:id(.:format)         posts#update
              PUT    /posts/:id(.:format)         posts#update
              DELETE /posts/:id(.:format)         posts#destroy
 ----
 
-So we can get the first post with `/posts/1` and all the comments with
-`/comments`. By using nesting, we could get all comments with the
-`post_id` 1 via `/posts/1/comments`.
+So we can get the first post with `/posts/1` and all the comments
+with `/comments`. By using nesting, we could get all comments with
+the `post_id` 1 via `/posts/1/comments`.
 
-To achive this we need to change the `config/routes.rb`:
+To achieve this we need to change `config/routes.rb`:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts do
     resources :comments
   end
@@ -645,7 +637,7 @@ This gives us the desired routes:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
            Prefix Verb   URI Pattern                                 Controller#Action
     post_comments GET    /posts/:post_id/comments(.:format)          comments#index
                   POST   /posts/:post_id/comments(.:format)          comments#create
@@ -665,7 +657,7 @@ edit_post_comment GET    /posts/:post_id/comments/:id/edit(.:format) comments#ed
                   DELETE /posts/:id(.:format)                        posts#destroy
 ----
 
-But we still need to make some changes in the file
+But we still need to make some changes in
 `app/controllers/comments_controller.rb`. This ensures that only the
 `Comments` of the specified `Post` can be displayed or changed:
 
@@ -674,7 +666,7 @@ But we still need to make some changes in the file
 ----
 class CommentsController < ApplicationController
   before_action :set_post
-  before_action :set_comment, only: [:show, :edit, :update, :destroy]
+  before_action :set_comment, only: %i[ show edit update destroy ]
 
   def index
     @comments = @post.comments
@@ -695,10 +687,10 @@ class CommentsController < ApplicationController
 
     respond_to do |format|
       if @comment.save
-        format.html { redirect_to post_comment_path(@post, @comment), notice: 'Comment was successfully created.' }
+        format.html { redirect_to post_comment_path(@post, @comment), notice: "Comment was successfully created." }
         format.json { render :show, status: :created, location: @comment }
       else
-        format.html { render :new }
+        format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @comment.errors, status: :unprocessable_entity }
       end
     end
@@ -707,19 +699,20 @@ class CommentsController < ApplicationController
   def update
     respond_to do |format|
       if @comment.update(comment_params)
-        format.html { redirect_to post_comments_path(@post, @comment), notice: 'Comment was successfully updated.' }
+        format.html { redirect_to post_comment_path(@post, @comment), notice: "Comment was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @comment }
       else
-        format.html { render :edit }
+        format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @comment.errors, status: :unprocessable_entity }
       end
     end
   end
 
   def destroy
-    @comment.destroy
+    @comment.destroy!
+
     respond_to do |format|
-      format.html { redirect_to post_comments_url(@post), notice: 'Comment was successfully destroyed.' }
+      format.html { redirect_to post_comments_path(@post), notice: "Comment was successfully destroyed.", status: :see_other }
       format.json { head :no_content }
     end
   end
@@ -734,43 +727,43 @@ class CommentsController < ApplicationController
     end
 
     def comment_params
-      params.require(:comment).permit(:content)
+      params.expect(comment: [ :content ])
     end
 end
 ----
 
-Unfortunately, this is only half the story, because the views still link
-to the old routes. So we need to adapt each view in accordance with the
-nested route.
+Unfortunately this is only half the story, because the views still
+link to the old, non-nested routes. So we need to adapt each view in
+accordance with the nested route.
 
-Please note that you need to change the `form_with` call to
-`form_with(model: [post, comment], local: true)`. But we don't need
-the `post_id` field any more, because that information is already
-in the URL.
+You need to change the `form_with` call to `form_with(model: [post,
+comment])` (a two-element array tells Rails the URL belongs under
+the nested route). We don't need the `post_id` form field anymore
+because that information is already in the URL.
 
-[source,ruby]
+[source,erb]
 .app/views/comments/_form.html.erb
 ----
-<%= form_with(model: [post, comment], local: true) do |f| %>
+<%= form_with(model: [post, comment]) do |form| %>
   <% if comment.errors.any? %>
-    <div id="error_explanation">
+    <div style="color: red">
       <h2><%= pluralize(comment.errors.count, "error") %> prohibited this comment from being saved:</h2>
 
       <ul>
-      <% comment.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
+        <% comment.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
       </ul>
     </div>
   <% end %>
 
-  <div class="field">
-    <%= f.label :content %>
-    <%= f.text_field :content %>
+  <div>
+    <%= form.label :content, style: "display: block" %>
+    <%= form.text_field :content %>
   </div>
 
-  <div class="actions">
-    <%= f.submit %>
+  <div>
+    <%= form.submit %>
   </div>
 <% end %>
 ----
@@ -780,44 +773,30 @@ in the URL.
 ----
 <h1>Editing Comment</h1>
 
-<%= render 'form', comment: @comment, post: @post %>
+<%= render "form", comment: @comment, post: @post %>
 
-<%= link_to 'Show', post_comment_path(@post, @comment) %> |
-<%= link_to 'Back', post_comments_path(@post) %>
+<%= link_to "Show", post_comment_path(@post, @comment) %> |
+<%= link_to "Back to comments", post_comments_path(@post) %>
 ----
 
-[source,ruby]
+[source,erb]
 .app/views/comments/index.html.erb
 ----
-<p id="notice"><%= notice %></p>
+<% content_for :title, "Comments" %>
 
-<h1>Comments</h1>
+<h1>Comments for "<%= @post.subject %>"</h1>
 
-<table>
-  <thead>
-    <tr>
-      <th>Post</th>
-      <th>Content</th>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
+<div id="comments">
+  <% @comments.each do |comment| %>
+    <%= render comment %>
+    <p>
+      <%= link_to "Show this comment", post_comment_path(@post, comment) %>
+    </p>
+  <% end %>
+</div>
 
-  <tbody>
-    <% @comments.each do |comment| %>
-      <tr>
-        <td><%= comment.post %></td>
-        <td><%= comment.content %></td>
-        <td><%= link_to 'Show', post_comment_path(@post, comment) %></td>
-        <td><%= link_to 'Edit', edit_post_comment_path(@post, comment) %></td>
-        <td><%= link_to 'Destroy', post_comment_url(@post, comment), method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<br>
-
-<%= link_to 'New Comment', new_post_comment_path(@post) %>
+<%= link_to "New comment", new_post_comment_path(@post) %> |
+<%= link_to "Back to post", @post %>
 ----
 
 [source,erb]
@@ -825,50 +804,43 @@ in the URL.
 ----
 <h1>New Comment</h1>
 
-<%= render 'form', comment: @comment, post: @post %>
+<%= render "form", comment: @comment, post: @post %>
 
-<%= link_to 'Back', post_comments_path(@post) %>
+<%= link_to "Back to comments", post_comments_path(@post) %>
 ----
 
 [source,erb]
 .app/views/comments/show.html.erb
 ----
-<p id="notice"><%= notice %></p>
+<%= render @comment %>
 
-<p>
-  <strong>Post:</strong>
-  <%= @comment.post %>
-</p>
-
-<p>
-  <strong>Content:</strong>
-  <%= @comment.content %>
-</p>
-
-<%= link_to 'Edit', edit_post_comment_path(@post,@comment) %> |
-<%= link_to 'Back', post_comments_path(@post) %>
+<div>
+  <%= link_to "Edit this comment", edit_post_comment_path(@post, @comment) %> |
+  <%= link_to "Back to comments", post_comments_path(@post) %>
+  <%= button_to "Destroy this comment", post_comment_path(@post, @comment), method: :delete %>
+</div>
 ----
 
-Please go ahead and have a go at experimenting with the URLs listed
-under rails routes. You can now generate a new post with `/posts/new` and
-a new comment for this post with `/posts/:post_id/comments/new`.
+Please go ahead and experiment with the URLs listed under `bin/rails
+routes`. You can now generate a new post with `/posts/new` and a new
+comment for this post with `/posts/1/comments/new`.
 
-If you want to see all comments of the first post you can access that
-with the URL http://localhost:3000/posts/1/comments. It would look like
-this:
+If you want to see all comments of the first post you can access
+that with http://localhost:3000/posts/1/comments. It would look
+like this:
 
 image::screenshots/chapter06/posts_1_comments.png[Listing comments,title="listing comments"]
 
 [[shallow-nesting]]
 ==== Shallow Nesting
 
-Sometimes it is a better option to use shallow nesting. For our example
-the `config/routes.rb` would contain the following routes:
+Sometimes it is a better option to use shallow nesting. For our
+example the `config/routes.rb` would contain the following routes:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts do
     resources :comments, only: [:index, :new, :create]
   end
@@ -877,11 +849,11 @@ Blog::Application.routes.draw do
 end
 ----
 
-That would lead to a less messy `rails routes` output:
+That would lead to a less messy `bin/rails routes` output:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
           Prefix Verb   URI Pattern                            Controller#Action
    post_comments GET    /posts/:post_id/comments(.:format)     comments#index
                  POST   /posts/:post_id/comments(.:format)     comments#create
@@ -901,33 +873,35 @@ new_post_comment GET    /posts/:post_id/comments/new(.:format) comments#new
                  DELETE /comments/:id(.:format)                comments#destroy
 ----
 
-Shallow nesting trys to combine the best of two worlds. And because it
-is often used there is a shortcut. You can use the following
-`config/routes.rb` to achieve it:
+Shallow nesting tries to combine the best of two worlds. And
+because it is often used there is a shortcut. You can use the
+following `config/routes.rb` to achieve it:
 
 [source,ruby]
 .config/routes.rb
 ----
-Blog::Application.routes.draw do
+Rails.application.routes.draw do
   resources :posts do
     resources :comments, shallow: true
   end
 end
 ----
 
-NOTE: Generally, you should never nest more deeply than one level and nested
-      resources should feel natural. After a while, you will get a feel for
-      it. In my opinion, the most important point about RESTful routes is that
-      they should feel logical. If you phone a fellow Rails programmer and say
-      "I’ve got a resource post and a resource comment here", then both
-      parties should immediately be clear on how you address these resources
+NOTE: Generally you should never nest more deeply than one level and
+      nested resources should feel natural. After a while you will
+      get a feel for it. In my opinion the most important point
+      about RESTful routes is that they should feel logical. If you
+      phone a fellow Rails programmer and say "I've got a resource
+      `post` and a resource `comment` here", then both parties
+      should immediately be clear on how you address these resources
       via REST and how you can nest them.
 
 [[further-information-on-routes]]
 == Further Information on Routes
 
-The topic routes is far more complex than we can address here. For
-example, you can also involve other HTTP methods/verbs. The official
-routing documentation http://guides.rubyonrails.org/routing.html will
-give you a lot of information an examples for these features and edge
-cases.
+The topic "routes" is far more complex than we can address here.
+For example you can also involve other HTTP methods/verbs and
+constraints based on request headers. The official routing
+documentation at https://guides.rubyonrails.org/routing.html will
+give you a lot of information and examples for these features and
+edge cases.

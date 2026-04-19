@@ -34,6 +34,10 @@ include::scaffolding-and-rest.adoc[]
 
 include::routing.adoc[]
 
+include::hotwire.adoc[]
+
+include::authentication.adoc[]
+
 include::bundler-and-gems.adoc[]
 
 include::forms.adoc[]
@@ -53,6 +57,8 @@ include::i18n.adoc[]
 include::asset-pipeline.adoc[]
 
 include::caching.adoc[]
+
+include::solid-trifecta.adoc[]
 
 include::action-cable.adoc[]
 

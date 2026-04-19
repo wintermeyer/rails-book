@@ -59,8 +59,7 @@ the language setting:
 [source,bash]
 ----
 $ rails console
-Running via Spring preloader in process 3337
-Loading development environment (Rails 5.2.0)
+Loading development environment (Rails 8.1.3)
 >> price = 1000.23
 => 1000.23
 >> helper.number_to_currency(price, locale: :de)
@@ -94,8 +93,7 @@ In the Rails console we can try out how `I18n.t` works:
 [source,bash]
 ----
 $ rails console
-Running via Spring preloader in process 3487
-Loading development environment (Rails 5.2.0)
+Loading development environment (Rails 8.1.3)
 >> I18n.t :hello
 => "Hello world"
 >> I18n.locale
@@ -129,7 +127,7 @@ Bundler.require(*Rails.groups)
 module ShopI18n
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 5.2
+    config.load_defaults 8.1
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
@@ -148,8 +146,7 @@ to German.
 [source,bash]
 ----
 $ rails console
-Running via Spring preloader in process 4009
-Loading development environment (Rails 5.2.0)
+Loading development environment (Rails 8.1.3)
 >> I18n.locale = :de
 => :de
 >> I18n.t :hello
@@ -210,8 +207,7 @@ or with a `:scope` for the symbols. You can also mix both options.
 [source,bash]
 ----
 $ rails console
-Running via Spring preloader in process 4243
-Loading development environment (Rails 5.2.0)
+Loading development environment (Rails 8.1.3)
 >> I18n.t 'example.test'
 => "A test"
 >> I18n.t 'aaa.bbb.test'
@@ -356,7 +352,7 @@ Bundler.require(*Rails.groups)
 module ShopI18n
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 5.2
+    config.load_defaults 8.1
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
@@ -948,8 +944,8 @@ link. This can be achieved as follows for all views in the file
     <title>I18nWebshop</title>
     <%= csrf_meta_tags %>
 
-    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
   <body>
@@ -1108,8 +1104,8 @@ link. This can be achieved as follows for all views in the file
     <title>I18nWebshop</title>
     <%= csrf_meta_tags %>
 
-    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
   <body>
@@ -1290,8 +1286,8 @@ Then we insert the links for the navigation in the
     <title>I18nWebshop</title>
     <%= csrf_meta_tags %>
 
-    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
   <body>
@@ -1715,7 +1711,7 @@ end
 Now you can use the scaffold products both in German and in English. You
 can switch the language via the link at the top of the page.
 
-[[further-information]]
+[[further-information-on-i18n]]
 == Further Information
 
 The best source of information on this topic can be found in the Rails

@@ -1,437 +1,189 @@
 [[production-webserver]]
 = Web Server in Production Mode
 
-This chapter walks you through the setup process of a production server which
-runs Nginx as a reverse proxy webserver and Puma as the Ruby on Rails webserver
-behind the Nginx. We start with a fresh Debian system and install all the
-software we need. The Rails 5.2 project will be run with Ruby 2.4 which gets
-installed with RVM and runs for the user deployer.
+Rails applications can be deployed in many ways. Heroku-style
+platforms, Docker on a PaaS, bare-metal with Passenger, it all
+works. Rails 8 however has picked a default that we'll cover
+first: a Docker container built from the generated `Dockerfile`,
+fronted by Thruster for static files and HTTPS, deployed and
+managed with Kamal 2.
 
-The example Rails application we use is called `blog`. It will contain a `post`
-scaffold.
+NOTE: This chapter replaces the Passenger/Nginx tutorial from the
+      Rails 5.2 edition of this book. Passenger still works
+      beautifully (see below), but the out-of-the-box experience
+      in Rails 8 is Kamal. If you've never deployed a Rails app,
+      start with Kamal.
 
-WARNING: If you have never set up a Nginx or Apache web server by
-         yourself on a Linux system before you will likely get lost
-         somewhere in this chapter.
+[[kamal-2]]
+== Kamal 2 (the Rails 8 Default)
 
-[[debian-8.7]]
-== Debian 8.7
+Kamal is an SSH-plus-Docker deploy tool that the Rails team
+sponsors. It builds a Docker image locally (or on any CI
+runner), pushes it to a registry, SSHes into the target server(s),
+and orchestrates a zero-downtime rollout.
 
-We build our production web server on a minimal Debian 8.7 system. To
-carry out this installation, you need to have root rights on the web
-server!
+Everything you need is already in a fresh Rails 8 application:
 
-This description assumes that you have a freshly installed Debian
-GNU/Linux 8.7 (Jessie). You will find an ISO image for the installation
-at http://www.debian.org. I recommend the approximately 250 MB net
-installation CD image. For instructions on how to install
-Debian-GNU/Linux, please go to http://www.debian.org/distrib/netinst.
+* `Dockerfile` — the image recipe.
+* `.dockerignore`.
+* `config/deploy.yml` — Kamal's deploy config.
+* `.kamal/secrets` — where you keep API tokens, database URLs, etc.
+* `bin/kamal` — the binstub for the Kamal CLI.
 
-TIP: http://www.vmware.com/[VMware] or any other virtual PC system
-     is a great playground to get a feeling how this works.
+[[kamal-first-deploy]]
+=== First Deploy
 
-[[buildsystem]]
-=== Buildsystem
-
-Login as root, update the package lists and upgrade the system:
-
-[source,bash]
-----
-root@debian:~# apt-get update
-[..]
-root@debian:~# apt-get upgrade
-----
-
-Installation of the packages required for the RVM installation:
-
-[source,bash]
-----
-root@debian:~# apt-get -y install curl gawk g++ \
-make libreadline6-dev zlib1g-dev libssl-dev \
-libyaml-dev libsqlite3-dev sqlite3 autoconf \
-libgdbm-dev libncurses5-dev libtool bison nodejs \
-pkg-config libffi-dev libgmp-dev libgmp-dev git
-----
-
-[[nginx]]
-=== nginx
-
-Nginx will be our web server to the outside world.
-
-[source,bash]
-----
-root@debian:~# apt-get -y install nginx
-----
-
-[[user-deployer]]
-=== User Deployer
-
-Our Rails project is going to use https://rvm.io[RVM] in the user space.
-So we create a new user with the name `deployer`:
-
-[source,bash]
-----
-root@debian:~# adduser deployer
-Adding user `deployer' ...
-Adding new group `deployer' (1001) ...
-Adding new user `deployer' (1001) with group `deployer' ...
-Creating home directory `/home/deployer' ...
-Copying files from `/etc/skel' ...
-Enter new UNIX password:
-Retype new UNIX password:
-passwd: password updated successfully
-Changing the user information for deployer
-Enter the new value, or press ENTER for the default
-  Full Name []: Deployer
-  Room Number []:
-  Work Phone []:
-  Home Phone []:
-  Other []:
-Is the information correct? [Y/n] Y
-root@debian:~#
-----
-
-[[database]]
-=== Database
-
-In this setup we use http://www.postgresql.org/[PostgreSQL] as our
-production database.
-
-[[postgresql-installation]]
-==== PostgreSQL Installation
-
-We need to install the database software:
-
-[source,bash]
-----
-root@debian:~# apt-get -y install postgresql postgresql-client libpq-dev
-----
-
-To create a database user `deployer` and a database `blog_production` we need to
-do the following steps:
-
-[source,bash]
-----
-root@debian:~# su - postgres
-postgres@debian:~$ createuser -W --createdb deployer
-Password:
-postgres@debian:~$ createdb blog_production
-postgres@debian:~$ exit
-logout
-root@debian:~#
-----
-
-For this example we use the password _123456_. It should be obvious that this is
-a bad idea for your application to copy.
-
-[[setting-up-rails-environment-for-user-deployer]]
-==== Setting up Rails Environment for User deployer
-
-With `su - deployer` we’ll become the user deployer:
-
-[source,bash]
-----
-root@debian:~# su - deployer
-----
-
-As user `deployer`, please carry out the steps for installing Ruby 2.4
-and Rails 5.2 via RVM.
-
-[source,bash]
-----
-deployer@debian:~$ gpg --keyserver hkp://keys.gnupg.net \
---recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
-[...]
-deployer@debian:~$ curl -sSL https://get.rvm.io | bash
-[...]
-deployer@debian:~$ source /home/deployer/.rvm/scripts/rvm
-deployer@debian:~$ rvm install 2.4 --autolibs=read-only
-[...]
-deployer@debian:~$ gem install rails
-[...]
-deployer@debian:~$
-----
-
-TIP: You need to run `gem install rails --pre` in case Rails 5.2 is still
-     beta while you read this text.
-
-[[setting-up-a-new-rails-project]]
-== Setting Up a New Rails Project
-
-To keep this guide as simple as possible, we create a simple blog in the
-home directory of the user `deployer`.
-
-[source,bash]
-----
-deployer@debian:~$ rails new blog --database=postgresql
-[...]
-deployer@debian:~$ cd blog
-deployer@debian:~/blog$ rails generate scaffold post subject content:text
-[...]
-deployer@debian:~/blog$
-----
-
-NOTE: `--database=postgresql` takes care of installing the `pg` gem for
-      using PostgreSQL. In case you already have a Rails application you
-      need to add the line `gem 'pg'` to your Gemfile and run
-      a `bundle install` afterwards.
-
-[[production-database-configuration]]
-=== Production Database Configuration
-
-In the file `config/database.yml` you need to change the production database
-user to `deployer`:
-
+1. Edit `config/deploy.yml` to point at your server(s) and
+   registry:
++
 [source,yaml]
-.config/database.yml
+.config/deploy.yml
 ----
-[...]
+service: myapp
+image: yourname/myapp
 
-production:
-  <<: *default
-  database: blog_production
-  username: deployer
-  password: <%= ENV['BLOG_DATABASE_PASSWORD'] %>
+servers:
+  web:
+    - 203.0.113.10
+
+proxy:
+  ssl: true
+  host: app.example.com
+
+registry:
+  server: ghcr.io
+  username: yourname
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
 ----
 
-[[rake-dbmigration]]
-=== rails db:migrate
+2. Set the relevant secrets in `.kamal/secrets` (or via your
+   shell environment). Never commit real values.
 
-We still need to create the production database tables:
+3. Make sure Docker is running locally and you have SSH access
+   to the server.
 
+4. Set up the server with the Kamal proxy once:
++
 [source,bash]
 ----
-deployer@debian:~/blog$ rails db:migrate RAILS_ENV=production BLOG_DATABASE_PASSWORD=123456
-[...]
-deployer@debian:~/blog$
+$ bin/kamal setup
 ----
-
-WARNING: You probably want to set `BLOG_DATABASE_PASSWORD` as an environment
-         variable in your `.bash_profile` because it is not a good idea
-         to have the DB password in your bash history.
-
-[[rake-assetsprecompile]]
-=== rails assets:precompile
-
-`rails assets:precompile` ensures that all assets in the asset pipeline
-are made available for the production environment.
-
++
+This installs Docker, pulls the Kamal proxy container, pulls
+your image for the first time, runs the DB migrations and
+starts the app.
+5. For every subsequent deploy:
++
 [source,bash]
 ----
-deployer@debian:~/blog$ rails assets:precompile
+$ bin/kamal deploy
 ----
++
+Kamal rebuilds the image if needed, rolls it out with zero
+downtime, and keeps an audit log of every deploy.
 
-=== Puma pid
+[[thruster]]
+=== Thruster
 
-Puma needs the `tmp/puma` directory to store a pid file:
+Thruster is a small Go process that sits in front of Puma inside
+the Rails container. It does three things:
 
-[source,bash]
-----
-deployer@debian:~/blog$ mkdir tmp/puma
-deployer@debian:~/blog$ exit
-logout
-root@debian:~#
-----
+- Serves compressed (gzip, brotli) responses for static assets
+  straight from `public/` without calling Ruby.
+- Handles HTTP/2 and HTTPS termination (when you terminate TLS
+  at Thruster).
+- Adds X-Sendfile support for Active Storage downloads.
 
-[[puma-init-script]]
-=== Puma Init Script
+There is no configuration required: `rails new` already adds
+`gem "thruster"` and the generated `Dockerfile` wires it as the
+container's entry point. When you run the image locally with
+`docker run`, requests go `client -> Thruster -> Puma ->
+Rails`.
 
-The Puma web server has to be started automatically at every booting
-process. Plus it has to be killed when the server shuts down. That's
-been taken care of by an init script.
+[[environment-variables]]
+=== Environment Variables in Production
 
-Please do the following commands as `root`.
+Rails 8's default production configuration reads sensitive
+values from environment variables:
 
-[source,bash]
-----
-$ cd /etc/init.d
-$ wget https://raw.githubusercontent.com/puma/puma/master/tools/jungle/init.d/puma
-$ chmod a+x puma
-$ cd /usr/local/bin
-$ wget https://raw.githubusercontent.com/puma/puma/master/tools/jungle/init.d/run-puma
-$ chmod a+x run-puma
-$ touch /etc/puma.conf
-$ chmod 640 /etc/puma.conf
-$ update-rc.d -f puma defaults
-----
+- `RAILS_MASTER_KEY` — decrypts `config/credentials.yml.enc`.
+- `DATABASE_URL` — PostgreSQL/MySQL/SQLite connection string.
+  (With SQLite on Kamal, Kamal mounts a persistent volume and
+  points `DATABASE_URL` at it.)
+- `SECRET_KEY_BASE` — falls back to what's inside credentials,
+  but can be overridden.
 
-Now we have to create the configuration for the production instance.
-It includes the environment variables `BLOG_DATABASE_PASSWORD` and
-`SECRET_KEY_BASE`.
+Kamal injects the variables you list under `env:` in
+`config/deploy.yml`. For secrets use the `env.secret:` sub-key
+and add the matching entries to `.kamal/secrets` so the actual
+values stay out of git.
 
-TIP: To create a new `SECRET_KEY_BASE` you should run `rails secret` in your
-     rails project directory.
+See xref:credentials.adoc#credentials[Credentials] for more on
+how Rails handles secrets.
 
-[source,config]
-./etc/puma.conf
-----
-/home/deployer/blog,deployer,/home/deployer/blog/config/puma.rb,/home/deployer/blog/log/production.log,RAILS_ENV=production;PORT=3001;BLOG_DATABASE_PASSWORD=123456;SECRET_KEY_BASE=AASD...ASDF
-----
+[[database-in-production]]
+=== Database in Production
 
-TIP: If you don't want to store the environment variables in `/etc/puma.conf`
-     you can use the `bin/rails secrets:setup` mechanism.
+A fresh Rails 8 app defaults to SQLite. Kamal, by default, makes
+that a persistent volume mounted into the container. For small
+and medium applications that's genuinely fine: SQLite in WAL
+mode with Solid Queue / Solid Cache / Solid Cable handles a
+surprising amount of traffic.
 
-It's time to start puma:
+If you need PostgreSQL or MySQL, change the database in
+`config/database.yml`, add the adapter gem (`pg` or `mysql2`),
+and set `DATABASE_URL` in the environment.
 
-[source,bash]
-----
-$ /etc/init.d/puma start
-[ ok ] Starting puma (via systemctl): puma.service.
-$
-----
+[[without-kamal]]
+== Deploying Without Kamal
 
-Now puma runs and is available at `http://localhost:3001`. To make it
-available to the internet we have to setup nginx.
+You do not have to use Kamal. Any host that can run a Docker
+container will run the same image the Rails 8 Dockerfile builds.
+A handful of common options:
 
-[[nginx-configuration]]
-=== nginx Configuration
+* *Heroku / Fly.io / Render / Railway* — these platforms detect
+  the Dockerfile (or have a "Ruby" buildpack). You push a git
+  branch or hit "deploy" and they host the app. Good for getting
+  something online fast.
+* *Docker Compose on a single VM* — keep things simple by
+  running the container with `docker compose up -d` behind Nginx
+  or Caddy.
+* *Kubernetes* — if you already run Kubernetes, deploy the image
+  as a `Deployment` + `Service`. Helm charts exist.
 
-For the Rails project, we add a new configuration file
-`/etc/nginx/sites-available/blog.conf` with the following content:
+[[passenger-and-nginx]]
+== The Classic Way: Passenger + Nginx
 
-[source,config]
-./etc/nginx/sites-available/blog.conf
-----
-server {
-  listen 80 default deferred;
-  # server_name example.com;
+If you want a non-Docker deploy to a long-lived Linux VM, the
+classic path is Phusion Passenger + Nginx. The short version:
 
-  root /home/deployer/blog/public;
+1. Install the Passenger Nginx module following
+   https://www.phusionpassenger.com[phusionpassenger.com].
+2. Clone your app to `/var/www/myapp`, run `bundle install
+   --deployment --without development test`, set
+   `RAILS_ENV=production bin/rails db:migrate
+   assets:precompile`.
+3. Configure Nginx to point at `/var/www/myapp/public` and
+   enable Passenger for the server block.
+4. Restart Nginx. Reload the app with
+   `touch /var/www/myapp/tmp/restart.txt` after each deploy.
 
-  location / {
-    gzip_static on;
-    try_files $uri/index.html $uri @puma;
-  }
+This path is well-trodden and works reliably for teams that
+cannot (or prefer not to) run Docker. We keep the Rails 8 Kamal
+path as the recommended default because it requires less
+sysadmin and because the whole Rails team uses it to deploy 37signals'
+own Rails applications.
 
-  location ^~ /assets/ {
-    gzip_static on;
-    expires max;
-    add_header Cache-Control public;
-  }
+[[further-reading-deployment]]
+== Further Reading
 
-  location @puma {
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header Host $http_host;
-    proxy_redirect off;
-    proxy_pass http://localhost:3001;
-  }
-
-  error_page 500 502 503 504 /500.html;
-  client_max_body_size 4G;
-  keepalive_timeout 10;
-}
-----
-
-We link this configuration file into the `/etc/nginx/sites-enabled/`
-directory to have it loaded by Nginx. The default file can be deleted.
-After that we restart Nginx and are all set. You can access the Rails
-application through the IP address of this server.
-
-[source,bash]
-----
-$ ln -s /etc/nginx/sites-available/blog.conf /etc/nginx/sites-enabled/
-$ rm /etc/nginx/sites-enabled/default
-$ /etc/init.d/nginx restart
-[ ok ] Restarting nginx (via systemctl): nginx.service.
-$
-----
-
-You're all set. Your new Rails project is online. You can access the `posts`.
-You'll have to configure the `root` path in `config/routes.rb` to get a proper
-root path URL.
-
-[[loading-updated-versions-of-the-rails-project]]
-=== Loading Updated Versions of the Rails Project
-
-If you want to activate Updates to the Rails project, you need to copy
-them into the directory `/home/deployer/blog` and log in as user
-`deployer` to run `rails assets:precompile` (see
-xref:asset-pipeline["Asset Pipeline"]).
-
-[source,bash]
-----
-deployer@debian:~/blog$ rails assets:precompile
-[...]
-deployer@debian:~/blog$
-----
-
-If you bring in new migrations, you of course also need to do a
-`rails db:migrate RAILS_ENV=production`:
-
-[source,bash]
-----
-deployer@debian:~/blog$ rails db:migrate RAILS_ENV=production
-[...]
-deployer@debian:~/blog$
-----
-
-Then you need to restart Puma as user `root`:
-
-[source,bash]
-----
-root@debian:~# /etc/init.d/puma restart
-----
-
-=== Performance
-
-If performance is key for your production webserver you want to use a socket
-connection instead of the TCP connection.
-
-[[misc]]
-== Misc
-
-[[alternative-setups]]
-=== Alternative Setups
-
-The RVM, Puma and Nginx way is fast and makes it possible to setup
-different Ruby versions on one server. But many admins prefer an easier
-installation process which is promised by Phusion Passenger. Have a look
-at https://www.phusionpassenger.com for more information about
-Passenger. It is a very good and reliable solution.
-
-[[what-else-there-is-to-do]]
-=== What Else There Is To Do
-
-Please always consider the following points - every admin has to decide
-these for him- or herself and implement them accordingly:
-
-* Automatic and regular backup of database and Rails project.
-* Set up log rotations of log files.
-* Set up monitoring for system load and hard drive space.
-* Regularly install Debian security updates as soon as they become
-available.
-
-[[and-co.]]
-=== 404 and Co.
-
-Finally, please look into the `public` directory in your Rails project
-and adapt the HTML pages saved there to your own requirements.
-Primarily, this is about the design of the pages. In the default
-setting, these are somewhat sparse and do not have any relation to the
-rest of your website. If you decide to update your web page and shut
-down your Puma server to do so, nginx will deliver the web page
-`public/500.html` in the meantime.
-
-You will find a list of HTTP error codes at
-http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-
-[[multiple-rails-servers-on-one-system]]
-=== Multiple Rails Servers on One System
-
-You can runs several Rails servers on one system without any problems.
-You need to set up a separate Puma for each Rails server. You can
-then distribute to it from nginx. With nginx you can also define on
-which IP address a Rails server is accessible from the outside.
-
-[[cloud-platform-as-service-provider]]
-== Cloud Platform as Service Provider
-
-If you do not have a web server available on the internet or want to
-deploy to a PaaS (Platform as a Service) system right from the start,
-you should have a look at what the various providers have to offer. The
-two US market leaders are currently Heroku (http://www.heroku.com/) and
-Engine Yard (http://www.engineyard.com/).
-
-PaaS as platform usually offers less options than your own server. But
-you have 7x24 support for this platform if anything does not work
-properly.
+* Kamal homepage: https://kamal-deploy.org
+* Thruster: https://github.com/basecamp/thruster
+* Phusion Passenger: https://www.phusionpassenger.com
+* Rails Guides — Configuring Rails Applications:
+  https://guides.rubyonrails.org/configuring.html

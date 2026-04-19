@@ -19,6 +19,25 @@ required and also not essential for working with `ActiveRecord`.
 NOTE: This chapter is only about ActiveRecord. So I am not going to integrate
       any tests to keep the examples as simple as possible.
 
+NOTE: The examples in this chapter were tested against Rails 8.1
+      and Ruby 4.0. A handful of Active Record APIs gained useful
+      companions since Rails 5.2; the most important ones you'll
+      want to know about are:
+
+      - `normalizes :email, with: -> e { e.strip.downcase }` —
+        declarative attribute normalisation at the model level.
+      - `has_secure_password` now supports `reset_token` / email
+        confirmation workflows out of the box (Rails 8's
+        authentication generator uses it).
+      - Encrypted attributes:
+        `encrypts :social_security_number`.
+      - Composite primary keys.
+      - `insert_all` / `upsert_all` for bulk writes.
+
+      They are all "in addition to" rather than "instead of" what
+      we cover below, so an old Rails 5.2 book chapter mostly
+      still teaches you the right mental model.
+
 [[creating-databasemodel]]
 == Creating Database/Model
 
@@ -39,8 +58,7 @@ Next, let's have a look at the help page for `rails generate model`:
 
 [source,bash]
 ----
-$ rails generate model
-Running via Spring preloader in process 21883
+$ bin/rails generate model
 Usage:
   rails generate model NAME [field[:type][:index] field[:type][:index]] [options]
 
@@ -87,8 +105,7 @@ Let's create the _model_ `country`:
 
 [source,bash]
 ----
-$ rails generate model Country name population:integer
-Running via Spring preloader in process 22053
+$ bin/rails generate model Country name population:integer
       invoke  active_record
       create    db/migrate/20170322165321_create_countries.rb
       create    app/models/country.rb
@@ -104,7 +121,7 @@ following code:
 [source,ruby]
 .db/migrate/20170322165321_create_countries.rb
 ----
-class CreateCountries < ActiveRecord::Migration[5.1]
+class CreateCountries < ActiveRecord::Migration[8.1]
   def change
     create_table :countries do |t|
       t.string :name
@@ -126,7 +143,7 @@ words, create the corresponding database table:
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 == 20170322165321 CreateCountries: migrating ==================================
 -- create_table(:countries)
    -> 0.0010s
@@ -159,9 +176,8 @@ model. In the Rails console, we can output the attributes of the class
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 22303
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Country.column_names
 => ["id", "name", "population", "created_at", "updated_at"]
 >> exit
@@ -174,7 +190,7 @@ record.
 `id` is used a central identification of the record (primary key). The
 `id` is automatically incremented by 1 for each new record.
 
-[[getters-and-setters]]
+[[ar-getters-and-setters]]
 === Getters and Setters
 
 To read and write values of a SQL table row you can use getters and setters by
@@ -252,7 +268,7 @@ Example for creating a price with a decimal:
 
 [source,bash]
 ----
-$ rails generate model product name 'price:decimal{7,2}'
+$ bin/rails generate model product name 'price:decimal{7,2}'
   [...]
 $
 ----
@@ -262,7 +278,7 @@ That would generate this migration:
 [source,ruby]
 .db/migrate/20170322170623_create_products.rb
 ----
-class CreateProducts < ActiveRecord::Migration[5.1]
+class CreateProducts < ActiveRecord::Migration[8.1]
   def change
     create_table :products do |t|
       t.string :name
@@ -286,9 +302,8 @@ also work with the `class` and `method` name.
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 23132
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Country.name.tableize
 => "countries"
 >> Country.name.foreign_key
@@ -370,9 +385,8 @@ Let's try creating a country in the console with the command
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 23285
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Country.create(name: 'Germany', population: 81831000)
    (0.1ms)  begin transaction
   SQL (0.4ms)  INSERT INTO "countries" ("name", "population", "created_at",
@@ -432,9 +446,8 @@ disadvantages):
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 23679
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> france = Country.new
 => #<Country id: nil, name: nil, population: nil, created_at: nil,
 updated_at: nil>
@@ -486,9 +499,8 @@ Example:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 23823
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> netherlands = Country.new(name: 'Netherlands')
 => #<Country id: nil, name: "Netherlands", population: nil,
 created_at: nil, updated_at: nil>
@@ -521,9 +533,8 @@ each case. Let's start with the easiest ones: `first` and `last`.
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 24090
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Country.first
   Country Load (0.2ms)  SELECT  "countries".* FROM "countries" ORDER BY
   "countries"."id" ASC LIMIT ?  [["LIMIT", 1]]
@@ -679,7 +690,7 @@ what we do here:
 
 [source,bash]
 ----
-$ rails db:reset
+$ bin/rails db:reset
 Dropped database 'db/development.sqlite3'
 Dropped database 'db/test.sqlite3'
 Created database 'db/development.sqlite3'
@@ -782,9 +793,9 @@ For describing queries, we create a new Rails project:
 $ rails new jukebox
   [...]
 $ cd jukebox
-$ rails generate model Album name release_year:integer
+$ bin/rails generate model Album name release_year:integer
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
@@ -810,7 +821,7 @@ Then, set up the new database with `rails db:reset`:
 
 [source,bash]
 ----
-$ rails db:reset
+$ bin/rails db:reset
 Dropped database 'db/development.sqlite3'
 Database 'db/test.sqlite3' does not exist
 Created database 'db/development.sqlite3'
@@ -839,9 +850,8 @@ at once via the ID:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 26956
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.find(2)
   Album Load (0.2ms)  SELECT  "albums".* FROM "albums"
   WHERE "albums"."id" = ? LIMIT ?  [["id", 2], ["LIMIT", 1]]
@@ -887,9 +897,8 @@ database. Let's search for all `albums` from the year 1966:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27119
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where(release_year: 1966)
   Album Load (0.2ms)  SELECT "albums".* FROM "albums"
   WHERE "albums"."release_year" = ?  [["release_year", 1966]]
@@ -964,9 +973,8 @@ The method `not` provides a way to search for the exact oposite of a
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27349
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where.not(release_year: 1968).count
    (0.2ms)  SELECT COUNT(*) FROM "albums"
    WHERE ("albums"."release_year" != ?)  [["release_year", 1968]]
@@ -983,9 +991,8 @@ logical `or`. Example:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27449
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where(release_year: 1967).or(Album.where(name: 'The Beatles')).count
    (0.2ms)  SELECT COUNT(*) FROM "albums"
    WHERE ("albums"."release_year" = ? OR "albums"."name" = ?)
@@ -1019,9 +1026,8 @@ contains the string “on”:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27553
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where( 'name like ?', '%on%').count
    (0.1ms)  SELECT COUNT(*) FROM "albums" WHERE (name like '%on%')
 => 5
@@ -1070,9 +1076,8 @@ Let's count all albums whose name contain the string “on”:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27699
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where( "name like '%on%'" ).count
    (0.2ms)  SELECT COUNT(*) FROM "albums" WHERE (name like '%on%')
 => 5
@@ -1102,9 +1107,8 @@ ActiveRecord methods `to_sql` you can display the current SQL query.
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27764
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> a = Album.where(release_year: 1965..1968)
   Album Load (0.2ms)  SELECT "albums".* FROM "albums" WHERE
   ("albums"."release_year" BETWEEN 1965 AND 1968)
@@ -1140,9 +1144,8 @@ sum.
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27764
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where(release_year: 1970..1979).sum(:release_year)
    (1.5ms)  SELECT SUM("albums"."release_year") FROM "albums" WHERE
    ("albums"."release_year" BETWEEN 1970 AND 1979)
@@ -1172,9 +1175,8 @@ Example: all albums from the 60s, sorted by name:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27764
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where(release_year: 1960..1969).order(:name)
   Album Load (0.2ms)  SELECT "albums".* FROM "albums" WHERE
   ("albums"."release_year" BETWEEN 1960 AND 1969)  ORDER BY "albums"."name"
@@ -1249,9 +1251,8 @@ Let's return all `albums`, grouped by their `release_year`:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27764
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.group(:release_year)
   Album Load (0.3ms)  SELECT "albums".* FROM "albums" GROUP BY "albums"."release_year"
 => #<ActiveRecord::Relation [#<Album id: 5, name: "Rubber Soul", release_year:
@@ -1281,9 +1282,8 @@ for the query. You can do this via the method `pluck`.
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Album.where(release_year: 1960..1969).pluck(:name)
    (0.2ms)  SELECT "albums"."name" FROM "albums"
    WHERE ("albums"."release_year" BETWEEN ? AND ?)
@@ -1517,9 +1517,8 @@ to “A Test”:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> beatles_album = Album.where(name: 'The Beatles').first
   Album Load (0.2ms)  SELECT  "albums".* FROM "albums"
   WHERE "albums"."name" = ?  ORDER BY "albums"."id" ASC LIMIT 1
@@ -1636,10 +1635,10 @@ Example setup:
 $ rails new shop
   [...]
 $ cd shop
-$ rails generate model Product name 'price:decimal{8,2}'
+$ bin/rails generate model Product name 'price:decimal{8,2}'
   lock_version:integer
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 $
 ----
@@ -1648,9 +1647,8 @@ Raising an `ActiveRecord::StaleObjectError`:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.create(name: 'Orange', price: 0.5)
    (0.1ms)  begin transaction SQL (0.7ms)  INSERT INTO "products" ("name",
    "price", "created_at", "updated_at", "lock_version")
@@ -1724,7 +1722,7 @@ Now we create the model for the categories:
 
 [source,bash]
 ----
-$ rails generate model Category name
+$ bin/rails generate model Category name
   [...]
 $
 ----
@@ -1738,8 +1736,7 @@ there is a better way of doing it:
 
 [source,bash]
 ----
-$ rails generate model product name price:integer category:references
-Running via Spring preloader in process 35988
+$ bin/rails generate model product name price:integer category:references
       invoke  active_record
       create    db/migrate/20170323074157_create_products.rb
       create    app/models/product.rb
@@ -1754,7 +1751,7 @@ which includes a foreign key optimization:
 [source,ruby]
 .db/migrate/20170323074157_create_products.rb
 ----
-class CreateProducts < ActiveRecord::Migration[5.1]
+class CreateProducts < ActiveRecord::Migration[8.1]
   def change
     create_table :products do |t|
       t.string :name
@@ -1772,16 +1769,15 @@ actually created:
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 ----
 
 Let's have a look at this on the console:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 36245
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Category.column_names
 => ["id", "name", "created_at", "updated_at"]
 >> Product.column_names
@@ -1830,9 +1826,8 @@ First create a new category for the fruits:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 37142
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> fruits = Category.create(name: "Fruits")
    (0.1ms)  begin transaction
   SQL (0.5ms)  INSERT INTO "categories"
@@ -1930,9 +1925,8 @@ only happens after a `save`:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 40092
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> fruits = Category.where(name: "Fruits").first
   Category Load (0.1ms)  SELECT  "categories".* FROM "categories"
   WHERE "categories"."name" = ? ORDER BY "categories"."id" ASC LIMIT ?
@@ -2000,16 +1994,15 @@ Now drop the database and refill it with the `db/seeds.rb`:
 
 [source,bash]
 ----
-$ rails db:reset
+$ bin/rails db:reset
 ----
 
 We already know how to access the products of a given category:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 45107
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Category.first.products.count
   Category Load (0.1ms)  SELECT  "categories".* FROM "categories"
   ORDER BY "categories"."id" ASC LIMIT ?  [["LIMIT", 1]]
@@ -2049,9 +2042,8 @@ And off we go. First we check how many products are in the database:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 45328
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.count
    (0.1ms)  SELECT COUNT(*) FROM "products"
 => 11
@@ -2160,9 +2152,8 @@ associated with a `Category` in one go:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 46835
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Category.first.products.destroy_all
   Category Load (0.3ms)  SELECT  "categories".* FROM "categories"
   ORDER BY "categories"."id" ASC LIMIT ?  [["LIMIT", 1]]
@@ -2247,9 +2238,8 @@ table. All products of this category are also automatically destroyed:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 47105
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.count
    (0.1ms)  SELECT COUNT(*) FROM "products"
 => 6
@@ -2303,21 +2293,21 @@ A model for products:
 
 [source,bash]
 ----
-$ rails generate model product name 'price:decimal{7,2}'
+$ bin/rails generate model product name 'price:decimal{7,2}'
 ----
 
 A model for an order:
 
 [source,bash]
 ----
-$ rails generate model order delivery_address
+$ bin/rails generate model order delivery_address
 ----
 
 And a model for individual items of an order:
 
 [source,bash]
 ----
-$ rails generate model line_item order:references \
+$ bin/rails generate model line_item order:references \
 product:references quantity:integer
 ----
 
@@ -2325,7 +2315,7 @@ Then, create the database:
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 ----
 
 And setup some example data:
@@ -2341,7 +2331,7 @@ Product.create(name: 'Eggs', price: 1.45)
 
 [source,bash]
 ----
-$ rails db:seed
+$ bin/rails db:seed
 ----
 
 [[the-association]]
@@ -2398,9 +2388,8 @@ We create a new `Order` object:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 48290
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> order = Order.new(delivery_address: '123 Acme Street')
 => #<Order id: nil, delivery_address: "123 Acme Street",
 created_at: nil, updated_at: nil>
@@ -2520,13 +2509,13 @@ Now the three required models:
 
 [source,bash]
 ----
-$ rails generate model Car name
+$ bin/rails generate model Car name
   [...]
-$ rails generate model Bike name
+$ bin/rails generate model Bike name
   [...]
-$ rails generate model Tag name taggable:references{polymorphic}
+$ bin/rails generate model Tag name taggable:references{polymorphic}
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
@@ -2579,9 +2568,8 @@ Let's go into the _console_ and create a car and a bike:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> beetle = Car.create(name: 'Beetle')
    (0.1ms)  begin transaction
   SQL (0.8ms)  INSERT INTO "cars" ("name", "created_at", "updated_at") VALUES
@@ -2708,11 +2696,11 @@ As an example, we use the following Rails application:
 $ rails new bookshelf
   [...]
 $ cd bookshelf
-$ rails generate model book title
+$ bin/rails generate model book title
   [...]
-$ rails generate model author book:references first_name last_name
+$ bin/rails generate model author book:references first_name last_name
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 $
 ----
@@ -2745,9 +2733,8 @@ Let's create a record and then destroy it again:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> book = Book.create(title: 'Homo faber')
    (0.1ms)  begin transaction
   SQL (0.7ms)  INSERT INTO "books" ("title", "created_at", "updated_at")
@@ -2877,11 +2864,10 @@ Let's create a book with one author and then remove the book with
 
 [source,bash]
 ----
-$ rails db:reset
+$ bin/rails db:reset
   [...]
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Book.create(title: 'Homo faber').authors.create(first_name: 'Max',
    last_name: 'Frisch')
    (0.5ms)  begin transaction
@@ -2969,10 +2955,10 @@ We build a little online shop:
 $ rails new shop
   [...]
 $ cd shop
-$ rails generate model product name 'price:decimal{7,2}' \
+$ bin/rails generate model product name 'price:decimal{7,2}' \
 weight:integer in_stock:boolean expiration_date:date
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 $
 ----
@@ -3002,7 +2988,7 @@ Now populate it with the `db/seeds.rb`:
 
 [source,bash]
 ----
-$ rails db:seed
+$ bin/rails db:seed
   [...]
 $
 ----
@@ -3015,9 +3001,8 @@ we can use the following query each time:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.where(in_stock: true).count
    (0.1ms)  SELECT COUNT(*) FROM "products" WHERE "products"."in_stock" = 't'
 => 5
@@ -3039,9 +3024,8 @@ And then use it:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.available.count
    (0.1ms)  SELECT COUNT(*) FROM "products" WHERE "products"."in_stock" = 't'
 => 5
@@ -3065,9 +3049,8 @@ in stock:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.cheap.count
    (0.3ms)  SELECT COUNT(*) FROM "products" WHERE ("products"."price" BETWEEN
    0 AND 1)
@@ -3099,9 +3082,8 @@ Now we can count all products that cost less than 50 cent:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.cheaper_than(0.5).count
    (0.2ms)  SELECT COUNT(*) FROM "products" WHERE (price < 0.5)
 => 2
@@ -3127,9 +3109,8 @@ field `in_stock`:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> product = Product.available.build
 => #<Product id: nil, name: nil, price: nil, weight: nil, in_stock: true,
 expiration_date: nil, created_at: nil, updated_at: nil>
@@ -3159,10 +3140,10 @@ Let's create a new application for this chapter:
 $ rails new shop
   [...]
 $ cd shop
-$ rails generate model product name 'price:decimal{7,2}' \
+$ bin/rails generate model product name 'price:decimal{7,2}' \
 weight:integer in_stock:boolean expiration_date:date
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 $
 ----
@@ -3180,9 +3161,8 @@ a problem:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> product = Product.create
 [...]
 => #<Product id: 1, name: nil, price: nil, weight: nil,
@@ -3216,9 +3196,8 @@ Now we try again to create an empty record in the console:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> product = Product.create
    (0.1ms)  begin transaction
    (0.1ms)  rollback transaction
@@ -3340,9 +3319,8 @@ validation errors:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> product = Product.create
    (0.1ms)  begin transaction
    (0.1ms)  rollback transaction
@@ -3396,9 +3374,8 @@ we get an error message:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> product = Product.create(:name => 'M', :price => 0.45)
    (0.1ms)  begin transaction
    (0.1ms)  rollback transaction
@@ -3536,9 +3513,8 @@ instead of numbers, we will get an error message:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> product = Product.create(name: 'Milk (1 liter)',
    price: 0.45, weight: 'abc')
    (0.1ms)  begin transaction
@@ -3673,9 +3649,8 @@ exists, then we get an error message:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.last
   Product Load (0.2ms)  SELECT  "products".* FROM "products"
   ORDER BY "products"."id" DESC LIMIT 1
@@ -3761,9 +3736,8 @@ In our data model, a `Product` must be either `true` or `false` for
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> product = Product.create(name: 'Milk low-fat (1 liter)')
    (0.1ms)  begin transaction
    (0.1ms)  rollback transaction
@@ -3977,10 +3951,10 @@ system.
 $ rails new my_hotel
   [...]
 $ cd my_hotel
-$ rails generate model reservation \
+$ bin/rails generate model reservation \
 start_date:date end_date:date room_type
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 $
 ----
@@ -4020,9 +3994,8 @@ to you. It does exactly what you'd expect from it. ;-)
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> reservation = Reservation.new(start_date: Date.today, end_date: Date.today)
 => #<Reservation id: nil, start_date: "2015-12-17", end_date: "2015-12-17",
 room_type: nil, created_at: nil, updated_at: nil>
@@ -4068,7 +4041,7 @@ Then we generate a Product model:
 
 [source,bash]
 ----
-$ rails generate model product name 'price:decimal{7,2}' \
+$ bin/rails generate model product name 'price:decimal{7,2}' \
 weight:integer in_stock:boolean expiration_date:date
       invoke  active_record
       create    db/migrate/20151217184823_create_products.rb
@@ -4085,7 +4058,7 @@ created. Let's have a closer look at it:
 [source,ruby]
 .db/migrate/20151217184823_create_products.rb
 ----
-class CreateProducts < ActiveRecord::Migration[5.1]
+class CreateProducts < ActiveRecord::Migration[8.1]
   def change
     create_table :products do |t|
       t.string :name
@@ -4107,7 +4080,7 @@ other words, when you call `rails db:migrate`).
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 == 20151217184823 CreateProducts: migrating ===================================
 -- create_table(:products)
    -> 0.0015s
@@ -4121,7 +4094,7 @@ corresponding migration has already been executed:
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 $
 ----
 
@@ -4131,7 +4104,7 @@ But if we manually delete the database with `rm` and then call
 [source,bash]
 ----
 $ rm db/development.sqlite3
-$ rails db:migrate
+$ bin/rails db:migrate
 == 20151217184823 CreateProducts: migrating ===================================
 -- create_table(:products)
    -> 0.0017s
@@ -4146,7 +4119,7 @@ There is an easy to remember syntax for this,
 
 [source,bash]
 ----
-$ rails generate migration addHeightToProduct height:integer
+$ bin/rails generate migration addHeightToProduct height:integer
       invoke  active_record
       create    db/migrate/20151217185307_add_height_to_product.rb
 $
@@ -4170,7 +4143,7 @@ With `rails db:migrate` we can start in the new migration:
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 == 20151217185307 AddHeightToProduct: migrating ===============================
 -- add_column(:products, :height, :integer)
    -> 0.0086s
@@ -4183,9 +4156,8 @@ field `updated_at`:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> Product.column_names
 => ["id", "name", "price", "weight", "in_stock", "expiration_date",
 "created_at", "updated_at", "height"]
@@ -4197,7 +4169,7 @@ You can easily go back to the previous version with `rails db:rollback`:
 
 [source,bash]
 ----
-$ rails db:rollback
+$ bin/rails db:rollback
 == 20151217185307 AddHeightToProduct: reverting ===============================
 -- remove_column(:products, :height, :integer)
    -> 0.0076s
@@ -4210,7 +4182,7 @@ number of the current status via `rails db:version`:
 
 [source,bash]
 ----
-$ rails db:version
+$ bin/rails db:version
 Current version: 20151217184823
 $
 ----
@@ -4237,7 +4209,7 @@ Let's try it out:
 
 [source,bash]
 ----
-$ rails db:migrate VERSION=0
+$ bin/rails db:migrate VERSION=0
 == 20151217184823 CreateProducts: reverting ===================================
 -- drop_table(:products)
    -> 0.0007s
@@ -4312,7 +4284,7 @@ Nothing in it. Of course not, as we have not yet run the migration:
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 == 20151217184823 CreateProducts: migrating ===================================
 -- create_table(:products)
    -> 0.0019s
@@ -4352,7 +4324,7 @@ In our production database, we should index the field `name` in the
 
 [source,bash]
 ----
-$ rails generate migration create_index
+$ bin/rails generate migration create_index
       invoke  active_record
       create    db/migrate/20151217190442_create_index.rb
 $
@@ -4380,7 +4352,7 @@ With `rails db:migrate` we create the index:
 
 [source,bash]
 ----
-$ rails db:migrate
+$ bin/rails db:migrate
 ==  CreateIndex: migrating ====================================================
 -- add_index(:products, :name)
    -> 0.0010s
@@ -4393,7 +4365,7 @@ Of course we don't have to use the `up` and `down` method. We can use
 
 [source,ruby]
 ----
-class CreateIndex < ActiveRecord::Migration[5.1]
+class CreateIndex < ActiveRecord::Migration[8.1]
   def change
     add_index :products, :name
   end
@@ -4408,7 +4380,7 @@ this:
 
 [source,bash]
 ----
-$ rails generate model product name:string:index
+$ bin/rails generate model product name:string:index
 $ cat db/migrate/20151217191435_create_products.rb
 class CreateProducts < ActiveRecord::Migration
   def change
@@ -4504,9 +4476,9 @@ The Rails application:
 $ rails new shop
   [...]
 $ cd shop
-$ rails generate model user email login
+$ bin/rails generate model user email login
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
@@ -4538,9 +4510,8 @@ Let's see in the console if it really works as we want it to:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> User.create(login: 'smith', email: 'SMITH@example.com')
    (0.1ms)  begin transaction
   SQL (0.5ms)  INSERT INTO "users" ("login", "email", "created_at",
@@ -4577,9 +4548,9 @@ Let's set up a quick example:
 $ rails new shop
   [...]
 $ cd shop
-$ rails generate model order product_id:integer quantity:integer
+$ bin/rails generate model order product_id:integer quantity:integer
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 ----
 
@@ -4606,9 +4577,8 @@ contains the quantity 1:
 
 [source,bash]
 ----
-$ rails console
-Running via Spring preloader in process 27927
-Loading development environment (Rails 5.2.0)
+$ bin/rails console
+Loading development environment (Rails 8.1.3)
 >> order = Order.new
 => #<Order id: nil, product_id: nil, quantity: 1, created_at: nil,
 updated_at: nil>

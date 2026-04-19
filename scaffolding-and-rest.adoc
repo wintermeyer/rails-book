@@ -4,45 +4,49 @@
 [[scaffolding-introduction]]
 == Introduction
 
-Scaffolding means purely and simply that a basic _scaffold_ for an application
-is created with a generator. This scaffold not only contains the _model_ but
-also a simple Web GUI (_views_) and of course a _controller_. The programming
-paradigm used for this is REST (Representational State Transfer).
+Scaffolding means purely and simply that a basic _scaffold_ for an
+application is created with a generator. This scaffold not only
+contains the _model_ but also a simple web GUI (_views_) and of
+course a _controller_. The programming paradigm used for this is
+REST (Representational State Transfer).
 
 You can find a definition of REST at
-http://en.wikipedia.org/wiki/Representational_state_transfer[wikipedia.org/wiki/Representational_state_transfer].
-My super short and a little bit oversimplified version: the inventor Roy Fielding described in 2000 how you can
-access data with a simple set of rules within the concept of
-http://en.wikipedia.org/wiki/Create,_read,_update_and_delete[CRUD] and the
-specification of the Hypertext Transfer Protocol (HTTP). CRUD is the
-abbreviation for Create (SQL: INSERT), Read (SQL: SELECT), Update (SQL: UPDATE)
-and Delete (SQL: Delete). This created URLs that are easy to read for humans and
-have a certain logic. In this chapter, you will see examples showing the
-individual paths for the different CRUD functions.
+https://en.wikipedia.org/wiki/Representational_state_transfer[wikipedia.org/wiki/Representational_state_transfer].
+My super short and slightly oversimplified version: the inventor Roy
+Fielding described in 2000 how you can access data with a simple set
+of rules within the concept of
+https://en.wikipedia.org/wiki/Create,_read,_update_and_delete[CRUD]
+and the specification of the Hypertext Transfer Protocol (HTTP). CRUD
+is the abbreviation for Create (SQL: INSERT), Read (SQL: SELECT),
+Update (SQL: UPDATE) and Delete (SQL: DELETE). This gives URLs that
+are easy to read for humans and have a certain logic. In this chapter
+you will see examples showing the individual paths for the different
+CRUD functions.
 
-I think the greatest frustration with Rails arises regularly from the fact that
-many beginners use scaffolding to get quick results without having proper basic
-knowledge of Ruby and without knowing what ActiveRecord is. They don’t know what
-to do next. Fortunately, you have worked your way through the chapters
+I think the greatest frustration with Rails arises regularly from the
+fact that many beginners use scaffolding to get quick results without
+having proper basic knowledge of Ruby and without knowing what
+ActiveRecord is. They don't know what to do next. Fortunately, you
+have worked your way through the chapters
 xref:ruby-basics.adoc#ruby-basics["Ruby Basics"],
-xref:first-steps-with-rails.adoc#first-steps-with-rails["First Steps with Rails"] and
-xref:activerecord.adoc#activerecord["ActiveRecord"], so you will be able to
-understand and use scaffolding straight away.
+xref:first-steps-with-rails.adoc#first-steps-with-rails["First Steps with Rails"]
+and xref:activerecord.adoc#activerecord["ActiveRecord"], so you will
+be able to understand and use scaffolding straight away.
 
 == Redirects and Flash Messages
 
-Scaffolding uses redirects and flash messages. So we have to make a little
-detour first to understand scaffolding.
+Scaffolding uses redirects and flash messages. So we have to make a
+little detour first to understand scaffolding.
 
 [[redirects]]
 === Redirects
 
-The name says it all, really: _redirects_ are commands that you can use
-within the controller to skip, i.e. redirect, to other web pages.
+The name says it all, really: _redirects_ are commands that you can
+use within the controller to skip, i.e. redirect, to other web pages.
 
-NOTE: A redirect returns to the browser the response `302 Moved`
-      with the new target. So each redirect does a roundtrip to
-      the browser and back.
+NOTE: A redirect returns to the browser the response `303 See Other`
+      (or `302 Found` for GET requests) with the new target. So
+      each redirect does a roundtrip to the browser and back.
 
 Let's create a new Rails project for a suitable example:
 
@@ -51,19 +55,18 @@ Let's create a new Rails project for a suitable example:
 $ rails new redirect_example
 [...]
 $ cd redirect_example
-$ rails db:migrate
+$ bin/rails db:prepare
 ----
 
-Before we can redirect, we need a controller with at least two different
-methods. Off we go with a ping pong example:
+Before we can redirect, we need a controller with at least two
+different methods. Off we go with a ping pong example:
 
 [source,bash]
 ----
-$ rails generate controller Game ping pong
-Running via Spring preloader in process 51759
+$ bin/rails generate controller Game ping pong
       create  app/controllers/game_controller.rb
-       route  get 'game/pong'
-       route  get 'game/ping'
+       route  get "game/ping"
+              get "game/pong"
       invoke  erb
       create    app/views/game
       create    app/views/game/ping.html.erb
@@ -73,11 +76,6 @@ Running via Spring preloader in process 51759
       invoke  helper
       create    app/helpers/game_helper.rb
       invoke    test_unit
-      invoke  assets
-      invoke    coffee
-      create      app/assets/javascripts/game.coffee
-      invoke    scss
-      create      app/assets/stylesheets/game.scss
 ----
 
 The controller `app/controllers/game_controller.rb` has the following
@@ -96,20 +94,21 @@ end
 ----
 
 Now for the redirect: how can we achieve that we get immediately
-redirected to the method pong when we go to
-http://localhost:3000/game/ping? Easy, you will say, we just change the
-route in `config/routes.rb`. And you are right. So we don't necessarily
-need a redirect. But if we want to process something else in the method
-ping before redirecting, then this is only possible by using a
-`redirect_to` in the controller `app/controllers/game_controller.rb`:
+redirected to the method `pong` when we go to
+http://localhost:3000/game/ping? Easy, you will say, we just change
+the route in `config/routes.rb`. And you are right. So we don't
+necessarily need a redirect. But if we want to process something else
+in the method `ping` before redirecting, then this is only possible
+by using `redirect_to` in
+`app/controllers/game_controller.rb`:
 
 [source,ruby]
 .app/controllers/game_controller.rb
 ----
 class GameController < ApplicationController
   def ping
-   logger.info '+++  Example  +++'
-   redirect_to game_pong_path
+    logger.info "+++  Example  +++"
+    redirect_to game_pong_path
   end
 
   def pong
@@ -117,92 +116,102 @@ class GameController < ApplicationController
 end
 ----
 
-But what is `game_pong_path`? Let's have a look a the routes generated
-for this Rails application:
+But what is `game_pong_path`? Let's have a look at the routes
+generated for this Rails application:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
    Prefix Verb URI Pattern          Controller#Action
 game_ping GET  /game/ping(.:format) game#ping
 game_pong GET  /game/pong(.:format) game#pong
+[...]
 ----
 
 [NOTE]
 ====
-As you can see, the route to the _action_ `ping` of the
-controller `GameController` now gets the name `game_ping`
-(see beginning of the line). We could also write the
-redirect like this:
+As you can see, the route to the _action_ `ping` of the controller
+`GameController` gets the name `game_ping` (see beginning of the
+line). We could also write the redirect like this:
 
 [source,ruby]
 ----
-redirect_to :action => 'pong'
+redirect_to action: :pong
 ----
 ====
 
-I will explain the details and the individual options of the redirect
-later in the context of each specific case. For now, you just need to
-know that you can redirect not just to another method, but also to
+I will explain the details and individual options of the redirect
+later in the context of each specific case. For now you just need to
+know that you can redirect not just to another method but also to
 another controller or an entirely different web page.
 
 When we try to go to http://localhost:3000/game/ping we are
-automatically redirected to http://localhost:3000/game/pong and in the
-log output we see this:
+automatically redirected to http://localhost:3000/game/pong and in
+the log output we see this:
 
 [source,bash]
 ----
-Started GET "/game/ping" for 127.0.0.1 at 2015-04-15 17:50:04 +0200
+Started GET "/game/ping" for ::1 at 2026-04-19 11:03:41 +0200
 Processing by GameController#ping as HTML
 +++  Example  +++
 Redirected to http://localhost:3000/game/pong
-Completed 302 Found in 14ms (ActiveRecord: 0.0ms)
+Completed 302 Found in 2ms (ActiveRecord: 0.0ms | GC: 0.0ms)
 
 
-Started GET "/game/pong" for 127.0.0.1 at 2015-04-15 17:50:04 +0200
+Started GET "/game/pong" for ::1 at 2026-04-19 11:03:41 +0200
 Processing by GameController#pong as HTML
-  Rendered game/pong.html.erb within layouts/application (2.1ms)
-Completed 200 OK in 2128ms (Views: 2127.4ms | ActiveRecord: 0.0ms)
+  Rendering layout layouts/application.html.erb
+  Rendering game/pong.html.erb within layouts/application
+  Rendered game/pong.html.erb within layouts/application
+  Rendered layout layouts/application.html.erb
+Completed 200 OK in 9ms (Views: 2.5ms | ActiveRecord: 0.0ms)
 ----
 
-[[redirect_to-back]]
-=== redirect_to :back
+[[redirect_back]]
+=== redirect_back_or_to
 
-If you want to redirect the user of your web application to the page he
-has just been you can use `redirect_to :back`. This is very useful in a
-scenario where your user first has to login to get access to a specific
-page.
+If you want to redirect the user of your web application to the page
+they just came from, you can use `redirect_back_or_to
+fallback_path`. This is very useful when a user first has to log in
+before getting access to a specific page.
+
+NOTE: Older versions of this book mentioned `redirect_to :back` and
+      `redirect_back`. Both were removed from Rails 7+. The current
+      helper is `redirect_back_or_to(fallback)` — the `fallback`
+      argument is required so Rails always has somewhere to send
+      people if the `Referer` header is missing.
 
 [[flash-messages]]
 === Flash Messages
 
-In my eyes, the term “_flash messages_” is somewhat misleading. Almost
-anyone would associate the term “_Flash_” with more or less colorful web
-pages that were implemented with the Adobe Shockwave Flash Plug-in. But
-in Ruby on Rails, flash messages are something completely different.
-They are messages that are displayed, for example on the new page after
-a redirect (see xref:scaffolding-and-rest.adoc#redirects[section Redirects]).
+In my eyes the term "_flash messages_" is somewhat misleading.
+Almost anyone would associate the term "_Flash_" with more or less
+colorful web pages that were implemented with the (long-gone) Adobe
+Shockwave Flash plug-in. But in Ruby on Rails flash messages are
+something completely different. They are short messages that are
+displayed, for example on the new page after a redirect (see
+xref:scaffolding-and-rest.adoc#redirects[section Redirects]).
 
 Flash messages are good friends with redirects. The two often work
-together in a team to give the user feedback on an action he just
-carried out. A typical example of a flash message is the system feedback
-when a user has logged in. Often the user is redirected back to the
-original page and gets the message “You are now logged in.”
+together in a team to give the user feedback on an action they just
+carried out. A typical example of a flash message is the system
+feedback when a user has logged in. Often the user is redirected back
+to the original page and gets the message "You are now logged in."
 
-As an example, we are once more constructing the ping pong scenario from
-xref:scaffolding-and-rest.adoc#redirects[section "Redirects"]:
+As an example we are once more constructing the ping pong scenario
+from xref:scaffolding-and-rest.adoc#redirects[section "Redirects"]:
 
 [source,bash]
 ----
 $ rails new pingpong
       [...]
 $ cd pingpong
-$ rails db:migrate
-$ rails generate controller Game ping pong
+$ bin/rails db:prepare
+$ bin/rails generate controller Game ping pong
       [...]
 ----
 
-We fill the `app/controllers/game_controller.rb` with the following
+We fill `app/controllers/game_controller.rb` with the following
 content:
 
 [source,ruby]
@@ -210,7 +219,7 @@ content:
 ----
 class GameController < ApplicationController
   def ping
-   redirect_to game_pong_path, notice: 'Ping-Pong!'
+    redirect_to game_pong_path, notice: "Ping-Pong!"
   end
 
   def pong
@@ -218,10 +227,11 @@ class GameController < ApplicationController
 end
 ----
 
-Now we start the Rails web server with `rails server` and use the
-browser to go to http://localhost:3000/game/ping. We are redirected from
-ping to pong. But the flash message "Ping-Pong!" is nowhere to be seen.
-We first need to expand `app/views/layouts/application.html.erb`:
+Now we start the Rails web server with `bin/rails server` and use the
+browser to go to http://localhost:3000/game/ping. We are redirected
+from ping to pong. But the flash message "Ping-Pong!" is nowhere to
+be seen. We first need to expand
+`app/views/layouts/application.html.erb`:
 
 [source,erb]
 .app/views/layouts/application.html.erb
@@ -229,11 +239,11 @@ We first need to expand `app/views/layouts/application.html.erb`:
 <!DOCTYPE html>
 <html>
   <head>
-    <title>RedirectExample</title>
+    <title><%= content_for(:title) || "Pingpong" %></title>
     <%= csrf_meta_tags %>
-
-    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
   <body>
@@ -250,83 +260,82 @@ http://localhost:3000/game/ping in the browser:
 
 image::screenshots/chapter03/flash_pong_notice.png[flash pong notice]
 
-If we go to http://localhost:3000/game/pong we still see the normal Pong
-page. But if we go to http://localhost:3000/game/ping we are redirected
-to the Pong page and then the flash message is displayed at the top.
+If we go to http://localhost:3000/game/pong we still see the normal
+Pong page. But if we go to http://localhost:3000/game/ping we are
+redirected to the Pong page and then the flash message is displayed
+at the top.
 
-TIP: If you do not see a flash message that you were expecting,
-     first check in the view to see if the flash message is output
+TIP: If you do not see a flash message that you were expecting, first
+     check in the view to see if the flash message is actually output
      there.
 
 [[different-types-of-flash-message]]
 === Different Types of Flash Message
 
 Flash messages are automagically passed to the view in a hash. By
-default, there are three different types: `error`, `warning` and
-`notice`. You can also invent your own category and then get it in the
-view later.
+default there are three different types: `error`, `warning` and
+`notice`. You can also invent your own category and then get it in
+the view later.
 
 You can set a flash message by writing the hash directly too:
 
 [source,ruby]
-flash[:notice] = 'Ping-Pong!'
+flash[:notice] = "Ping-Pong!"
 
 Please have a look at the official documentation at
-http://guides.rubyonrails.org/action_controller_overview.html#the-flash
+https://guides.rubyonrails.org/action_controller_overview.html#the-flash
 for more information.
 
 [[why-are-there-flash-messages-at-all]]
 === Why Are There Flash Messages At All?
 
-You may wonder why there are flash messages in the first place. Couldn't
-you just build them yourself if you need them? Yes, indeed. But flash
-messages have the advantage that they offer a defined approach that is
-the same for any programmer. So you don't need to start from scratch
-every single time you need one.
+You may wonder why there are flash messages in the first place.
+Couldn't you just build them yourself if you need them? Yes, indeed.
+But flash messages have the advantage that they offer a defined
+approach that is the same for any programmer. So you don't need to
+start from scratch every single time you need one.
 
 
 [[generating-a-scaffold]]
 == Generating a Scaffold
 
-Let’s first use scaffolding to create a list of products for an online
-shop. First, we need to create a new Rails application:
+Let's first use scaffolding to create a list of products for an
+online shop. First we need to create a new Rails application:
 
 [source,bash]
 ----
 $ rails new scaffold-shop
   [...]
 $ cd scaffold-shop
-$ rails db:migrate
+$ bin/rails db:prepare
 ----
 
-Let’s look at the scaffolding options:
+Let's look at the scaffolding options:
 
 [source,bash]
 ----
-$ rails generate scaffold
+$ bin/rails generate scaffold
 Usage:
-  rails generate scaffold NAME [field[:type][:index] field[:type][:index]]
-  [options]
+  bin/rails generate scaffold NAME [field[:type][:index] field[:type][:index]] [options]
 
 [...]
 
 Examples:
-    `rails generate scaffold post`
-    `rails generate scaffold post title body:text published:boolean`
-    `rails generate scaffold purchase amount:decimal tracking_id:integer:uniq`
-    `rails generate scaffold user email:uniq password:digest`
+    `bin/rails generate scaffold post`
+    `bin/rails generate scaffold post title body:text published:boolean`
+    `bin/rails generate scaffold purchase amount:decimal tracking_id:integer:uniq`
+    `bin/rails generate scaffold user email:uniq password:digest`
 ----
 
-I’ll keep it short: for our current state of knowledge, we can use
-`rails generate scaffold` just like `rails generate model`. Let’s create
-the scaffold for the products:
+I'll keep it short: for our current state of knowledge we can use
+`bin/rails generate scaffold` just like `bin/rails generate model`.
+Let's create the scaffold for the products:
 
 [source,bash]
 ----
-$ rails generate scaffold product name 'price:decimal{7,2}'
-Running via Spring preloader in process 38321
+$ bin/rails generate scaffold product name 'price:decimal{7,2}'
       invoke  active_record
-      create    db/migrate/20180118065756_create_products.rb
+      create    db/migrate/20260419085520_create_products.rb
       create    app/models/product.rb
       invoke    test_unit
       create      test/models/product_test.rb
@@ -342,9 +351,10 @@ Running via Spring preloader in process 38321
       create      app/views/products/show.html.erb
       create      app/views/products/new.html.erb
       create      app/views/products/_form.html.erb
+      create      app/views/products/_product.html.erb
+      invoke    resource_route
       invoke    test_unit
       create      test/controllers/products_controller_test.rb
-      create      test/system/products_test.rb
       invoke    helper
       create      app/helpers/products_helper.rb
       invoke      test_unit
@@ -352,61 +362,55 @@ Running via Spring preloader in process 38321
       create      app/views/products/index.json.jbuilder
       create      app/views/products/show.json.jbuilder
       create      app/views/products/_product.json.jbuilder
-      invoke  assets
-      invoke    coffee
-      create      app/assets/javascripts/products.coffee
-      invoke    scss
-      create      app/assets/stylesheets/products.scss
-      invoke  scss
-      create    app/assets/stylesheets/scaffolds.scss
 ----
 
-As you can see, `rails generate scaffold` has already created the model.
-So we can directly call `rails db:migrate`:
+As you can see `bin/rails generate scaffold` has already created the
+model. So we can directly call `bin/rails db:migrate`:
 
 [source,bash]
 ----
-$ rails db:migrate
-== 20180118065756 CreateProducts: migrating ===================================
+$ bin/rails db:migrate
+== 20260419085520 CreateProducts: migrating ===================================
 -- create_table(:products)
-   -> 0.0014s
-== 20180118065756 CreateProducts: migrated (0.0015s) ==========================
+   -> 0.0006s
+== 20260419085520 CreateProducts: migrated (0.0006s) ==========================
 ----
 
-Let’s create the first six products in the `db/seeds.rb`.
+Let's create the first four products in `db/seeds.rb`:
 
 [source,ruby]
 ----
-Product.create(name: 'Apple', price: 1)
-Product.create(name: 'Orange', price: 1)
-Product.create(name: 'Pineapple', price: 2.4)
-Product.create(name: 'Marble cake', price: 3)
+Product.create(name: "Apple", price: 1)
+Product.create(name: "Orange", price: 1)
+Product.create(name: "Pineapple", price: 2.4)
+Product.create(name: "Marble cake", price: 3)
 ----
 
 Populate with the example data:
 
 [source,bash]
 ----
-$ rails db:seed
+$ bin/rails db:seed
 ----
 
 [[the-routes]]
 === The Routes
 
-`rails generate scaffold` has created a route (more on this later in
-the chapter xref:routing.adoc#routing["Routes"]), a controller and several views for us.
+`bin/rails generate scaffold` has created a route (more on this
+later in xref:routing.adoc#routing["Routes"]), a controller and
+several views for us.
 
-We could also have done all of this manually. Scaffolding is merely an
-automatism that does the work for us for some basic things. This is
-assuming that you always want to view, create and delete records.
+We could also have done all of this manually. Scaffolding is merely
+an automatism that does the work for us for some basic things. This
+assumes that you always want to view, create and delete records.
 
-Without diving too deeply into the topic routes, let’s just have a quick
-look at the available routes for our example. You need to run
-`rails routes`:
+Without diving too deeply into the topic of routes, let's just have a
+quick look at the available routes for our example. You need to run
+`bin/rails routes`:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
       Prefix Verb   URI Pattern                  Controller#Action
     products GET    /products(.:format)          products#index
              POST   /products(.:format)          products#create
@@ -416,36 +420,39 @@ edit_product GET    /products/:id/edit(.:format) products#edit
              PATCH  /products/:id(.:format)      products#update
              PUT    /products/:id(.:format)      products#update
              DELETE /products/:id(.:format)      products#destroy
+[...]
 ----
 
-These are all the routes and consequently URLs available in this Rails
-application. All routes invoke actions (in other words, methods) in the
-`ProductsController`.
+NOTE: `bin/rails routes` also prints Rails' built-in routes (health
+      check, Turbo helpers, Active Storage, Action Mailbox, etc.).
+      The eight product routes above are the ones we just generated.
+
+These are all the routes and consequently URLs available for our
+products in this Rails application. All routes invoke actions (in
+other words, methods) in the `ProductsController`.
 
 [[the-controller]]
 === The Controller
 
-Now it’s about time we had a look at the file
-`app/controllers/products_controller.rb`. Scaffold automatically creates
-the methods index, show, new, create, update and destroy. These methods
-or actions are called by the routes.
+Now it's about time we had a look at the file
+`app/controllers/products_controller.rb`. Scaffold automatically
+creates the methods `index`, `show`, `new`, `create`, `update` and
+`destroy`. These methods (actions) are called by the routes.
 
-Here is the content of `app/controllers/products_controller.rb`
+Here is the content of `app/controllers/products_controller.rb`:
 
 [source,ruby]
 .app/controllers/products_controller.rb
 ----
 class ProductsController < ApplicationController
-  before_action :set_product, only: [:show, :edit, :update, :destroy]
+  before_action :set_product, only: %i[ show edit update destroy ]
 
-  # GET /products
-  # GET /products.json
+  # GET /products or /products.json
   def index
     @products = Product.all
   end
 
-  # GET /products/1
-  # GET /products/1.json
+  # GET /products/1 or /products/1.json
   def show
   end
 
@@ -458,42 +465,40 @@ class ProductsController < ApplicationController
   def edit
   end
 
-  # POST /products
-  # POST /products.json
+  # POST /products or /products.json
   def create
     @product = Product.new(product_params)
 
     respond_to do |format|
       if @product.save
-        format.html { redirect_to @product, notice: 'Product was successfully created.' }
+        format.html { redirect_to @product, notice: "Product was successfully created." }
         format.json { render :show, status: :created, location: @product }
       else
-        format.html { render :new }
+        format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @product.errors, status: :unprocessable_entity }
       end
     end
   end
 
-  # PATCH/PUT /products/1
-  # PATCH/PUT /products/1.json
+  # PATCH/PUT /products/1 or /products/1.json
   def update
     respond_to do |format|
       if @product.update(product_params)
-        format.html { redirect_to @product, notice: 'Product was successfully updated.' }
+        format.html { redirect_to @product, notice: "Product was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @product }
       else
-        format.html { render :edit }
+        format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @product.errors, status: :unprocessable_entity }
       end
     end
   end
 
-  # DELETE /products/1
-  # DELETE /products/1.json
+  # DELETE /products/1 or /products/1.json
   def destroy
-    @product.destroy
+    @product.destroy!
+
     respond_to do |format|
-      format.html { redirect_to products_url, notice: 'Product was successfully destroyed.' }
+      format.html { redirect_to products_path, notice: "Product was successfully destroyed.", status: :see_other }
       format.json { head :no_content }
     end
   end
@@ -501,12 +506,12 @@ class ProductsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_product
-      @product = Product.find(params[:id])
+      @product = Product.find(params.expect(:id))
     end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
+    # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:name, :price)
+      params.expect(product: [ :name, :price ])
     end
 end
 ----
@@ -517,33 +522,38 @@ Let us take a moment and go through this controller.
 ==== set_product
 
 A `before_action` calls a private method to set an instance variable
-`@product` for the actions :show, :edit, :update and :destroy. That DRYs
-it up nicely:
+`@product` for the actions `:show`, `:edit`, `:update` and
+`:destroy`. That DRYs it up nicely:
 
 [source,ruby]
 ----
-before_action :set_product, only: [:show, :edit, :update, :destroy]
+before_action :set_product, only: %i[ show edit update destroy ]
 
 [...]
 
 private
   # Use callbacks to share common setup or constraints between actions.
   def set_product
-    @product = Product.find(params[:id])
+    @product = Product.find(params.expect(:id))
   end
 [...]
 ----
 
+NOTE: `params.expect(:id)` is the Rails 8 successor to
+      `params.require(:id)`. It performs the same "required
+      parameter" check and additionally raises a clean 400 Bad
+      Request response for malformed input, rather than bubbling up
+      as a 500.
+
 [[index]]
 ==== index
 
-The `index` method sets the instance variable `@products`. It contains
-the result of `Product.all`.
+The `index` method sets the instance variable `@products`. It
+contains the result of `Product.all`.
 
 [source,ruby]
 ----
-# GET /products
-# GET /products.json
+# GET /products or /products.json
 def index
   @products = Product.all
 end
@@ -552,24 +562,22 @@ end
 [[show]]
 ==== show
 
-The `show` method doesn’t do anything. `set_product` `before_action`
-already set the instance variable `@product`. So there is not more to
-do.
+The `show` method doesn't do anything. The `set_product`
+`before_action` already set the instance variable `@product`. So
+there is no more to do.
 
 [source,ruby]
 ----
-# GET /products/1
-# GET /products/1.json
+# GET /products/1 or /products/1.json
 def show
 end
 ----
 
-[[new]]
-new
-+++
+[[new-action]]
+==== new
 
-The `new` method creates a new instance of Product and saves it in the
-instance variable `@product`.
+The `new` method creates a new instance of `Product` and saves it in
+the instance variable `@product`.
 
 [source,ruby]
 ----
@@ -582,9 +590,9 @@ end
 [[edit]]
 ==== edit
 
-The `edit` method doesn’t do anything. the `set_product` `before_action`
-already set the instance variable `@product`. So there is not more to
-do.
+The `edit` method doesn't do anything. The `set_product`
+`before_action` already set the instance variable `@product`. So
+there is no more to do.
 
 [source,ruby]
 ----
@@ -593,29 +601,30 @@ def edit
 end
 ----
 
-[[create]]
+[[create-action]]
 ==== create
 
 The `create` method uses `Product.new` to create a new instance of
-Product and stores it in `@product`. The private method `product_params`
-is used to filter the trusted parameters with a white list. When
-`@product` was successfully saved a `redirect` to the `show` action is
-initiated for html requests. If a validation error occurred the `new`
-action will be rendered.
+`Product` and stores it in `@product`. The private method
+`product_params` is used to filter the trusted parameters with an
+allow-list. When `@product` was successfully saved a `redirect` to
+the `show` action is initiated for HTML requests. If a validation
+error occurred the `new` action is rendered with status
+`:unprocessable_entity` (HTTP 422). Turbo notices that 422 status
+and swaps the form in place without a full page reload.
 
 [source,ruby]
 ----
-# POST /products
-# POST /products.json
+# POST /products or /products.json
 def create
   @product = Product.new(product_params)
 
   respond_to do |format|
     if @product.save
-      format.html { redirect_to @product, notice: 'Product was successfully created.' }
+      format.html { redirect_to @product, notice: "Product was successfully created." }
       format.json { render :show, status: :created, location: @product }
     else
-      format.html { render :new }
+      format.html { render :new, status: :unprocessable_entity }
       format.json { render json: @product.errors, status: :unprocessable_entity }
     end
   end
@@ -623,59 +632,53 @@ end
 
 [...]
 
-# Never trust parameters from the scary internet, only allow the white list through.
+# Only allow a list of trusted parameters through.
 def product_params
-  params.require(:product).permit(:name, :price)
+  params.expect(product: [ :name, :price ])
 end
 ----
 
-[[update]]
+[[update-action]]
 ==== update
 
-The `update` method tries to update @product with the `product_params`.
-The private method `product_params` is used to filter the trusted
-parameters with a white list. When `@product` was successfully updated a
-`redirect` to the `show` action is initiated for html requests. If a
-validation error occured the `edit` action will be rendered.
+The `update` method tries to update `@product` with the
+`product_params`. When `@product` was successfully updated a
+`redirect` to the `show` action is initiated for HTML requests (with
+status `:see_other` — HTTP 303 — which Turbo requires to follow a
+redirect after a form submission). If a validation error occurred
+the `edit` action is rendered with `:unprocessable_entity`.
 
 [source,ruby]
 ----
-# PATCH/PUT /products/1
-# PATCH/PUT /products/1.json
+# PATCH/PUT /products/1 or /products/1.json
 def update
   respond_to do |format|
     if @product.update(product_params)
-      format.html { redirect_to @product, notice: 'Product was successfully updated.' }
+      format.html { redirect_to @product, notice: "Product was successfully updated.", status: :see_other }
       format.json { render :show, status: :ok, location: @product }
     else
-      format.html { render :edit }
+      format.html { render :edit, status: :unprocessable_entity }
       format.json { render json: @product.errors, status: :unprocessable_entity }
     end
   end
 end
-
-[...]
-
-# Never trust parameters from the scary internet, only allow the white list through.
-def product_params
-  params.require(:product).permit(:name, :price)
-end
 ----
 
-[[destroy]]
+[[destroy-action]]
 ==== destroy
 
-The `destroy` method destroys `@product` and redirects an html request
-to the `index` action.
+The `destroy` method destroys `@product` (`destroy!` raises an
+exception if the delete fails) and redirects an HTML request to the
+`index` action.
 
 [source,ruby]
 ----
-# DELETE /products/1
-# DELETE /products/1.json
+# DELETE /products/1 or /products/1.json
 def destroy
-  @product.destroy
+  @product.destroy!
+
   respond_to do |format|
-    format.html { redirect_to products_url, notice: 'Product was successfully destroyed.' }
+    format.html { redirect_to products_path, notice: "Product was successfully destroyed.", status: :see_other }
     format.json { head :no_content }
   end
 end
@@ -688,208 +691,207 @@ Now we start the Rails web server:
 
 [source,bash]
 ----
-$ rails server
+$ bin/rails server
 => Booting Puma
-=> Rails 5.2.0 application starting in development on http://localhost:3000
-=> Run `rails server -h` for more startup options
+=> Rails 8.1.3 application starting in development
+=> Run `bin/rails server --help` for more startup options
 Puma starting in single mode...
-* Version 3.11.0 (ruby 2.5.0-p0), codename: Love Song
-* Min threads: 5, max threads: 5
-* Environment: development
-* Listening on tcp://0.0.0.0:3000
+* Puma version: 8.0.0 ("Into the Arena")
+* Ruby version: ruby 4.0.2 (2026-03-17 revision d3da9fec82) +PRISM [arm64-darwin25]
+*  Min threads: 3
+*  Max threads: 3
+*  Environment: development
+* Listening on http://127.0.0.1:3000
 Use Ctrl-C to stop
 ----
 
-Now a little drum roll ... dramatic suspense ... launch the web browser and go
-to the URL http://localhost:3000/products. You can see the list of
-products as simple web page.
+Now a little drum roll ... dramatic suspense ... launch the web
+browser and go to http://localhost:3000/products. You can see the
+list of products as a simple web page.
 
 image::screenshots/chapter05/products_index.png[products index,title="Products index"]
 
-If you now click the link _New Product_, you will see an input form
+If you now click the link _New product_, you will see an input form
 for a new record:
 
 image::screenshots/chapter05/product_new.png[product new,title="Products new"]
 
-Use your browser’s Back button to go back and click on the _Show_ link
-in the first line. You will then see the following page:
+Use your browser's Back button to go back and click on the
+_Show this product_ link in the first row. You will then see the
+following page:
 
 image::screenshots/chapter05/product_show_1.png[product show,title="Products show"]
 
-If you now click _Edit_, you will see the editing view for this
-record:
+If you now click _Edit this product_ you will see the editing view
+for this record:
 
 image::screenshots/chapter05/product_edit_1.png[product edit,title="Products edit"]
 
-And if you click _Destroy_ on the Index page, you can delete a record
-after confirming the message that pops up. Isn’t that cool?! Within less
-than 10 minutes, you have written a Web application that allows you to
-*c*reate, *r*ead/*r*etrieve, *u*pdate and *d*elete/*d*estroy records
-CRUD. That is the scaffolding magic. You can save a lot of time.
+And if you click _Destroy this product_ on the show page you can
+delete the record after confirming the message that pops up. Isn't
+that cool?! Within less than 10 minutes you have written a web
+application that allows you to *c*reate, *r*ead/*r*etrieve, *u*pdate
+and *d*elete/*d*estroy records (CRUD). That is the scaffolding magic.
+You can save a lot of time.
+
+NOTE: Rails 8 scaffolds are deliberately plain. There is no
+      `scaffolds.scss` or generated CSS anymore and the list view is
+      a stack of `<div>` partials rather than an HTML `<table>`.
+      Styling is left entirely up to you. If you prefer a table or
+      a fully styled Tailwind look, edit the generated erb files —
+      the point of a scaffold is to be a starting point, not a
+      final design.
 
 [[where-are-the-views]]
 ==== Where Are the Views?
 
-You can probably guess, but let’s have a look at the directory
+You can probably guess, but let's have a look at the directory
 `app/views/products` anyway:
 
 [source,bash]
 ----
-$ tree app/views/products/
-app/views/products/
-├── _form.html.erb
-├── _product.json.jbuilder
-├── edit.html.erb
-├── index.html.erb
-├── index.json.jbuilder
-├── new.html.erb
-├── show.html.erb
-└── show.json.jbuilder
+$ ls app/views/products
+_form.html.erb    _product.html.erb   edit.html.erb      index.html.erb
+index.json.jbuilder  new.html.erb     show.html.erb      show.json.jbuilder
+_product.json.jbuilder
 ----
 
-There are two different file extensions. The `html.erb` is for HTML
-requests and the `json.jbuilder` is for JSON requests.
+There are two different file extensions. The `.html.erb` files are
+for HTML requests and the `.json.jbuilder` files are for JSON
+requests.
 
 For `index`, `edit`, `new` and `show` the corresponding views are
-located there. As `new` and `edit` both require a form for editing the
-data, this is stored in the partial `_form.html.erb` in accordance with
-the principle of DRY (*D*on’t *R*epeat
-*Y*ourself) and integrated in `new.html.erb` and `edit.html.erb` with a
-`<%= render 'form' %>`.
+located there. As `new` and `edit` both require a form for editing
+the data, this is stored in the partial `_form.html.erb` in
+accordance with the principle of DRY (*D*on't *R*epeat
+*Y*ourself) and integrated in `new.html.erb` and `edit.html.erb`
+with `<%= render "form", product: @product %>`.
 
-Let’s open the file `app/views/products/index.html.erb`:
+The partial `_product.html.erb` is new in modern Rails: it renders a
+single product and is reused on both the `index` and the `show` page.
+
+Let's open `app/views/products/index.html.erb`:
 
 [source,erb]
 .app/views/products/index.html.erb
 ----
-<p id="notice"><%= notice %></p>
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Products" %>
 
 <h1>Products</h1>
 
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Price</th>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
+<div id="products">
+  <% @products.each do |product| %>
+    <%= render product %>
+    <p>
+      <%= link_to "Show this product", product %>
+    </p>
+  <% end %>
+</div>
 
-  <tbody>
-    <% @products.each do |product| %>
-      <tr>
-        <td><%= product.name %></td>
-        <td><%= product.price %></td>
-        <td><%= link_to 'Show', product %></td>
-        <td><%= link_to 'Edit', edit_product_path(product) %></td>
-        <td><%= link_to 'Destroy', product, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<br>
-
-<%= link_to 'New Product', new_product_path %>
+<%= link_to "New product", new_product_path %>
 ----
 
-You are now an old hand when it comes to ERB, so you’ll be able to read
-and understand the code without any problems.
+And the per-product partial:
+
+[source,erb]
+.app/views/products/_product.html.erb
+----
+<div id="<%= dom_id product %>">
+  <div>
+    <strong>Name:</strong>
+    <%= product.name %>
+  </div>
+
+  <div>
+    <strong>Price:</strong>
+    <%= product.price %>
+  </div>
+
+</div>
+----
+
+You are now an old hand when it comes to ERB, so you'll be able to
+read and understand the code without any problems.
+
+TIP: The call `<%= render product %>` uses Rails' "magic"
+     partial-lookup convention: it knows `product` is a `Product`
+     instance and automatically renders `_product.html.erb`. Writing
+     it as `<%= render @products %>` would render the whole
+     collection in one go (the loop would no longer be needed).
 
 [[link_to]]
 ==== link_to
 
-In the views generated by the scaffold generator, you first came across
-the helper `link_to`. This creates `<a hre ...>` links. You can of
-course also enter a link manually via `<a href="...">` in the erb, but
-for links within a Rails project, `link_to` is more practical, because
-you can use the names of the routes as a target. The code becomes much
-easier to read. In the above example, there are the following routes:
+In the views generated by the scaffold generator you first come
+across the helper `link_to`. This creates `<a hre...>` links. You
+can of course also enter a link manually via `<a href="...">` in the
+erb, but for links within a Rails project `link_to` is more
+practical because you can use the names of the routes as a target.
+The code becomes much easier to read.
 
-[source,bash]
-----
-$ rails routes
-      Prefix Verb   URI Pattern                  Controller#Action
-    products GET    /products(.:format)          products#index
-             POST   /products(.:format)          products#create
- new_product GET    /products/new(.:format)      products#new
-edit_product GET    /products/:id/edit(.:format) products#edit
-     product GET    /products/:id(.:format)      products#show
-             PATCH  /products/:id(.:format)      products#update
-             PUT    /products/:id(.:format)      products#update
-             DELETE /products/:id(.:format)      products#destroy
-----
-
-The first part of this route is the name of the route. With a new call,
-this is `new_product`. A link to `new_product` looks like this in the
-erb code (you can see it at the end of the file
-`app/views/products/index.html.erb`):
+A link to `new_product` looks like this in the erb code (you can see
+it at the bottom of `app/views/products/index.html.erb`):
 
 [source,erb]
 ----
-<%= link_to 'New Product', new_product_path %>
+<%= link_to "New product", new_product_path %>
 ----
 
-In the HTML code of the generated page (http://localhost:3000/products)
-you can see the result:
+With `link_to` you can also link to resources within a RESTful
+resource. Again, you can find examples for this in the show view
+`app/views/products/show.html.erb`:
 
 [source,erb]
+.app/views/products/show.html.erb
 ----
-<%= link_to 'New Product', new_product_path %>
-----
+<p style="color: green"><%= notice %></p>
 
-With `link_to` you can also link to resources within a RESTful resource.
-Again, you can find examples for this in
-`app/views/products/index.html.erb`. In the table, a `show`, an `edit`
-and a `destroy` link is rendered for each `product`:
+<%= render @product %>
 
-[source,erb]
-----
-<tbody>
-  <% @products.each do |product| %>
-    <tr>
-      <td><%= product.name %></td>
-      <td><%= product.price %></td>
-      <td><%= link_to 'Show', product %></td>
-      <td><%= link_to 'Edit', edit_product_path(product) %></td>
-      <td><%= link_to 'Destroy', product, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-    </tr>
-  <% end %>
-</tbody>
+<div>
+  <%= link_to "Edit this product", edit_product_path(@product) %> |
+  <%= link_to "Back to products", products_path %>
+
+  <%= button_to "Destroy this product", @product, method: :delete %>
+</div>
 ----
 
-From the resource and the selected route, Rails automatically determines
-the required URL and the required HTTP verb (in other words, whether it
-is a POST, GET, PUT or DELETE). For index and show calls, you need to
-observe the difference between singular and plural.
-`link_to 'Show', product` links to a single record and
-`link_to 'Show', products_path` links to the index view.
-
-Whether the name of the route is used with or without the suffix `_path`
-in `link_to` depends on whether Rails can ``derive'' the route from the
-other specified information. If only one object is specified (in our
-example, the variable `product`), then Rails automatically assumes that
-it is a show route.
+From the resource and the selected route Rails automatically
+determines the required URL and the required HTTP verb (in other
+words, whether it is a POST, GET, PUT or DELETE). For index and show
+calls you need to observe the difference between singular and plural.
+`link_to "Show this product", product` links to a single record and
+`link_to "Back to products", products_path` links to the index view.
 
 Examples:
 
 [cols=",",options="header",]
 |=======================================================================
-|ERD-Code |Explanation
-|`link_to 'Show', Product.first` |Link to the first product.
+|erb code |Explanation
+|`link_to "Show", Product.first` |Link to the first product.
 
-|`link_to 'New Product', new_product_path` |Link to the Web interface
-where a new product can be created.
+|`link_to "New product", new_product_path` |Link to the web
+interface where a new product can be created.
 
-|`link_to 'Edit', edit_product_path(Product.first)` |Link to the form
-where the first product can be edited.
+|`link_to "Edit", edit_product_path(Product.first)` |Link to the
+form where the first product can be edited.
 
-|`link_to 'Destroy', Product.first, method: :delete` |Link to deleting
-the first product.
+|`button_to "Destroy", Product.first, method: :delete` |Button that
+sends a DELETE request to destroy the first product.
 |=======================================================================
 
-[[form_for]]
-==== form_for
+NOTE: Older Rails versions used `link_to "Destroy", product,
+      method: :delete, data: { confirm: "Are you sure?" }` for
+      destructive actions. In Rails 7+ the recommended pattern is
+      `button_to` (which renders an actual `<form>` and therefore
+      does not need JavaScript to issue a DELETE). For the
+      confirmation prompt use `data: { turbo_confirm: "Are you
+      sure?" }`.
+
+[[form_with]]
+==== form_with
 
 In the partial used by `new` and `edit`,
 `app/views/products/_form.html.erb`, you will find the following code
@@ -898,135 +900,141 @@ for the product form:
 [source,erb]
 .app/views/products/_form.html.erb
 ----
-<%= form_with(model: product, local: true) do |f| %>
+<%= form_with(model: product) do |form| %>
   <% if product.errors.any? %>
-    <div id="error_explanation">
+    <div style="color: red">
       <h2><%= pluralize(product.errors.count, "error") %> prohibited this product from being saved:</h2>
 
       <ul>
-      <% product.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
+        <% product.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
       </ul>
     </div>
   <% end %>
 
-  <div class="field">
-    <%= f.label :name %>
-    <%= f.text_field :name %>
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
   </div>
 
-  <div class="field">
-    <%= f.label :price %>
-    <%= f.text_field :price %>
+  <div>
+    <%= form.label :price, style: "display: block" %>
+    <%= form.text_field :price %>
   </div>
 
-  <div class="actions">
-    <%= f.submit %>
+  <div>
+    <%= form.submit %>
   </div>
 <% end %>
 ----
 
-In a block, the helper `form_for` takes care of creating the HTML form
-via which the user can enter the data for the record or edit it. If you
-delete a complete `<div class="field">` element here, this can no longer
-be used for input in the web interface. I am not going to comment on all
-possible form field variations at this point. The most frequently used
-ones will appear in examples later on and be explained then (if they are
-not self-explanatory).
+In a block the helper `form_with` takes care of creating the HTML
+form via which the user can enter the data for the record or edit
+it. If you delete a complete `<div>` element wrapping a form field,
+that field disappears from the input. I am not going to comment on
+all possible form field variations at this point. The most
+frequently used ones will appear in examples later on and be
+explained then (if they are not self-explanatory).
+
+NOTE: In Rails 7+ `form_with` is submitted through Turbo by default.
+      You don't need to pass `local: true` any more (old Rails 5.x
+      scaffold generators added that to opt out of Rails-UJS).
+      If you _really_ want a plain, non-Turbo submission you can
+      write `form_with(model: product, data: { turbo: false })` or
+      set it per-controller with `turbo_frame_request_variant`.
 
 NOTE: You can find an overview of all form helpers at
-      http://guides.rubyonrails.org/form_helpers.html
+      https://guides.rubyonrails.org/form_helpers.html
 
-When using validations in the model, any validation errors that occur
-are displayed in the following code at the head of the form:
+When using validations in the model, any validation errors that
+occur are displayed at the head of the form by this code block:
 
 [source,erb]
 ----
 <% if product.errors.any? %>
-  <div id="error_explanation">
+  <div style="color: red">
     <h2><%= pluralize(product.errors.count, "error") %> prohibited this product from being saved:</h2>
 
     <ul>
-    <% product.errors.full_messages.each do |message| %>
-      <li><%= message %></li>
-    <% end %>
+      <% product.errors.each do |error| %>
+        <li><%= error.full_message %></li>
+      <% end %>
     </ul>
   </div>
 <% end %>
 ----
 
-Let’s add a small validation to the `app/models/product.rb` model:
+Let's add a small validation to the `app/models/product.rb` model:
 
 [source,ruby]
 .app/models/product.rb
 ----
 class Product < ApplicationRecord
-  validates :name,
-            presence: true
+  validates :name, presence: true
 end
 ----
 
-When ever somebody wants to save a product which doesn’t have a name
-Rails will show this Flash Error:
+Whenever somebody tries to save a product which doesn't have a name
+Rails will show this form error:
 
 image::screenshots/chapter05/product_error_flash.png[product error flash,title="Products error flash"]
 
 [[access-via-json]]
 ==== Access via JSON
 
-By default, Rails’ scaffolding generates not just access via HTML for
-human users, but also a direct interface for machines. The same methods
-`index`, `show`, `new`, `create`, `update` and `destroy` can be called
-via this interface, but in a format that is easier to read for machines.
-As an example, we will demonstrate the `index` action via which all data
-can be read in one go. With the same idea, data can be removed
-(`destroy`) or edited (`update`).
+By default Rails' scaffolding generates not just access via HTML for
+human users but also a direct interface for machines. The same
+methods `index`, `show`, `new`, `create`, `update` and `destroy` can
+be called via this interface, but in a format that is easier for
+machines to read. As an example, we will demonstrate the `index`
+action via which all data can be read in one go. The same idea
+applies to all the other actions.
 
 JSON (see
-http://de.wikipedia.org/wiki/JavaScript_Object_Notation[wikipedia.org/wiki/Json])
-seems to be the new cool kid. So we use JSON.
+https://en.wikipedia.org/wiki/JSON[en.wikipedia.org/wiki/JSON])
+is effectively the lingua franca of web APIs. So we use JSON.
 
-If you do not require machine-readable access to data, you can remove
-these lines in the file `Gemfile` (followed by the command `bundle`).
+If you do not require machine-readable access to data you can remove
+this line from the `Gemfile` (followed by `bundle`):
 
 [source,ruby]
 .Gemfile
 ----
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
-gem 'jbuilder', '~> 2.5'
+gem "jbuilder"
 ----
 
 Of course you can delete the `format.json` lines manually too. But
-please don’t forget to delete the JSON view files too.
+please don't forget to delete the `json.jbuilder` view files as well.
 
 [[json-as-default]]
-JSON as Default
+===== JSON as Default
 
-Right at the beginning of `app/controllers/products_controller.rb` you
-will find the entry for the index action:
+Right at the beginning of `app/controllers/products_controller.rb`
+you will find the entry for the `index` action:
 
 [source,ruby]
 .app/controllers/products_controller.rb
 ----
-# GET /products
-# GET /products.json
+# GET /products or /products.json
 def index
   @products = Product.all
 end
 ----
 
-The code is straightforward. In the instance variable `@products`, all
-products are saved. The view `app/views/products/index.json.jbuilder`
-contains the following code to render the JSON:
+The code is straightforward. In the instance variable `@products`
+all products are saved. The view
+`app/views/products/index.json.jbuilder` contains the following code
+to render the JSON:
 
 [source,ruby]
 .app/views/products/index.json.jbuilder
 ----
-json.array! @products, partial: 'products/product', as: :product
+json.array! @products, partial: "products/product", as: :product
 ----
 
-It renders the partial _product.json.jbuilder:
+It renders the partial `_product.json.jbuilder`:
 
 [source,ruby]
 .app/views/products/_product.json.jbuilder
@@ -1036,20 +1044,20 @@ json.url product_url(product, format: :json)
 ----
 
 You can use your browser to fetch the JSON output. Just open
-http://localhost:3000/products.json and view the result. I installed a
-JSON view extension in my Chrome browser to get a nicer format.
+http://localhost:3000/products.json and view the result. A JSON
+viewer extension makes the output nicer to read:
 
 image::screenshots/chapter05/products_index_json.png[products index json,title="Products index json"]
 
-If you do not want the JSON output, you need to delete the
+If you do not want the JSON output you need to delete the
 `json.jbuilder` files.
 
 [[json-and-xml-together]]
-JSON and XML Together
+===== JSON and XML Together
 
-If you ever need a JSON and XML interface in a Rails application, you
+If you ever need a JSON and XML interface in a Rails application you
 just need to specify both variants in the controller in the block
-`respond_to`. Here is an example with the
+`respond_to`. Here is an example with
 `app/controllers/products_controller.rb` in the `index` action:
 
 [source,ruby]
@@ -1059,12 +1067,12 @@ just need to specify both variants in the controller in the block
 # GET /products.json
 # GET /products.xml
 def index
-  @products = product.all
+  @products = Product.all
 
   respond_to do |format|
     format.html # index.html.erb
     format.json { render json: @products }
-    format.xml { render xml: @products }
+    format.xml  { render xml:  @products }
   end
 end
 ----
@@ -1073,27 +1081,27 @@ end
 == When Should You Use Scaffolding?
 
 You should never use scaffolding just for the sake of it. There are
-Rails developers who never use scaffolding and always build everything
-manually. I find scaffolding quite useful for quickly getting into a new
-project. But it is always just the beginning.
+Rails developers who never use scaffolding and always build
+everything manually. I find scaffolding quite useful for quickly
+getting into a new project. But it is always just the beginning.
 
 [[example-for-a-minimal-project]]
 === Example for a Minimal Project
 
-Let’s assume we need a web page quickly with which we can list products
-and represent them individually. But we do not require an editing or
-deleting function. In that case, a large part of the code created via
-scaffold would be useless and have to be deleted. Let’s try it out as
-follows:
+Let's assume we need a web page quickly with which we can list
+products and show them individually. But we do not require an
+editing or deleting function. In that case a large part of the code
+created via `scaffold` would be useless and have to be deleted.
+Let's try it out as follows:
 
 [source,bash]
 ----
 $ rails new read-only-shop
   [...]
 $ cd read-only-shop
-$ rails generate scaffold product name 'price:decimal{7,2}'
+$ bin/rails generate scaffold product name 'price:decimal{7,2}'
   [...]
-$ rails db:migrate
+$ bin/rails db:prepare
   [...]
 ----
 
@@ -1102,21 +1110,21 @@ Now create the `db/seeds.rb` with some demo products:
 [source,ruby]
 .db/seeds.rb
 ----
-Product.create(name: 'Apple', price: 1)
-Product.create(name: 'Orange', price: 1)
-Product.create(name: 'Pineapple', price: 2.4)
-Product.create(name: 'Marble cake', price: 3)
+Product.create(name: "Apple", price: 1)
+Product.create(name: "Orange", price: 1)
+Product.create(name: "Pineapple", price: 2.4)
+Product.create(name: "Marble cake", price: 3)
 ----
 
 And populate it with this data:
 
 [source,bash]
 ----
-$ rails db:seed
+$ bin/rails db:seed
 ----
 
-As we only need `index` and `show`, we should delete the not required
-views:
+As we only need `index` and `show` we should delete the views we
+don't need:
 
 [source,bash]
 ----
@@ -1132,8 +1140,8 @@ The `json.jbuilder` views are not needed either:
 $ rm app/views/products/*.json.jbuilder
 ----
 
-The file `app/controllers/products_controller.rb` can be simplified with
-an editor. It should look like this:
+The file `app/controllers/products_controller.rb` can be simplified
+with an editor. It should look like this:
 
 [source,ruby]
 .app/controllers/products_controller.rb
@@ -1142,25 +1150,23 @@ class ProductsController < ApplicationController
   before_action :set_product, only: [:show]
 
   # GET /products
-  # GET /products.json
   def index
     @products = Product.all
   end
 
   # GET /products/1
-  # GET /products/1.json
   def show
   end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_product
-      @product = Product.find(params[:id])
+      @product = Product.find(params.expect(:id))
     end
 end
 ----
 
-We only need the routes for `index` and `show`. Please open the file
+We only need the routes for `index` and `show`. Please open
 `config/routes.rb` and edit it as follows:
 
 [source,ruby]
@@ -1171,19 +1177,20 @@ Rails.application.routes.draw do
 end
 ----
 
-A `rails routes` shows us that really only `index` and `show` are routed
-now:
+A `bin/rails routes` shows us that really only `index` and `show`
+are routed now:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
   Prefix Verb URI Pattern             Controller#Action
 products GET  /products(.:format)     products#index
  product GET  /products/:id(.:format) products#show
+[...]
 ----
 
-If we now start the server `rails server` and go to the URL
-http://localhost:3000/products, we get an error message.
+If we now start the server with `bin/rails server` and go to
+http://localhost:3000/products we get an error message.
 
 image::screenshots/chapter05/products_routes_error.png[products error message,title="Products error message"]
 
@@ -1191,106 +1198,67 @@ The same message will be displayed in the log:
 
 [source,bash]
 ----
-$ rails server
-=> Booting Puma
-=> Rails 5.2.0 application starting in development on http://localhost:3000
-=> Run `rails server -h` for more startup options
-Puma starting in single mode...
-* Version 3.11.0 (ruby 2.5.0-p0), codename: Love Song
-* Min threads: 5, max threads: 5
-* Environment: development
-* Listening on tcp://0.0.0.0:3000
-Use Ctrl-C to stop
-Started GET "/products" for 127.0.0.1 at 2017-03-23 17:47:43 +0100
-   (0.2ms)  SELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC
-Processing by ProductsController#index as HTML
-  Rendering products/index.html.erb within layouts/application
-  Product Load (0.2ms)  SELECT "products".* FROM "products"
-  Rendered products/index.html.erb within layouts/application (126.3ms)
-Completed 500 Internal Server Error in 149ms (ActiveRecord: 0.7ms)
+ActionView::Template::Error (undefined local variable or method 'new_product_path' for an instance of #<Class:...>)
 
+    14: </div>
+    15:
+    16: <%= link_to "New product", new_product_path %>
 
-
-ActionView::Template::Error (undefined method `edit_product_path' for #<#<Class:0x007f98eb1e8148>:0x007f98ea6620d0>
-Did you mean?  edit_polymorphic_path):
-    17:         <td><%= product.name %></td>
-    18:         <td><%= product.price %></td>
-    19:         <td><%= link_to 'Show', product %></td>
-    20:         <td><%= link_to 'Edit', edit_product_path(product) %></td>
-    21:         <td><%= link_to 'Destroy', product, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-    22:       </tr>
-    23:     <% end %>
-
-app/views/products/index.html.erb:20:in `block in _app_views_products_index_html_erb___4554496912710881403_70147378203280'
-app/views/products/index.html.erb:15:in `_app_views_products_index_html_erb___4554496912710881403_70147378203280'
+app/views/products/index.html.erb:17
 ----
 
-The error message states that we call an undefined method
-`edit_product_path` in the view `app/views/products/index.html.erb`. As
-we only route `index` and `show` now, there are no more `edit`,
-`destroy` or `new` methods any more. So we need to adapt the file
+The error message states that we reference the undefined method
+`new_product_path` in the view `app/views/products/index.html.erb`.
+As we only route `index` and `show` now there are no more `edit`,
+`destroy` or `new` paths. So we need to adapt
 `app/views/products/index.html.erb` in the editor as follows:
 
 [source,erb]
 .app/views/products/index.html.erb
 ----
+<% content_for :title, "Products" %>
+
 <h1>Products</h1>
 
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Price</th>
-      <th></th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <% @products.each do |product| %>
-      <tr>
-        <td><%= product.name %></td>
-        <td><%= product.price %></td>
-        <td><%= link_to 'Show', product %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<div id="products">
+  <% @products.each do |product| %>
+    <%= render product %>
+    <p>
+      <%= link_to "Show this product", product %>
+    </p>
+  <% end %>
+</div>
 ----
 
-And while we are at it, we also edit the
+And while we are at it we also edit
 `app/views/products/show.html.erb` accordingly:
 
 [source,erb]
 .app/views/products/show.html.erb
 ----
-<p>
-  <strong>Name:</strong>
-  <%= @product.name %>
-</p>
+<%= render @product %>
 
-<p>
-  <strong>Price:</strong>
-  <%= @product.price %>
-</p>
-
-<%= link_to 'Back', products_path %>
+<div>
+  <%= link_to "Back to products", products_path %>
+</div>
 ----
 
 Now our application is finished. Start the Rails server with
-`rails server` and open the URL http://localhost:3000/products in the
+`bin/rails server` and open http://localhost:3000/products in the
 browser.
 
 image::screenshots/chapter05/read-only-products-index.png[read only products index,title="ReadOnlyProducts index"]
 
-NOTE: In this example, I am not commenting on the required changes in the
-      tests, as this is not an exercise for test driven development but meant
-      to demonstrate a way of working with scaffolding. TDD developers will
-      quickly be able to adapt the tests.
+NOTE: In this example I am not commenting on the required changes in
+      the tests, as this is not an exercise for test-driven
+      development but meant to demonstrate a way of working with
+      scaffolding. TDD developers will quickly be able to adapt the
+      tests.
 
 [[conclusion]]
 === Conclusion
 
 Have a go and try it out. Try working with scaffolds one time and
-without them the next. Then you will soon get a feel for whether it fits
-into your working flow or not. I find that scaffolding makes my work
-much easier for standard applications.
+without them the next. Then you will soon get a feel for whether it
+fits into your working flow or not. I find that scaffolding makes my
+work much easier for standard applications.
