@@ -1,0 +1,38 @@
+/* Tailwind source for the shared site chrome (nav + footer).
+ *
+ * The HTML for these partials lives in the wincon repo at
+ * wincon/priv/static/partials/ and is fetched into
+ * .scratch/partials/ during the build. Tailwind scans those fetched
+ * files plus assets/nav.html and assets/footer.html (the committed
+ * fallbacks used for local dev) to emit only the utility classes the
+ * chrome actually uses — keeps the output tiny (~2-3 KB gzipped).
+ */
+
+@import "tailwindcss" source(none);
+
+@source "../assets/nav.html";
+@source "../assets/footer.html";
+@source "../.scratch/partials";
+
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-serif: Georgia, "Times New Roman", Times, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
+               "Liberation Mono", monospace;
+}
+
+/* Highlight the current book's link in the shared book nav. The
+ * nav element carries data-book-current="rails" (set by
+ * scripts/fetch-partials.sh), and each stack link carries
+ * data-stack="rails|phoenix|ruby|elixir". */
+@layer components {
+  [data-book-current="rails"] [data-stack="rails"],
+  [data-book-current="phoenix"] [data-stack="phoenix"],
+  [data-book-current="ruby"] [data-stack="ruby"],
+  [data-book-current="elixir"] [data-stack="elixir"] {
+    @apply font-semibold text-lime-700 dark:text-[#c8f55a];
+  }
+}

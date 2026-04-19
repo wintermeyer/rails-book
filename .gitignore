@@ -3,6 +3,7 @@
 /.bundle/
 /output/
 /.scratch/
+/node_modules/
 # Ignore generated artifacts at the repo root, but keep anything
 # checked into subdirectories (e.g. assets/nav.html, assets/footer.html).
 /*.html

@@ -1,13 +1,14 @@
-<nav class="site-nav" aria-label="Hauptnavigation">
-  <a href="/" class="site-nav__brand">
-    <span class="accent">Wintermeyer</span>&nbsp;Consulting
+<nav class="flex items-center justify-between gap-4 px-6 py-4 sm:px-8 lg:px-12" aria-label="Hauptnavigation" data-book-current="rails">
+  <a href="/" class="font-serif text-xl tracking-tight sm:text-[22px]">
+    <span class="text-lime-700 dark:text-[#c8f55a]">Wintermeyer</span>&nbsp;Consulting
   </a>
-  <div class="site-nav__links">
-    <a href="/rails">Rails</a>
-    <a href="/phoenix">Phoenix</a>
-    <a href="/ruby">Ruby</a>
-    <a href="/elixir">Elixir</a>
-    <a href="/rails/book/" class="current">Rails&nbsp;Buch</a>
+  <div class="hidden items-center gap-7 md:flex">
+    <a href="/rails" data-stack="rails" class="font-serif text-base text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-[#f0ede6]">Rails</a>
+    <a href="/phoenix" data-stack="phoenix" class="font-serif text-base text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-[#f0ede6]">Phoenix</a>
+    <a href="/ruby" data-stack="ruby" class="font-serif text-base text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-[#f0ede6]">Ruby</a>
+    <a href="/elixir" data-stack="elixir" class="font-serif text-base text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-[#f0ede6]">Elixir</a>
   </div>
-  <a href="mailto:sw@wintermeyer-consulting.de" class="site-nav__cta">Kontakt →</a>
+  <a href="mailto:sw@wintermeyer-consulting.de" class="rounded-sm bg-[#c8f55a] px-4 py-2.5 font-mono text-[13px] tracking-wider text-[#0e0e0e] hover:brightness-95">
+    Kontakt →
+  </a>
 </nav>

@@ -85,141 +85,14 @@ body {
 }
 
 /* ------------------------------------------------------------------
- * Site chrome (nav + footer injected by post-processing)
+ * Site chrome (nav + footer)
+ *
+ * The nav and footer HTML is fetched from the parent site wincon at
+ * build time (see scripts/fetch-partials.sh) and uses Tailwind utility
+ * classes. The utility rules are emitted into chrome.css by the
+ * Tailwind CLI during `rake build` — we load that file alongside
+ * book.css. Keep the chrome styles out of this file.
  * ------------------------------------------------------------------ */
-
-.site-nav {
-  border-bottom: 1px solid var(--color-border);
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-@media (min-width: 640px) { .site-nav { padding: 1rem 2rem; } }
-@media (min-width: 1024px) { .site-nav { padding: 1rem 3rem; } }
-
-.site-nav__brand {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  letter-spacing: -0.01em;
-  color: inherit;
-  text-decoration: none;
-}
-@media (min-width: 640px) {
-  .site-nav__brand { font-size: 1.375rem; }
-}
-.site-nav__brand .accent { color: var(--color-accent); }
-
-.site-nav__links {
-  display: none;
-  gap: 1.75rem;
-  align-items: center;
-}
-@media (min-width: 768px) { .site-nav__links { display: flex; } }
-.site-nav__links a {
-  font-family: var(--font-serif);
-  color: var(--color-text-soft);
-  text-decoration: none;
-}
-.site-nav__links a:hover { color: var(--color-text); }
-.site-nav__links a.current { color: var(--color-text); }
-
-.site-nav__cta {
-  background: var(--color-button-bg);
-  color: var(--color-button-fg);
-  padding: 0.625rem 1rem;
-  border-radius: var(--radius-field);
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  letter-spacing: 0.06em;
-  text-decoration: none;
-}
-.site-nav__cta:hover { filter: brightness(0.95); }
-
-.site-footer {
-  border-top: 1px solid var(--color-border);
-  padding: 3.5rem 1.5rem 2.5rem;
-  margin-top: auto;
-}
-@media (min-width: 640px) { .site-footer { padding-left: 2rem; padding-right: 2rem; } }
-@media (min-width: 1024px) { .site-footer { padding-left: 3rem; padding-right: 3rem; } }
-
-.site-footer__inner {
-  margin: 0 auto;
-  max-width: var(--shell-max);
-  display: grid;
-  gap: 2.5rem;
-}
-@media (min-width: 768px) {
-  .site-footer__inner {
-    grid-template-columns: 1fr auto auto auto;
-    gap: 3.5rem;
-  }
-}
-
-.site-footer h4,
-.site-footer__label {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--color-text-soft);
-  margin: 0 0 1rem;
-}
-
-.site-footer__brand {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  letter-spacing: -0.01em;
-  color: inherit;
-  text-decoration: none;
-}
-.site-footer__brand .accent { color: var(--color-accent); }
-
-.site-footer p {
-  max-width: 22rem;
-  margin: 1rem 0 0;
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: var(--color-text-soft);
-}
-
-.site-footer ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-}
-.site-footer a {
-  color: var(--color-text-soft);
-  text-decoration: none;
-}
-.site-footer a:hover { color: var(--color-accent); }
-
-.site-footer__colophon {
-  margin-top: 3rem;
-  border-top: 1px solid var(--color-border);
-  padding-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  color: var(--color-text-soft);
-}
-@media (min-width: 640px) {
-  .site-footer__colophon {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
 
 /* ------------------------------------------------------------------
  * Content shell

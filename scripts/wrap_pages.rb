@@ -11,17 +11,27 @@ require "cgi"
 module WrapPages
   module_function
 
-  def run(html_dir:, nav_path:, footer_path:)
+  def run(html_dir:, nav_path:, footer_path:, extra_stylesheets: [])
     nav = File.read(nav_path)
     footer = File.read(footer_path)
 
     Dir.glob(File.join(html_dir, "*.html")).each do |file|
       html = File.read(file)
       html = strip_noise(html)
+      html = inject_stylesheets(html, hrefs: extra_stylesheets)
       html = inject_chrome(html, nav: nav, footer: footer)
       html = set_title(html, file: file)
       File.write(file, html)
     end
+  end
+
+  # Add <link rel="stylesheet"> tags just before </head>. Used to
+  # load chrome.css alongside the book.css that asciidoctor emits.
+  def inject_stylesheets(html, hrefs:)
+    return html if hrefs.empty?
+
+    tags = hrefs.map { |h| %(<link rel="stylesheet" href="#{h}">) }.join("\n")
+    html.sub(%r{</head>}, "#{tags}\n</head>")
   end
 
   # Drop links and styles that fight with book.css.
