@@ -46,7 +46,7 @@ info.
 $ rails new shop-i18n
   [...]
 $ cd shop-i18n
-$ rails db:migrate
+$ bin/rails db:migrate
 $ echo "gem 'rails-i18n'" >> Gemfile
 $ bundle
   [...]
@@ -58,7 +58,7 @@ the language setting:
 
 [source,bash]
 ----
-$ rails console
+$ bin/rails console
 Loading development environment (Rails 8.1.3)
 >> price = 1000.23
 => 1000.23
@@ -92,7 +92,7 @@ In the Rails console we can try out how `I18n.t` works:
 
 [source,bash]
 ----
-$ rails console
+$ bin/rails console
 Loading development environment (Rails 8.1.3)
 >> I18n.t :hello
 => "Hello world"
@@ -145,7 +145,7 @@ to German.
 
 [source,bash]
 ----
-$ rails console
+$ bin/rails console
 Loading development environment (Rails 8.1.3)
 >> I18n.locale = :de
 => :de
@@ -206,7 +206,7 @@ or with a `:scope` for the symbols. You can also mix both options.
 
 [source,bash]
 ----
-$ rails console
+$ bin/rails console
 Loading development environment (Rails 8.1.3)
 >> I18n.t 'example.test'
 => "A test"
@@ -303,10 +303,10 @@ application:
 $ rails new bibliography
   [...]
 $ cd bibliography
-$ rails generate scaffold book title number_of_pages:integer \
+$ bin/rails generate scaffold book title number_of_pages:integer \
   'price:decimal{7,2}'
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 $ echo "gem 'rails-i18n'" >> Gemfile
 $ bundle
@@ -691,7 +691,7 @@ As a result, we then have the following new paths:
 
 [source,bash]
 ----
-$ rails routes
+$ bin/rails routes
 (in /Users/xyz/rails/project-42/bibliography)
    Prefix Verb   URI Pattern                      Controller#Action
     books GET    /buecher(.:format)               books#index
@@ -765,7 +765,7 @@ This web shop gets a homepage:
 
 [source,bash]
 ----
-$ rails generate controller Page index
+$ bin/rails generate controller Page index
   [...]
 $
 ----
@@ -856,7 +856,7 @@ following content:
 </p>
 ----
 
-[[setting-i18n.locale-via-url-path-prefix]]
+[[setting-i18nlocale-via-url-path-prefix]]
 ==== Setting I18n.locale via URL Path Prefix
 
 The more stylish way of setting the language is to add it as prefix to
@@ -1062,7 +1062,7 @@ the controller `SetLanguage` with the two actions `english` and
 
 [source,bash]
 ----
-$ rails generate controller SetLanguage english german
+$ bin/rails generate controller SetLanguage english german
   [...]
 $
 ----
@@ -1226,9 +1226,9 @@ The Rails application:
 $ rails new i18n-webshop
   [...]
 $ cd i18n-webshop
-$ rails generate scaffold Product name description 'price:decimal{7,2}'
+$ bin/rails generate scaffold Product name description 'price:decimal{7,2}'
   [...]
-$ rails db:migrate
+$ bin/rails db:migrate
   [...]
 $ echo "gem 'rails-i18n'" >> Gemfile
 $ bundle
@@ -1332,7 +1332,7 @@ Start the Rails server with `rails server.`
 
 [source,bash]
 ----
-$ rails server
+$ bin/rails server
 [...]
 ----
 

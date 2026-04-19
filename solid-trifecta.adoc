@@ -74,13 +74,15 @@ config.cache_store = :solid_cache_store
 ----
 
 `config/cache.yml` controls the max age (default 60 days) and
-max size (default 256 MB). Inspect cache hits/misses with:
+max size (default 256 MB). Because the cache lives in a regular
+SQLite (or PostgreSQL / MySQL) database, you can also poke at it
+with plain SQL:
 
 [source,bash]
 ----
-$ bin/rails console
-irb(main):001> Rails.cache.stats
-=> { hits: 12_345, misses: 678, ... }
+$ bin/rails dbconsole -e production
+sqlite> SELECT COUNT(*) FROM solid_cache_entries;
+sqlite> SELECT key FROM solid_cache_entries LIMIT 5;
 ----
 
 See xref:caching.adoc#caching[Caching] for patterns that get

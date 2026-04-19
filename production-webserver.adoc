@@ -164,10 +164,11 @@ classic path is Phusion Passenger + Nginx. The short version:
 
 1. Install the Passenger Nginx module following
    https://www.phusionpassenger.com[phusionpassenger.com].
-2. Clone your app to `/var/www/myapp`, run `bundle install
-   --deployment --without development test`, set
-   `RAILS_ENV=production bin/rails db:migrate
-   assets:precompile`.
+2. Clone your app to `/var/www/myapp`, configure Bundler for
+   deployment with `bundle config set --local deployment 'true'`
+   and `bundle config set --local without 'development test'`,
+   then run `bundle install` and
+   `RAILS_ENV=production bin/rails db:migrate assets:precompile`.
 3. Configure Nginx to point at `/var/www/myapp/public` and
    enable Passenger for the server block.
 4. Restart Nginx. Reload the app with

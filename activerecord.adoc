@@ -19,24 +19,25 @@ required and also not essential for working with `ActiveRecord`.
 NOTE: This chapter is only about ActiveRecord. So I am not going to integrate
       any tests to keep the examples as simple as possible.
 
-NOTE: The examples in this chapter were tested against Rails 8.1
-      and Ruby 4.0. A handful of Active Record APIs gained useful
-      companions since Rails 5.2; the most important ones you'll
-      want to know about are:
+[NOTE]
+====
+The examples in this chapter were tested against Rails 8.1 and
+Ruby 4.0. A handful of Active Record features are worth knowing
+about early, even if we only use the most common ones in this
+chapter:
 
-      - `normalizes :email, with: -> e { e.strip.downcase }` —
-        declarative attribute normalisation at the model level.
-      - `has_secure_password` now supports `reset_token` / email
-        confirmation workflows out of the box (Rails 8's
-        authentication generator uses it).
-      - Encrypted attributes:
-        `encrypts :social_security_number`.
-      - Composite primary keys.
-      - `insert_all` / `upsert_all` for bulk writes.
+- `normalizes :email, with: \->(e) { e.strip.downcase }`,
+  declarative attribute normalisation at the model level.
+- `has_secure_password` supports `reset_token` and email
+  confirmation workflows out of the box (Rails 8's authentication
+  generator uses it).
+- Encrypted attributes: `encrypts :social_security_number`.
+- Composite primary keys.
+- `insert_all` / `upsert_all` for bulk writes.
 
-      They are all "in addition to" rather than "instead of" what
-      we cover below, so an old Rails 5.2 book chapter mostly
-      still teaches you the right mental model.
+These are additions, not replacements, so the fundamentals we
+cover below still form the mental model you need.
+====
 
 [[creating-databasemodel]]
 == Creating Database/Model
@@ -3837,6 +3838,10 @@ WARNING: It should be obvious that the e-mail address validation shown
          can only use it to check the syntactic correctness of an e-mail
          address.
 
+TIP: In real applications you should use Ruby's built-in
+     `URI::MailTo::EMAIL_REGEXP` instead of hand-rolling your own
+     regex: `format: { with: URI::MailTo::EMAIL_REGEXP }`.
+
 [[options-8]]
 ==== Options
 
@@ -4160,7 +4165,7 @@ a change method:
 [source,ruby]
 .db/migrate/20151217185307_add_height_to_product.rb
 ----
-class AddHeightToProduct < ActiveRecord::Migration
+class AddHeightToProduct < ActiveRecord::Migration[8.1]
   def change
     add_column :products, :height, :integer
   end
@@ -4358,14 +4363,14 @@ $ bin/rails generate migration create_index
 $
 ----
 
-In the file `db/migrate/20121120142002_create_index.rb` we create the
+In the file `db/migrate/20151217190442_create_index.rb` we create the
 index with `add_index` in the method `self.up`, and in the method
 `self.down` we delete it again with `remove_index`:
 
 [source,ruby]
-.db/migrate/20121120142002_create_index.rb
+.db/migrate/20151217190442_create_index.rb
 ----
-class CreateIndex < ActiveRecord::Migration
+class CreateIndex < ActiveRecord::Migration[8.1]
   def up
     add_index :products, :name
   end
@@ -4410,7 +4415,7 @@ this:
 ----
 $ bin/rails generate model product name:string:index
 $ cat db/migrate/20151217191435_create_products.rb
-class CreateProducts < ActiveRecord::Migration
+class CreateProducts < ActiveRecord::Migration[8.1]
   def change
     create_table :products do |t|
       t.string :name

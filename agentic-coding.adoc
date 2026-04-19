@@ -17,10 +17,20 @@ WARNING: Do the xref:ruby-basics.adoc#ruby-basics[Ruby Basics]
          and xref:first-steps-with-rails.adoc#first-steps-with-rails[First Steps]
          chapters by hand first. If you let an agent drive
          while you're learning the language, you end up
-         shipping code you don't understand — and when it
-         breaks at 3 AM, nobody on your team can read it
-         either. Pick up the fundamentals first, _then_ use an
-         agent to go faster.
+         shipping code you don't understand, and when it breaks
+         at 3 AM, nobody on your team can read it either. Pick
+         up the fundamentals first, _then_ use an agent to go
+         faster.
+
+NOTE: On a first read you can skim this chapter. It mentions
+      concepts such as scaffolds, migrations, routes, Turbo,
+      and test fixtures that only get introduced properly in
+      later chapters. Come back here once you have worked
+      through the xref:activerecord.adoc#activerecord[ActiveRecord],
+      xref:scaffolding-and-rest.adoc#scaffolding-and-rest[Scaffolding]
+      and xref:test-driven-development.adoc#test-driven-development[Test-Driven Development]
+      chapters. Agentic coding is a style of working, not a
+      replacement for the fundamentals.
 
 [[why-rails-good-fit]]
 == Why Rails Is a Particularly Good Fit

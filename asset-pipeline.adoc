@@ -182,14 +182,14 @@ $ RAILS_ENV=production bin/rails assets:precompile
 
 This copies every asset from `app/assets/` and `app/javascript/`
 into `public/assets/`, each file's name suffixed with its SHA-256
-digest, and writes a `.sprockets-manifest-*.json` map that
-translates logical names to fingerprinted names at runtime.
-Rails 8's default `Dockerfile` runs this command as one of the
-build steps, and so does Kamal when it builds a deploy image.
+digest, and writes a `.manifest.json` map that translates logical
+names to fingerprinted names at runtime. Rails 8's default
+`Dockerfile` runs this command as one of the build steps, and so
+does Kamal when it builds a deploy image.
 
 Because every file in `public/assets/` is static, you should let
-your web server (Thruster, Nginx, a CDN) serve them directly —
-no Ruby involvement.
+your web server (Thruster, Nginx, a CDN) serve them directly, no
+Ruby involvement.
 
 [[live-recompile-dev]]
 == Live Recompile In Development

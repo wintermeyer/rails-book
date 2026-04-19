@@ -164,8 +164,7 @@ $
 TIP: Many times it is easier and more informative to use Google instead of ri.
 
 [[irb]]
-irb
-~~~
+=== irb
 
 `irb` stands for **I**nteractive **R**u**b**y and is a kind of sandbox where
 you can play around with Ruby at your leisure. `irb` is launched by

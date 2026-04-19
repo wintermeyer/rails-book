@@ -5,11 +5,11 @@ Rails 7 introduced _Hotwire_, Basecamp's HTML-over-the-wire
 approach to modern web apps, as the default frontend stack. It
 continues to be the default in Rails 8. You don't have to write
 a single line of JavaScript to get SPA-like navigation,
-in-place form submissions, and real-time push updates — Rails
+in-place form submissions, and real-time push updates: Rails
 sends plain HTML over the existing request cycle and Hotwire
 applies it to the DOM.
 
-Hotwire has three parts:
+Hotwire has four parts:
 
 * *Turbo Drive* — makes every link and form submission an Ajax
   call, replacing only the `<body>` without a full page reload.

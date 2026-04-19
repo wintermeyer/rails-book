@@ -322,9 +322,9 @@ breadcrumb application.
 [source,bash]
 ----
 $ bin/rails generate controller Home reset --skip-routes
-Running via Spring preloader in process 49668
-        skip  app/controllers/home_controller.rb
+      create  app/controllers/home_controller.rb
       invoke  erb
+      create    app/views/home
       create    app/views/home/reset.html.erb
 [...]
 ----

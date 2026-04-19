@@ -179,8 +179,9 @@ employees in the Index view and all the employees in the Show view.
 === Example Data
 
 To easily populate the database, we use the Faker gem (see
-http://faker.rubyforge.org/). With Faker, you can generate random names
-and phone numbers. Please add the following line in the `Gemfile`:
+https://github.com/faker-ruby/faker). With Faker, you can generate
+random names and phone numbers. Please add the following line in
+the `Gemfile`:
 
 [source,ruby]
 .Gemfile
@@ -326,9 +327,8 @@ header of http://localhost:3000/companies/1:
 $ curl -I http://localhost:3000/companies/1
 HTTP/1.1 200 OK
 X-Frame-Options: SAMEORIGIN
-X-XSS-Protection: 1; mode=block
 X-Content-Type-Options: nosniff
-Last-Modified: Sat, 27 Jan 2018 18:38:05 GMT
+Last-Modified: Sun, 19 Apr 2026 10:38:05 GMT
 [...]
 ----
 
@@ -339,7 +339,7 @@ specify this time as well, then we do not get the web page back, but a
 
 [source,bash]
 ----
-$ curl -I http://localhost:3000/companies/1 --header 'If-Modified-Since: Sat, 27 Jan 2018 18:38:05 GMT'
+$ curl -I http://localhost:3000/companies/1 --header 'If-Modified-Since: Sun, 19 Apr 2026 10:38:05 GMT'
 HTTP/1.1 304 Not Modified
  [...]
 ----
@@ -348,7 +348,7 @@ In the Rails log, we find this:
 
 [source,bash]
 ----
-Started HEAD "/companies/1" for 127.0.0.1 at 2018-01-27 18:24:21 +0100
+Started HEAD "/companies/1" for 127.0.0.1 at 2026-04-19 12:24:21 +0200
 Processing by CompaniesController#show as */*
   Parameters: {"id"=>"1"}
   Company Load (0.1ms)  SELECT  "companies".* FROM "companies" WHERE "companies"."id" = ? LIMIT ?  [["id", 1], ["LIMIT", 1]]
@@ -414,7 +414,6 @@ For saving, we use the `-c cookies.txt` parameter.
 $ curl -I http://localhost:3000/companies -c cookies.txt
 HTTP/1.1 200 OK
 X-Frame-Options: SAMEORIGIN
-X-XSS-Protection: 1; mode=block
 X-Content-Type-Options: nosniff
 ETag: W/"53830a75ef520df8ad8e1894cf1e5003"
   [...]
@@ -429,7 +428,6 @@ subsequent requests:
 $ curl -I http://localhost:3000/companies -b cookies.txt
 HTTP/1.1 200 OK
 X-Frame-Options: SAMEORIGIN
-X-XSS-Protection: 1; mode=block
 X-Content-Type-Options: nosniff
 ETag: W/"53830a75ef520df8ad8e1894cf1e5003"
 [...]
@@ -437,7 +435,6 @@ ETag: W/"53830a75ef520df8ad8e1894cf1e5003"
 $ curl -I http://localhost:3000/companies -b cookies.txt
 HTTP/1.1 200 OK
 X-Frame-Options: SAMEORIGIN
-X-Xss-Protection: 1; mode=block
 X-Content-Type-Options: nosniff
 ETag: W/"53830a75ef520df8ad8e1894cf1e5003"
 [...]
@@ -452,7 +449,6 @@ the version we have cached is still up to date:
 $ curl -I http://localhost:3000/companies -b cookies.txt --header 'If-None-Match: W/"53830a75ef520df8ad8e1894cf1e5003"'
 HTTP/1.1 304 Not Modified
 X-Frame-Options: SAMEORIGIN
-X-XSS-Protection: 1; mode=block
 X-Content-Type-Options: nosniff
 ETag: W/"53830a75ef520df8ad8e1894cf1e5003"
 [...]
@@ -462,7 +458,7 @@ We get a `304 Not Modified` in response. Let’s look at the Rails log:
 
 [source,bash]
 ----
-Started HEAD "/companies" for 127.0.0.1 at 2018-01-27 18:36:25 +0100
+Started HEAD "/companies" for 127.0.0.1 at 2026-04-19 12:36:25 +0200
 Processing by CompaniesController#index as */*
    (0.2ms)  SELECT COUNT(*) AS "size", MAX("companies"."updated_at") AS timestamp FROM "companies"
 Completed 304 Not Modified in 24ms (ActiveRecord: 0.2ms)
@@ -567,10 +563,9 @@ We go to the web page and get the output:
 $ curl -I http://localhost:3000/companies/1
 HTTP/1.1 200 OK
 X-Frame-Options: SAMEORIGIN
-X-XSS-Protection: 1; mode=block
 X-Content-Type-Options: nosniff
 ETag: W/"f37a06dbe0ee1b4a2aee85c1c326b737"
-Last-Modified: Sat, 27 Jan 2018 17:16:53 GMT
+Last-Modified: Sun, 19 Apr 2026 09:16:53 GMT
 Content-Type: text/html; charset=utf-8
 Cache-Control: public
 [...]
@@ -650,11 +645,10 @@ request:
 $ curl -I http://localhost:3000/companies/1
 HTTP/1.1 200 OK
 X-Frame-Options: SAMEORIGIN
-X-XSS-Protection: 1; mode=block
 X-Content-Type-Options: nosniff
-Date: Sat, 27 Jan 2018 17:58:56 GMT
+Date: Sun, 19 Apr 2026 09:58:56 GMT
 ETag: W/"f37a06dbe0ee1b4a2aee85c1c326b737"
-Last-Modified: Sat, 27 Jan 2018 17:16:53 GMT
+Last-Modified: Sun, 19 Apr 2026 09:16:53 GMT
 Content-Type: text/html; charset=utf-8
 Cache-Control: max-age=120, public
 [...]
@@ -693,8 +687,8 @@ advantages once again are a reduction of server load and faster web page
 generation, which means increased usability.
 
 Please create a new example application (see
-xref:caching.adoc#a-simple-example-application["A Simple Example
-Application"]).
+xref:caching.adoc#the-example-application[The Example
+Application]).
 
 [[enabling-fragment-caching-in-development-mode]]
 === Enabling Fragment Caching in Development Mode
@@ -1101,8 +1095,8 @@ different route logic.
 ====
 
 Please install a fresh example application (see section
-xref:caching.adoc#a-simple-example-application["A Simple Example
-Application"]) and add the gem with the following line in Gemfile.
+xref:caching.adoc#the-example-application[The Example
+Application]) and add the gem with the following line in Gemfile.
 
 [source,config]
 ----

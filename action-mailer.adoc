@@ -181,7 +181,7 @@ $ bin/rails console
 Loading development environment (Rails 8.1.3)
 irb(main):001> User.create(name: "Wintermeyer", email: "sw@wintermeyer-consulting.de")
   TRANSACTION (0.1ms)  BEGIN
-  User Create (0.4ms)  INSERT INTO "users" ("name", "email", "created_at", "updated_at") VALUES ($1, $2, $3, $4)
+  User Create (0.4ms)  INSERT INTO "users" ("name", "email", "created_at", "updated_at") VALUES (?, ?, ?, ?) RETURNING "id"
   Enqueued ActionMailer::MailDeliveryJob (Job ID: de33ce3d-...) to Async(default) with arguments: "NotificationMailer", "new_account", "deliver_now", {:args=>[#<GlobalID:0x... @uri=#<URI::GID gid://webshop/User/1>>]}
   TRANSACTION (3.2ms)  COMMIT
 => #<User id: 1, name: "Wintermeyer", email: "sw@wintermeyer-consulting.de", created_at: "2026-04-19 11:21:32", updated_at: "2026-04-19 11:21:32">

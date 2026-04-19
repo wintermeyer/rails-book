@@ -285,9 +285,6 @@ NOTE: Older versions of this book mentioned `form_tag`. It was
 
 A few options you will reach for often:
 
-`form_with(model: person, local: false)`::
-  Submits over Ajax instead of going through Turbo. Rarely needed
-  today.
 `form_with(model: person, data: { turbo: false })`::
   Force a full page reload on submit. Useful if you need the
   browser's default POST behaviour (downloads, for example).
