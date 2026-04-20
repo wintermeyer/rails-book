@@ -522,6 +522,46 @@ Verify: test suite still green; controller noticeably smaller;
 new file is independently testable (no `Rails.application`
 references).
 
+[.agentic-tip]
+****
+.Agentic Coding Tip: The `/simplify` Slash Command
+The prompt above is the explicit shape. For smaller cases —
+a method that grew, a view with too much inline logic, a
+test with repetitive setup — Claude Code ships a built-in
+shortcut: the `/simplify` slash command. Hand it the current
+file (or a selection) and it returns a simpler version with
+the same behaviour, optimising for readability and
+idiomatic Ruby/Rails.
+
+Where it's good:
+
+* Collapsing manual collection loops into `.map`,
+  `.select`, `.each_with_object`.
+* Replacing repetitive `params[:x] \|\| default` chains with
+  `params.fetch(:x, default)`.
+* Reducing `respond_to` blocks when only one format is
+  served.
+* Tidying test setup with `setup` blocks or helper methods.
+
+Where it's not:
+
+* Multi-file refactorings — extracting a service object,
+  splitting a fat controller, moving logic into a concern.
+  The explicit "Refactor a Fat Controller" prompt above is
+  the right tool for that.
+* Anything where the public shape must stay identical
+  (controller action names, routes, fixture keys, public
+  methods used by other files). `/simplify` optimises for
+  terseness and sometimes renames a local whose name was
+  carrying intent.
+
+Treat `/simplify` as a "one file, one diff" tool. Always
+review the diff before accepting; green tests are
+necessary but not sufficient, because the skill can
+legitimately change behaviour in edge cases the tests
+don't cover.
+****
+
 === Extract Hard-Coded Strings Into I18n
 
 [quote]
