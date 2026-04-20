@@ -10,11 +10,11 @@ Introduction]**, a ten-chapter language primer written as the
 prerequisite for this book. Every example runs on Ruby 4.0 and
 Rails 8.1; screenshots come from fresh Rails 8 scaffolds.
 
-I'll not sugar-coat this: Rails is not an easy framework to
-learn. It's one of the best and most effective for shipping
-web applications, and the conventions and machinery that make
-it effective take real time to internalise. That's true of any
-framework worth using.
+Rails isn't small, and it isn't easy. No sugar-coating there.
+But it's one of the most productive web frameworks in serious
+production — once the conventions and machinery click, you'll
+ship at a pace that's hard to match anywhere else. Worth every
+hour you put in.
 
 The book doubles as the material I use in my Rails workshops —
 written in a step-by-step shape so you can work through it on
