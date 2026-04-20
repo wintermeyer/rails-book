@@ -1,6 +1,7 @@
 [[preface]]
 = Preface
 Stefan Wintermeyer <sw@wintermeyer-consulting.de>
+:page-notoc: true
 
 Rails is built on Ruby — and this book doesn't teach you
 Ruby. It teaches you **Ruby on Rails 8.1**, the framework.
